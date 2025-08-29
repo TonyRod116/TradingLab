@@ -1,28 +1,43 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './Header.css';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   const handleLogin = () => {
-    navigate('/login');
+    navigate('/users/login/');
   };
 
   const handleSignup = () => {
-    navigate('/signup');
+    navigate('/users/signup/');
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/strategies');
+  };
+
+  const handleLogoClick = () => {
+    if (isAuthenticated) {
+      navigate('/strategies');
+    } else {
+      navigate('/');
+    }
   };
 
   return (
     <header className="header">
       <div className="header-container">
         {/* Logo */}
-        <div className="logo">
+        <div className="logo" onClick={handleLogoClick}>
           <span className="logo-text">TradeLab</span>
           <span className="logo-dot">.</span>
         </div>
@@ -36,8 +51,22 @@ const Header = () => {
 
         {/* Auth Buttons */}
         <div className="auth-buttons">
-          <button className="btn btn-login" onClick={handleLogin}>Login</button>
-          <button className="btn btn-signup" onClick={handleSignup}>Sign Up</button>
+                      {isAuthenticated ? (
+              <>
+                <span className="user-welcome">
+                  Welcome, {user?.username || 'Trader'}
+                  {console.log('🔍 Header Debug - User object:', user)}
+                  {console.log('🔍 Header Debug - Username:', user?.username)}
+                  {console.log('🔍 Header Debug - isAuthenticated:', isAuthenticated)}
+                </span>
+                <button className="btn btn-logout" onClick={handleLogout}>Logout</button>
+              </>
+          ) : (
+            <>
+              <button className="btn btn-login" onClick={handleLogin}>Login</button>
+              <button className="btn btn-signup" onClick={handleSignup}>Sign Up</button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -53,8 +82,19 @@ const Header = () => {
             <a href="#pricing" className="nav-link">Pricing</a>
           </nav>
           <div className="auth-buttons-mobile">
-            <button className="btn btn-login" onClick={handleLogin}>Login</button>
-            <button className="btn btn-signup" onClick={handleSignup}>Sign Up</button>
+            {isAuthenticated ? (
+              <>
+                <span className="user-welcome">
+                  Welcome, {user?.username || 'User'}
+                </span>
+                <button className="btn btn-logout" onClick={handleLogout}>Logout</button>
+              </>
+            ) : (
+              <>
+                <button className="btn btn-login" onClick={handleLogin}>Login</button>
+                <button className="btn btn-signup" onClick={handleSignup}>Sign Up</button>
+              </>
+            )}
           </div>
         </div>
       </div>
