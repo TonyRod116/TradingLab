@@ -4,6 +4,7 @@
   top: 0;
   left: 0;
   right: 0;
+  width: 100vw;
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--color-green);
@@ -18,6 +19,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
 }
 
 /* Logo styling */
@@ -151,6 +153,7 @@
   top: 100%;
   left: 0;
   right: 0;
+  width: 100vw;
   background: rgba(0, 0, 0, 0.98);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--color-green);

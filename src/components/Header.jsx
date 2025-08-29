@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Header.css';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
+  const handleSignup = () => {
+    navigate('/signup');
   };
 
   return (
@@ -26,8 +36,8 @@ const Header = () => {
 
         {/* Auth Buttons */}
         <div className="auth-buttons">
-          <button className="btn btn-login">Login</button>
-          <button className="btn btn-signup">Sign Up</button>
+          <button className="btn btn-login" onClick={handleLogin}>Login</button>
+          <button className="btn btn-signup" onClick={handleSignup}>Sign Up</button>
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -43,8 +53,8 @@ const Header = () => {
             <a href="#pricing" className="nav-link">Pricing</a>
           </nav>
           <div className="auth-buttons-mobile">
-            <button className="btn btn-login">Login</button>
-            <button className="btn btn-signup">Sign Up</button>
+            <button className="btn btn-login" onClick={handleLogin}>Login</button>
+            <button className="btn btn-signup" onClick={handleSignup}>Sign Up</button>
           </div>
         </div>
       </div>

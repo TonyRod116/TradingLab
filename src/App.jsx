@@ -18,7 +18,7 @@ function App() {
               AI-Powered Trading Strategy Backtesting
             </p>
             <p className="hero-description">
-              Convert your trading ideas into executable strategies and run backtests 
+              Convert your Trade ideas into executable strategies and run backtests 
               with real historical data. Analyze performance metrics and optimize 
               your strategies to maximize profits.
             </p>
