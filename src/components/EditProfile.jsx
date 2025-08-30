@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Header from './Header';
 import './EditProfile.css';
@@ -7,6 +8,7 @@ import './EditProfile.css';
 const EditProfile = () => {
   const { user: currentUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     bio: '',
     profile_image: null
@@ -22,95 +24,206 @@ const EditProfile = () => {
       return;
     }
     
-    // Load current profile data
-    const loadProfile = async () => {
-      try {
-        const response = await fetch(`http://localhost:8000/users/profile/edit/`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setFormData({
-            bio: data.bio || '',
-            profile_image: null
-          });
-          if (data.profile_image) {
-            setPreviewImage(data.profile_image);
-          }
-        }
-      } catch (err) {
-        setError('Failed to load profile data');
-      }
-    };
-    
     loadProfile();
   }, [isAuthenticated, navigate]);
   
-  const handleChange = (e) => {
+  const loadProfile = useCallback(async () => {
+    try {
+      const response = await axios.get('/users/profile/');
+      const data = response.data;
+      
+      setFormData({
+        bio: data.bio || '',
+        profile_image: null
+      });
+      
+      if (data.profile_image) {
+        setPreviewImage(data.profile_image);
+      }
+    } catch (err) {
+      setError('Failed to load profile data');
+    }
+  }, []);
+  
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-  };
+  }, []);
   
-  const handleImageChange = (e) => {
+  const handleImageChange = useCallback((e) => {
     const file = e.target.files[0];
-    if (file) {
-      setFormData(prev => ({
-        ...prev,
-        profile_image: file
-      }));
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewImage(e.target.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select a valid image file');
+      return;
     }
-  };
+    
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be less than 5MB');
+      return;
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      profile_image: file
+    }));
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewImage(e.target.result);
+    };
+    reader.readAsDataURL(file);
+    setError(''); // Clear any previous errors
+  }, []);
   
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
+    
     setLoading(true);
     setError('');
     setSuccess('');
     
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('bio', formData.bio);
+      let cloudinaryUrl = null;
       
+      // Si hay una nueva imagen, subirla a Cloudinary primero
       if (formData.profile_image) {
-        formDataToSend.append('profile_image', formData.profile_image);
+        const cloudinaryFormData = new FormData();
+        cloudinaryFormData.append('file', formData.profile_image);
+        cloudinaryFormData.append('upload_preset', 'tradinglab');
+        
+        // Crear instancia de axios sin interceptores para Cloudinary
+        const cloudinaryAxios = axios.create();
+        
+        try {
+          const cloudinaryResponse = await cloudinaryAxios.post(
+            'https://api.cloudinary.com/v1_1/dgu3pco4q/image/upload',
+            cloudinaryFormData
+          );
+          
+          cloudinaryUrl = cloudinaryResponse.data.secure_url;
+        } catch (cloudinaryError) {
+          const errorMessage = cloudinaryError.response?.data?.error?.message || 
+                             cloudinaryError.response?.data?.error || 
+                             'Unknown Cloudinary error';
+          
+          setError(`Failed to upload image: ${errorMessage}`);
+          setLoading(false);
+          return;
+        }
       }
       
-      const response = await fetch(`http://localhost:8000/users/profile/edit/`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: formDataToSend
-      });
+      // Preparar datos para el backend
+      const backendData = new FormData();
       
-      if (response.ok) {
-        setSuccess('Profile updated successfully!');
-        setTimeout(() => {
-          navigate(`/users/profile/${currentUser.id}`);
-        }, 1500);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to update profile');
+      if (formData.bio) {
+        backendData.append('bio', formData.bio);
       }
+      
+      if (cloudinaryUrl) {
+        backendData.append('profile_image', cloudinaryUrl);
+      }
+      
+      // Enviar al backend
+      const response = await axios.put(
+        'http://localhost:8000/users/profile/',
+        backendData,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      setSuccess('Profile updated successfully!');
+      setTimeout(() => {
+        navigate(`/users/profile/${currentUser.id}`);
+      }, 1500);
+      
     } catch (err) {
-      setError('Network error. Please try again.');
+      const errorMessage = err.response?.data?.error || 'Failed to update profile';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, [formData.bio, formData.profile_image, navigate, currentUser.id]);
+  
+  const handleCancel = useCallback(() => {
+    navigate(`/users/profile/${currentUser.id}`);
+  }, [navigate, currentUser.id]);
+  
+  const renderImageUpload = () => (
+    <div className="form-group">
+      <label htmlFor="profile_image">Profile Image</label>
+      <div className="image-upload-section">
+        <div className="current-image">
+          {previewImage ? (
+            <img src={previewImage} alt="Profile preview" />
+          ) : (
+            <div className="image-placeholder">
+              {currentUser?.username?.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </div>
+        <input
+          type="file"
+          id="profile_image"
+          name="profile_image"
+          accept="image/*"
+          onChange={handleImageChange}
+          disabled={loading}
+        />
+        <p className="image-help">Click to upload a new image (JPG, PNG, GIF, max 5MB)</p>
+      </div>
+    </div>
+  );
+  
+  const renderBioSection = () => (
+    <div className="form-group">
+      <label htmlFor="bio">Bio</label>
+      <textarea
+        id="bio"
+        name="bio"
+        value={formData.bio}
+        onChange={handleChange}
+        placeholder="Tell us about yourself..."
+        rows="4"
+        maxLength="500"
+        disabled={loading}
+      />
+      <div className="char-count">
+        {formData.bio.length}/500 characters
+      </div>
+    </div>
+  );
+  
+  const renderActionButtons = () => (
+    <div className="form-actions">
+      <button 
+        type="button" 
+        className="btn btn-cancel"
+        onClick={handleCancel}
+        disabled={loading}
+      >
+        Cancel
+      </button>
+      <button 
+        type="submit" 
+        className="btn btn-save"
+        disabled={loading}
+      >
+        {loading ? 'Saving...' : 'Save Changes'}
+      </button>
+    </div>
+  );
   
   if (!isAuthenticated) {
     return null;
@@ -126,79 +239,17 @@ const EditProfile = () => {
         </div>
         
         {error && (
-          <div className="edit-profile-error">
-            {error}
-          </div>
+          <div className="edit-profile-error">{error}</div>
         )}
         
         {success && (
-          <div className="edit-profile-success">
-            {success}
-          </div>
+          <div className="edit-profile-success">{success}</div>
         )}
         
         <form className="edit-profile-form" onSubmit={handleSubmit}>
-          {/* Profile Image Section */}
-          <div className="form-group">
-            <label htmlFor="profile_image">Profile Image</label>
-            <div className="image-upload-section">
-              <div className="current-image">
-                {previewImage ? (
-                  <img src={previewImage} alt="Profile preview" />
-                ) : (
-                  <div className="image-placeholder">
-                    {currentUser?.username?.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <input
-                type="file"
-                id="profile_image"
-                name="profile_image"
-                accept="image/*"
-                onChange={handleImageChange}
-                disabled={loading}
-              />
-              <p className="image-help">Click to upload a new image (JPG, PNG, GIF)</p>
-            </div>
-          </div>
-          
-          {/* Bio Section */}
-          <div className="form-group">
-            <label htmlFor="bio">Bio</label>
-            <textarea
-              id="bio"
-              name="bio"
-              value={formData.bio}
-              onChange={handleChange}
-              placeholder="Tell us about yourself..."
-              rows="4"
-              maxLength="500"
-              disabled={loading}
-            />
-            <div className="char-count">
-              {formData.bio.length}/500 characters
-            </div>
-          </div>
-          
-          {/* Action Buttons */}
-          <div className="form-actions">
-            <button 
-              type="button" 
-              className="btn btn-cancel"
-              onClick={() => navigate(`/users/profile/${currentUser.id}`)}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              className="btn btn-save"
-              disabled={loading}
-            >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
+          {renderImageUpload()}
+          {renderBioSection()}
+          {renderActionButtons()}
         </form>
       </div>
     </div>

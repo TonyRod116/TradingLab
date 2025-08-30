@@ -2,7 +2,30 @@ import React from 'react';
 import Header from './Header';
 import './About.css';
 
+const TECH_STACK = [
+  { icon: '⚛️', name: 'React + Vite', description: 'Modern frontend framework' },
+  { icon: '🐍', name: 'Django + DRF', description: 'Robust backend API' },
+  { icon: '🗄️', name: 'PostgreSQL', description: 'Reliable database' },
+  { icon: '🔐', name: 'JWT Auth', description: 'Secure authentication' },
+  { icon: '🎨', name: 'CSS Variables', description: 'Dynamic theming' },
+  { icon: '☕', name: 'Coffee', description: 'Essential fuel' }
+];
+
 const About = () => {
+  const renderTechStack = () => (
+    <div className="tech-grid">
+      {TECH_STACK.map((tech, index) => (
+        <div key={index} className="tech-item">
+          <span className="tech-icon">{tech.icon}</span>
+          <div className="tech-details">
+            <span className="tech-name">{tech.name}</span>
+            <span className="tech-description">{tech.description}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="about-page">
       <Header />
@@ -42,32 +65,7 @@ const About = () => {
 
           <div className="about-section">
             <h2>🛠️ The Tech Stack (AKA My Desperation Stack)</h2>
-            <div className="tech-grid">
-              <div className="tech-item">
-                <span className="tech-icon">⚛️</span>
-                <span>React + Vite</span>
-              </div>
-              <div className="tech-item">
-                <span className="tech-icon">🐍</span>
-                <span>Django + DRF</span>
-              </div>
-              <div className="tech-item">
-                <span className="tech-icon">🗄️</span>
-                <span>PostgreSQL</span>
-              </div>
-              <div className="tech-item">
-                <span className="tech-icon">🔐</span>
-                <span>JWT Auth</span>
-              </div>
-              <div className="tech-item">
-                <span className="tech-icon">🎨</span>
-                <span>CSS Variables</span>
-              </div>
-              <div className="tech-item">
-                <span className="tech-icon">☕</span>
-                <span>Lots of Coffee</span>
-              </div>
-            </div>
+            {renderTechStack()}
           </div>
 
           <div className="about-section">
