@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
-import { setToken, getToken, setRefreshToken, removeToken, getUser, isTokenExpired } from '../utils/auth.js';
+import { setToken as setTokenStorage, getToken, setRefreshToken, removeToken, getUser, isTokenExpired } from '../utils/auth.js';
 
 // Create context
 const AuthContext = createContext();
@@ -55,20 +55,37 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const checkAuth = () => {
       const currentToken = getToken();
+      console.log('🔍 CheckAuth - Token from localStorage:', currentToken);
+      
       if (currentToken && !isTokenExpired()) {
+        console.log('🔍 CheckAuth - Token is valid, extracting user data');
         const userData = getUser();
+        console.log('🔍 CheckAuth - User data extracted:', userData);
+        
         if (userData) {
           setUser(userData);
           setTokenState(currentToken);
+          console.log('🔍 CheckAuth - User authenticated successfully');
         } else {
+          console.log('🔍 CheckAuth - No user data, logging out');
           logout();
         }
+      } else {
+        console.log('🔍 CheckAuth - No token or token expired');
       }
       setLoading(false);
     };
 
     checkAuth();
   }, []);
+
+  // Sync token state with localStorage
+  useEffect(() => {
+    const currentToken = getToken();
+    if (currentToken !== token) {
+      setTokenState(currentToken);
+    }
+  }, [token]);
 
   // Helper function to extract user data from JWT token
   const getUserFromToken = (token) => {
@@ -202,7 +219,7 @@ export function AuthProvider({ children }) {
       const userData = getUserFromToken(access);
       console.log('🔍 Login - User data extracted from token:', userData);
       
-      setToken(access);
+      setTokenStorage(access);
       setRefreshToken(refresh);
       setTokenState(access);
       setUser(userData);
@@ -240,7 +257,7 @@ export function AuthProvider({ children }) {
       
       const { access, user: userData } = response.data;
       
-      setToken(access);
+      setTokenStorage(access);
       setTokenState(access);
       setUser(userData);
       
@@ -265,6 +282,9 @@ export function AuthProvider({ children }) {
     setTokenState(null);
     setUser(null);
     console.log('🔍 Logout - User data cleared');
+    
+    // Clear any stored user data
+    localStorage.removeItem('user');
   };
 
   const value = {

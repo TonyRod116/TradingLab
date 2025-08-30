@@ -79,7 +79,13 @@
 .feature-icon {
   font-size: 3rem;
   margin-bottom: 1rem;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-green);
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1rem auto;
 }
 
 .feature-card h3 {

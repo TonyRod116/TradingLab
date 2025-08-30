@@ -33,15 +33,22 @@ export const getUser = () => {
   const payloadString = token.split('.')[1]
   // 4. We then decode the payload string into an object by b64 decoding
   try {
-    const { user, exp } = JSON.parse(atob(payloadString))
+    const payload = JSON.parse(atob(payloadString))
+    const { exp, user_id, username, email } = payload
+    
     // 5. Ensure the token is still within the expiry date
     const today = Date.now() / 1000
     if (today > exp) {
       removeToken()
       return null
     }
-    // 6. Return the user if the token is valid
-    return user
+    
+    // 6. Return the user data if the token is valid
+    return {
+      id: user_id,
+      username: username,
+      email: email
+    }
   } catch (error) {
     console.error('Error parsing JWT token:', error)
     removeToken()
