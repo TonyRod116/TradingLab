@@ -1,4 +1,14 @@
 import React from 'react';
+import { 
+  FaGift, 
+  FaRocket, 
+  FaCrown, 
+  FaQuestionCircle, 
+  FaMoneyBillWave, 
+  FaLock, 
+  FaEnvelope, 
+  FaPlus 
+} from 'react-icons/fa';
 import Header from './Header';
 import './Pricing.css';
 
@@ -17,7 +27,7 @@ const Pricing = () => {
           <div className="pricing-card featured">
             <div className="pricing-badge">Most Popular</div>
             <div className="pricing-header">
-              <h2>🎉 The "It's Free" Plan</h2>
+              <h2><FaGift /> The "It's Free" Plan</h2>
               <div className="pricing-price">
                 <span className="price-amount">$0</span>
                 <span className="price-period">forever</span>
@@ -48,7 +58,7 @@ const Pricing = () => {
           <div className="pricing-card joke">
             <div className="pricing-badge">Coming Never</div>
             <div className="pricing-header">
-              <h2>🚀 The "Pro" Plan</h2>
+              <h2><FaRocket /> The "Pro" Plan</h2>
               <div className="pricing-price">
                 <span className="price-amount">$99</span>
                 <span className="price-period">/month</span>
@@ -78,7 +88,7 @@ const Pricing = () => {
           <div className="pricing-card joke">
             <div className="pricing-badge">Mythical</div>
             <div className="pricing-header">
-              <h2>👑 The "Enterprise" Plan</h2>
+              <h2><FaCrown /> The "Enterprise" Plan</h2>
               <div className="pricing-price">
                 <span className="price-amount">$999</span>
                 <span className="price-period">/month</span>
@@ -110,27 +120,27 @@ const Pricing = () => {
           <h2>Frequently Asked Questions</h2>
           
           <div className="faq-item">
-            <h3>🤔 Why is this free?</h3>
+            <h3><FaQuestionCircle /> Why is this free?</h3>
             <p>Because I built this for my General Assembly bootcamp final project, not to make money. I'm just happy if people actually use it!</p>
           </div>
 
           <div className="faq-item">
-            <h3>💰 Will you start charging later?</h3>
-            <p>Probably not. But I'll accept beer, coffee, or a 50% commission on your profits (losses not included, sorry traders!). And if you're a recruiter, this is totally my portfolio piece!</p>
+            <h3><FaMoneyBillWave /> Will you start charging later?</h3>
+            <p>Probably not. But I'll accept a beer, coffee, or a 90% commission on your profits (losses not included, sorry traders!). And if you're a recruiter, this is totally my portfolio piece!</p>
           </div>
 
           <div className="faq-item">
-            <h3>🔒 Is my data safe?</h3>
+            <h3><FaLock /> Is my data safe?</h3>
             <p>As safe as any project built by a sleep-deprived bootcamp student can be. I'm using industry-standard practices, but maybe don't store your life savings strategy here.</p>
           </div>
 
           <div className="faq-item">
-            <h3>📧 Can I get support?</h3>
+            <h3><FaEnvelope /> Can I get support?</h3>
             <p>I'll do my best to help, but remember: this was built in a week. My support skills are as polished as my code was on day 1.</p>
           </div>
 
           <div className="faq-item">
-            <h3>🚀 Will you add more features?</h3>
+            <h3><FaPlus /> Will you add more features?</h3>
             <p>Maybe! But first I need to recover from the trauma of building this in a week. Give me a few months to process the experience.</p>
           </div>
         </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getToken } from '../utils/auth';
+import { FaChartLine, FaCog, FaPlus } from 'react-icons/fa';
 import axios from 'axios';
 import Header from './Header';
 import './Profile.css';
@@ -115,6 +116,7 @@ const Profile = () => {
           className="btn btn-edit-profile"
           onClick={handleEditProfile}
         >
+          <FaCog size={16} style={{ marginRight: '8px' }} />
           Edit Profile
         </button>
       </div>
@@ -135,7 +137,9 @@ const Profile = () => {
 
   const renderEmptyStrategies = () => (
     <div className="empty-strategies">
-      <div className="empty-icon">📊</div>
+      <div className="empty-icon">
+        <FaChartLine size={48} color="#00ff88" />
+      </div>
       <h3>No strategies yet</h3>
       <p>
         {isOwnProfile 
@@ -144,6 +148,7 @@ const Profile = () => {
         }
       </p>
       <button className="btn btn-primary" onClick={handleCreateStrategy}>
+        <FaPlus size={16} style={{ marginRight: '8px' }} />
         Create Your First Strategy
       </button>
     </div>

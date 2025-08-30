@@ -47,15 +47,15 @@ const Header = () => {
           <a href="/features" className="nav-link">Features</a>
           <a href="/about" className="nav-link">About</a>
           <a href="/pricing" className="nav-link">Pricing</a>
+          {isAuthenticated && (
+            <a href="/strategies" className="nav-link">Strategies</a>
+          )}
         </nav>
 
         {/* Auth Buttons */}
         <div className="auth-buttons">
-                      {isAuthenticated ? (
-              <>
-                              <span className="user-welcome">
-                Welcome, {user?.username || 'Trader'}
-              </span>
+          {isAuthenticated ? (
+            <>
               <button 
                 className="btn btn-profile"
                 onClick={() => navigate(`/users/profile/${user?.id}`)}
@@ -63,7 +63,7 @@ const Header = () => {
                 Profile
               </button>
               <button className="btn btn-logout" onClick={handleLogout}>Logout</button>
-              </>
+            </>
           ) : (
             <>
               <button className="btn btn-login" onClick={handleLogin}>Login</button>
@@ -83,16 +83,19 @@ const Header = () => {
             <a href="/features" className="nav-link">Features</a>
             <a href="/about" className="nav-link">About</a>
             <a href="/pricing" className="nav-link">Pricing</a>
+            {isAuthenticated && (
+              <a href="/strategies" className="nav-link">Strategies</a>
+            )}
           </nav>
-          <div className="auth-buttons-mobile">
-            {isAuthenticated ? (
-              <>
-                <span className="user-welcome">
-                  Welcome, {user?.username || 'User'}
-                </span>
-                <button className="btn btn-logout" onClick={handleLogout}>Logout</button>
-              </>
-            ) : (
+                      <div className="auth-buttons-mobile">
+              {isAuthenticated ? (
+                <>
+                  <button className="btn btn-profile" onClick={() => navigate(`/users/profile/${user?.id}`)}>
+                    Profile
+                  </button>
+                  <button className="btn btn-logout" onClick={handleLogout}>Logout</button>
+                </>
+              ) : (
               <>
                 <button className="btn btn-login" onClick={handleLogin}>Login</button>
                 <button className="btn btn-signup" onClick={handleSignup}>Sign Up</button>

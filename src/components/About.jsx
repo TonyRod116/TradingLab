@@ -1,4 +1,11 @@
 import React from 'react';
+import { 
+  FaGraduationCap, 
+  FaBolt, 
+  FaTools, 
+  FaCrosshairs, 
+  FaRocket 
+} from 'react-icons/fa';
 import Header from './Header';
 import './About.css';
 
@@ -37,7 +44,7 @@ const About = () => {
 
         <div className="about-content">
           <div className="about-section">
-            <h2>🎓 The GA Origin Story</h2>
+            <h2><FaGraduationCap /> The GA Origin Story</h2>
             <p>
               Picture this: It's the final week of General Assembly's Software Engineering bootcamp, 
               and I'm staring at a blank screen wondering how I'm going to build something impressive 
@@ -50,9 +57,9 @@ const About = () => {
           </div>
 
           <div className="about-section">
-            <h2>⚡ What Actually Happened</h2>
+            <h2><FaBolt /> What Actually Happened</h2>
             <p>
-              In a week that felt like a month, I went from "I should learn Django" to "I'm deploying 
+              In a week that felt like a month, I went from "I should practice Django" to "I'm deploying 
               a full-stack application with React frontend, Django backend, JWT authentication, and 
               a PostgreSQL database." Spoiler alert: I'm still not entirely sure how I pulled it off.
             </p>
@@ -64,12 +71,12 @@ const About = () => {
           </div>
 
           <div className="about-section">
-            <h2>🛠️ The Tech Stack (AKA My Desperation Stack)</h2>
+            <h2><FaTools /> The Tech Stack (AKA My Desperation Stack)</h2>
             {renderTechStack()}
           </div>
 
           <div className="about-section">
-            <h2>🎯 The Mission</h2>
+            <h2><FaCrosshairs /> The Mission</h2>
             <p>
               Despite the chaotic origins, TradeLab serves a real purpose: helping traders test their 
               strategies before risking real money. It's like a flight simulator, but for trading - 
@@ -83,10 +90,10 @@ const About = () => {
           </div>
 
           <div className="about-section">
-            <h2>🚀 What's Next?</h2>
+            <h2><FaRocket /> What's Next?</h2>
             <p>
               Now that the bootcamp is over and I've had time to sleep, I'm planning to add more 
-              features like real-time data feeds, advanced charting, and maybe even some AI-powered 
+              features like advanced charting, and maybe even some AI-powered 
               strategy suggestions. But first, I need to recover from the trauma of building this 
               in a week.
             </p>
@@ -94,7 +101,7 @@ const About = () => {
               <em>P.S. To my future employers: I promise I don't always work this chaotically. 
               This was just a special case of "bootcamp desperation meets deadline panic." 
               But hey, if you're impressed by someone who can build a full-stack app in a week, 
-              I'm your developer! 🚀</em>
+              I'm your developer!</em>
             </p>
           </div>
         </div>

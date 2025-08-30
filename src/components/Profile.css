@@ -108,9 +108,9 @@
 }
 
 .btn-edit-profile {
-  background: var(--color-green);
-  color: var(--color-black);
-  border: none;
+  background: transparent;
+  color: var(--color-green);
+  border: 2px solid var(--color-green);
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-weight: 600;
@@ -121,7 +121,8 @@
 }
 
 .btn-edit-profile:hover {
-  background: var(--color-green-bright);
+  background: var(--color-green);
+  color: var(--color-black);
   transform: translateY(-2px);
 }
 

@@ -21,10 +21,6 @@
   color: var(--color-white);
   margin-bottom: 1rem;
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, var(--color-white) 0%, var(--color-green) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .features-hero p {
