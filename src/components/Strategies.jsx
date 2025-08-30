@@ -2,17 +2,20 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Header from './Header';
 import './Strategies.css';
+import { useNavigate } from 'react-router-dom';
+import { FaChartLine } from 'react-icons/fa';
 
 const Strategies = () => {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="strategies-page">
       <Header />
       <div className="strategies-container">
         <div className="strategies-header">
-          <h1>Trading Strategies</h1>
-          <p>Discover and analyze trading strategies from the community</p>
+          <h1>Strategy Backtesting</h1>
+          <p>Discover and analyze strategies from the community</p>
         </div>
 
         {isAuthenticated ? (
@@ -27,7 +30,15 @@ const Strategies = () => {
         ) : (
           <div className="auth-prompt">
             <h2>Join the Community</h2>
-            <p>Sign up or sign in to create and explore trading strategies</p>
+            <p>Sign up or sign in to create and explore strategies</p>
+            <div className="auth-buttons">
+              <button className="btn btn-primary" onClick={() => navigate('/users/signup/')}>
+                Sign Up
+              </button>
+              <button className="btn btn-secondary" onClick={() => navigate('/users/login/')}>
+                Sign In
+              </button>
+            </div>
           </div>
         )}
 
@@ -60,7 +71,7 @@ const Strategies = () => {
             <div className="no-strategies">
               <div className="empty-state">
                 <h4>No strategies yet</h4>
-                <p>Be the first to create a trading strategy!</p>
+                <p>Be the first to create a strategy!</p>
                 {isAuthenticated && (
                   <button className="btn btn-primary">Create Your First Strategy</button>
                 )}

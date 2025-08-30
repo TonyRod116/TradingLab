@@ -58,10 +58,38 @@
   color: var(--color-text);
   font-weight: 500;
   transition: color 0.3s ease;
+  text-decoration: none;
+  position: relative;
+  padding: 0.5rem 0;
 }
 
 .nav-link:hover {
   color: var(--color-green);
+}
+
+.nav-link.active {
+  color: var(--color-green);
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--color-green);
+  border-radius: 1px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 /* User welcome message */
@@ -126,6 +154,12 @@
   background: var(--color-green);
   color: var(--color-black);
   transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+}
+
+.btn-profile.active {
+  background: var(--color-green);
+  color: var(--color-black);
   box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
 }
 

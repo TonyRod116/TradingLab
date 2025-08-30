@@ -19,7 +19,7 @@ const Pricing = () => {
       <div className="pricing-container">
         <div className="pricing-hero">
           <h1>Pricing Plans</h1>
-          <p>Choose the plan that's right for your trading needs (spoiler: there's only one)</p>
+          <p>Choose the plan that's right for your strategy backtesting needs (spoiler: there's only one)</p>
         </div>
 
         <div className="pricing-grid">
@@ -30,7 +30,7 @@ const Pricing = () => {
               <h2><FaGift /> The "It's Free" Plan</h2>
               <div className="pricing-price">
                 <span className="price-amount">$0</span>
-                <span className="price-period">forever</span>
+                <span className="price-period"> forever</span>
               </div>
               <p className="pricing-subtitle">Because this is a school project, not a real platform</p>
             </div>
@@ -49,7 +49,7 @@ const Pricing = () => {
             </div>
 
             <div className="pricing-cta">
-              <button className="btn btn-primary">Start Trading (It's Free!)</button>
+              <button className="btn btn-primary">Start Backtesting (It's Free!)</button>
               <p className="pricing-note">No credit card required. No hidden fees. No catch.</p>
             </div>
           </div>
@@ -146,7 +146,7 @@ const Pricing = () => {
         </div>
 
         <div className="pricing-cta-section">
-          <h2>Ready to Start Trading for Free?</h2>
+          <h2>Ready to Start Strategy Backtesting for Free?</h2>
           <p>Join the exclusive club of people who use a platform that's completely free because the developer is still in school</p>
           <button className="btn btn-primary">Get Started (It's Still Free!)</button>
           <p className="final-note">Seriously, it's free. I'm not kidding. This is just a school project.</p>

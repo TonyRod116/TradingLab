@@ -51,8 +51,15 @@ const About = () => {
               in just 7 days. Cue the panic, the coffee consumption, and the questionable life choices.
             </p>
             <p>
-              <strong>TradeLab</strong> was born from this beautiful chaos - a trading strategy backtesting 
-              platform that I somehow managed to build while surviving on instant noodles and sleep deprivation.
+              <strong>TradeLab</strong> was born from this beautiful chaos - a strategy backtesting 
+              platform that I somehow managed to build while surviving on leftover pizza, reheated coffee, and the kind of sleep deprivation that makes you question if you're actually a human or just a very advanced coffee machine. All while being the best possible parent I could be with my 1-year-old son (who thinks my laptop is a toy and my code is just fancy scribbles)
+            </p>
+            <p>
+                          <em>Speaking of my son - in the 30 seconds I left him alone with my laptop, he managed to: 
+            send a "3" to the General Assembly Slack group (probably testing the keyboard and accidentally 
+            hitting Enter), open a Windows command prompt that I didn't even know existed (and still don't 
+            know how he did it), and probably would have deployed this to production if I hadn't intervened. 
+            Kids these days are natural-born developers, I tell you.</em>
             </p>
           </div>
 
@@ -79,11 +86,11 @@ const About = () => {
             <h2><FaCrosshairs /> The Mission</h2>
             <p>
               Despite the chaotic origins, TradeLab serves a real purpose: helping traders test their 
-              strategies before risking real money. It's like a flight simulator, but for trading - 
+              strategies before risking real money. It's like a flight simulator, but for strategy testing - 
               you can crash and burn without losing your life savings.
             </p>
             <p>
-              Plus, it's a great conversation starter: "Oh, this trading platform? Yeah, I built it 
+              Plus, it's a great conversation starter: "Oh, this strategy backtesting platform? Yeah, I built it 
               in a week for my coding bootcamp final project. No big deal." (Spoiler: it was a very 
               big deal, and I'm still recovering from the stress.)
             </p>

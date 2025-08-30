@@ -1,0 +1,134 @@
+.quantconnect-sync {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-green);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.sync-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.sync-header h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-white);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.sync-header p {
+  color: var(--color-text);
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.sync-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: var(--color-white);
+  font-weight: 500;
+  font-size: 0.9rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.form-group input {
+  padding: 0.75rem;
+  border: 1px solid var(--color-light-gray);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-white);
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--color-green);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sync-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.sync-error, .sync-success {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  text-align: center;
+  justify-content: center;
+}
+
+.sync-error {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  color: #ff6b6b;
+}
+
+.sync-success {
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  color: var(--color-green);
+}
+
+.sync-success p {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .quantconnect-sync {
+    padding: 1.5rem;
+  }
+  
+  .sync-header h3 {
+    font-size: 1.3rem;
+  }
+  
+  .sync-form {
+    max-width: 100%;
+  }
+}

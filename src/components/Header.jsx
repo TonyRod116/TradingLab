@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './Header.css';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
 
   const toggleMenu = () => {
@@ -33,6 +34,36 @@ const Header = () => {
     }
   };
 
+  // Function to determine if a link should be active
+  const isLinkActive = (path) => {
+    if (path === '/') {
+      // For home page, highlight Strategies if user is authenticated
+      return location.pathname === '/' && isAuthenticated;
+    }
+    if (path === '/profile') {
+      // For profile, check if we're on any profile-related page
+      return location.pathname.includes('/users/profile');
+    }
+    return location.pathname === path;
+  };
+
+  // Function to get active class for navigation links
+  const getActiveClass = (path) => {
+    if (path === '/') {
+      // Special case: if we're on home page and user is authenticated, highlight Strategies
+      if (location.pathname === '/' && isAuthenticated) {
+        return 'nav-link active';
+      }
+      return 'nav-link';
+    }
+    return isLinkActive(path) ? 'nav-link active' : 'nav-link';
+  };
+
+  // Function to get active class for profile button
+  const getProfileActiveClass = () => {
+    return location.pathname.includes('/users/profile') ? 'btn btn-profile active' : 'btn btn-profile';
+  };
+
   return (
     <header className="header">
       <div className="header-container">
@@ -44,11 +75,19 @@ const Header = () => {
 
         {/* Desktop Navigation */}
         <nav className="nav-desktop">
-          <a href="/features" className="nav-link">Features</a>
-          <a href="/about" className="nav-link">About</a>
-          <a href="/pricing" className="nav-link">Pricing</a>
+          <Link to="/features" className={getActiveClass('/features')}>
+            Features
+          </Link>
+          <Link to="/about" className={getActiveClass('/about')}>
+            About
+          </Link>
+          <Link to="/pricing" className={getActiveClass('/pricing')}>
+            Pricing
+          </Link>
           {isAuthenticated && (
-            <a href="/strategies" className="nav-link">Strategies</a>
+            <Link to="/strategies" className={getActiveClass('/strategies')}>
+              Strategies
+            </Link>
           )}
         </nav>
 
@@ -57,7 +96,7 @@ const Header = () => {
           {isAuthenticated ? (
             <>
               <button 
-                className="btn btn-profile"
+                className={getProfileActiveClass()}
                 onClick={() => navigate(`/users/profile/${user?.id}`)}
               >
                 Profile
@@ -80,22 +119,33 @@ const Header = () => {
         {/* Mobile Menu */}
         <div className={`mobile-menu ${isMenuOpen ? 'open' : ''}`}>
           <nav className="nav-mobile">
-            <a href="/features" className="nav-link">Features</a>
-            <a href="/about" className="nav-link">About</a>
-            <a href="/pricing" className="nav-link">Pricing</a>
+            <Link to="/features" className={getActiveClass('/features')}>
+              Features
+            </Link>
+            <Link to="/about" className={getActiveClass('/about')}>
+              About
+            </Link>
+            <Link to="/pricing" className={getActiveClass('/pricing')}>
+              Pricing
+            </Link>
             {isAuthenticated && (
-              <a href="/strategies" className="nav-link">Strategies</a>
+              <Link to="/strategies" className={getActiveClass('/strategies')}>
+                Strategies
+              </Link>
             )}
           </nav>
-                      <div className="auth-buttons-mobile">
-              {isAuthenticated ? (
-                <>
-                  <button className="btn btn-profile" onClick={() => navigate(`/users/profile/${user?.id}`)}>
-                    Profile
-                  </button>
-                  <button className="btn btn-logout" onClick={handleLogout}>Logout</button>
-                </>
-              ) : (
+          <div className="auth-buttons-mobile">
+            {isAuthenticated ? (
+              <>
+                <button 
+                  className={getProfileActiveClass()} 
+                  onClick={() => navigate(`/users/profile/${user?.id}`)}
+                >
+                  Profile
+                </button>
+                <button className="btn btn-logout" onClick={handleLogout}>Logout</button>
+              </>
+            ) : (
               <>
                 <button className="btn btn-login" onClick={handleLogin}>Login</button>
                 <button className="btn btn-signup" onClick={handleSignup}>Sign Up</button>

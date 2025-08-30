@@ -137,32 +137,40 @@ const Profile = () => {
 
   const renderEmptyStrategies = () => (
     <div className="empty-strategies">
-      <div className="empty-icon">
-        <FaChartLine size={48} color="#00ff88" />
-      </div>
-      <h3>No strategies yet</h3>
+      <FaChartLine size={48} color="#00ff88" />
       <p>
         {isOwnProfile 
-          ? "Start building your first trading strategy to see it here!"
+          ? "Start building your first strategy to see it here!"
           : `${profile.username} hasn't created any strategies yet.`
         }
       </p>
-      <button className="btn btn-primary" onClick={handleCreateStrategy}>
-        <FaPlus size={16} style={{ marginRight: '8px' }} />
-        Create Your First Strategy
-      </button>
+      {isOwnProfile && (
+        <button className="btn btn-primary">
+          <FaPlus /> Create Your First Strategy
+        </button>
+      )}
     </div>
   );
 
   const renderStrategiesGrid = () => (
     <div className="strategies-grid">
-      {strategies.map(strategy => (
+      {strategies.map((strategy) => (
         <div key={strategy.id} className="strategy-card">
           <h3>{strategy.name}</h3>
           <p>{strategy.description}</p>
-          <div className="strategy-stats">
-            <span className="stat">Win Rate: {strategy.win_rate}%</span>
-            <span className="stat">Total Trades: {strategy.total_trades}</span>
+          <div className="strategy-metrics">
+            <div className="metric">
+              <span className="metric-label">Sharpe Ratio:</span>
+              <span className="metric-value">{strategy.sharpe_ratio || 'N/A'}</span>
+            </div>
+            <div className="metric">
+              <span className="metric-label">Max Drawdown:</span>
+              <span className="metric-value">{strategy.max_drawdown || 'N/A'}</span>
+            </div>
+            <div className="metric">
+              <span className="metric-label">Total Return:</span>
+              <span className="metric-value">{strategy.total_return || 'N/A'}</span>
+            </div>
           </div>
         </div>
       ))}

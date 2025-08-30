@@ -10,12 +10,10 @@ const Hero = () => (
         <span className="hero-dot">.</span>
       </h1>
       <p className="hero-subtitle">
-        Professional Trading Strategy Backtesting Platform
+        Professional Strategy Backtesting Platform
       </p>
       <p className="hero-description">
-        Transform your trading ideas into executable strategies and run comprehensive backtests 
-        with real historical data. Analyze performance metrics, optimize parameters, and 
-        validate your strategies before risking real capital.
+        Transform your strategy ideas into executable strategies and run comprehensive backtests
       </p>
       <div className="hero-buttons">
         <button className="btn btn-primary">Start Free</button>

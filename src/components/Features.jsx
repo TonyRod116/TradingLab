@@ -16,8 +16,8 @@ const Features = () => {
       <Header />
       <div className="features-container">
         <div className="features-hero">
-          <h1>Powerful Trading Strategy Backtesting</h1>
-          <p>Test your trading strategies against historical data with professional-grade tools</p>
+          <h1>Powerful Strategy Backtesting</h1>
+          <p>Test your strategies against historical data with professional-grade tools</p>
         </div>
 
         <div className="features-grid">
@@ -34,7 +34,7 @@ const Features = () => {
               <FaBolt size={48} color="#00ff88" />
             </div>
             <h3>Real-time Strategy Testing</h3>
-            <p>Execute your trading algorithms against historical data in real-time simulation to identify optimal entry and exit points.</p>
+            <p>Execute your strategy algorithms against historical data in real-time simulation to identify optimal entry and exit points.</p>
           </div>
 
           <div className="feature-card">
@@ -50,7 +50,7 @@ const Features = () => {
               <FaCrosshairs size={48} color="#00ff88" />
             </div>
             <h3>Strategy Optimization</h3>
-            <p>Fine-tune your trading parameters with advanced optimization algorithms to maximize profitability and minimize risk.</p>
+            <p>Fine-tune your strategy parameters with advanced optimization algorithms to maximize profitability and minimize risk.</p>
           </div>
 
           <div className="feature-card">
@@ -71,7 +71,7 @@ const Features = () => {
         </div>
 
         <div className="features-cta">
-          <h2>Ready to Transform Your Trading?</h2>
+          <h2>Ready to Transform Your Strategy Testing?</h2>
           <p>Join thousands of traders who use our platform to validate and optimize their strategies</p>
           <button className="btn btn-primary">Get Started Free</button>
         </div>
