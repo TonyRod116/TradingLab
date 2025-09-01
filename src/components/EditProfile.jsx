@@ -29,8 +29,20 @@ const EditProfile = () => {
   
   const loadProfile = useCallback(async () => {
     try {
-      const response = await axios.get('/users/profile/');
+      // Verificar que el token esté disponible
+      const token = localStorage.getItem('access_token');
+      console.log('Token available:', !!token);
+      
+      const response = await axios.get('http://localhost:8000/users/profile/', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
       const data = response.data;
+      
+      console.log('Profile data received:', data);
+      console.log('Bio field:', data.bio);
+      console.log('Profile image field:', data.profile_image);
       
       setFormData({
         bio: data.bio || '',
@@ -41,6 +53,9 @@ const EditProfile = () => {
         setPreviewImage(data.profile_image);
       }
     } catch (err) {
+      console.error('Error loading profile:', err);
+      console.error('Response data:', err.response?.data);
+      console.error('Status:', err.response?.status);
       setError('Failed to load profile data');
     }
   }, []);

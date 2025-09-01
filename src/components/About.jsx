@@ -39,7 +39,7 @@ const About = () => {
       <div className="about-container">
         <div className="about-hero">
           <h1>About TradeLab</h1>
-          <p>The trading platform that proves you can build anything in a week... if you're desperate enough</p>
+          <p>The trading platform that proves you can build anything in 8 days... if you're desperate enough</p>
         </div>
 
         <div className="about-content">
@@ -48,7 +48,7 @@ const About = () => {
             <p>
               Picture this: It's the final week of General Assembly's Software Engineering bootcamp, 
               and I'm staring at a blank screen wondering how I'm going to build something impressive 
-              in just 7 days. Cue the panic, the coffee consumption, and the questionable life choices.
+              in just 8 days. Cue the panic, the coffee consumption, and the questionable life choices.
             </p>
             <p>
               <strong>TradeLab</strong> was born from this beautiful chaos - a strategy backtesting 
@@ -66,7 +66,7 @@ const About = () => {
           <div className="about-section">
             <h2><FaBolt /> What Actually Happened</h2>
             <p>
-              In a week that felt like a month, I went from "I should practice Django" to "I'm deploying 
+              In 8 days that felt like a month, I went from "I should practice Django" to "I'm deploying 
               a full-stack application with React frontend, Django backend, JWT authentication, and 
               a PostgreSQL database." Spoiler alert: I'm still not entirely sure how I pulled it off.
             </p>
@@ -91,7 +91,7 @@ const About = () => {
             </p>
             <p>
               Plus, it's a great conversation starter: "Oh, this strategy backtesting platform? Yeah, I built it 
-              in a week for my coding bootcamp final project. No big deal." (Spoiler: it was a very 
+              in 8 days for my coding bootcamp final project. No big deal." (Spoiler: it was a very 
               big deal, and I'm still recovering from the stress.)
             </p>
           </div>
@@ -102,7 +102,7 @@ const About = () => {
               Now that the bootcamp is over and I've had time to sleep, I'm planning to add more 
               features like advanced charting, and maybe even some AI-powered 
               strategy suggestions. But first, I need to recover from the trauma of building this 
-              in a week.
+              in 8 days.
             </p>
             <p>
               <em>P.S. To my future employers: I promise I don't always work this chaotically. 
@@ -115,7 +115,7 @@ const About = () => {
 
         <div className="about-cta">
           <h2>Ready to Experience the Magic?</h2>
-          <p>Join the exclusive club of people who use a platform built in a week by a sleep-deprived bootcamp student</p>
+          <p>Join the exclusive club of people who use a platform built in 8 days by a sleep-deprived bootcamp student</p>
           <button className="btn btn-primary">Try It (At Your Own Risk)</button>
         </div>
       </div>

@@ -107,7 +107,7 @@
   gap: 0.75rem;
 }
 
-.btn {
+.auth-buttons .btn {
   padding: 0.5rem 1rem;
   border-radius: 6px;
   font-weight: 600;
@@ -117,60 +117,62 @@
   text-align: center;
 }
 
-.btn-login {
+.auth-buttons .btn-login {
   background: transparent;
   color: var(--color-green);
   border: 2px solid var(--color-green);
+  width: 100px !important;
 }
 
-.btn-login:hover {
+.auth-buttons .btn-login:hover {
   background: var(--color-green);
   color: var(--color-black);
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
 }
 
-.btn-signup {
+.auth-buttons .btn-signup {
   background: var(--color-green);
   color: var(--color-black);
   border: 2px solid var(--color-green);
+  width: 100px !important;
 }
 
-.btn-signup:hover {
+.auth-buttons .btn-signup:hover {
   background: var(--color-green-bright);
   border-color: var(--color-green-bright);
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 255, 136, 0.4);
 }
 
-.btn-profile {
+.auth-buttons .btn-profile {
   background: transparent;
   color: var(--color-green);
   border: 2px solid var(--color-green);
   width: 100px !important;
 }
 
-.btn-profile:hover {
+.auth-buttons .btn-profile:hover {
   background: var(--color-green);
   color: var(--color-black);
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
 }
 
-.btn-profile.active {
+.auth-buttons .btn-profile.active {
   background: var(--color-green);
   color: var(--color-black);
   box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
 }
 
-.btn-logout {
+.auth-buttons .btn-logout {
   background: transparent;
   color: #ff6b6b;
   border: 2px solid #ff6b6b;
   width: 100px !important;
 }
 
-.btn-logout:hover {
+.auth-buttons .btn-logout:hover {
   background: #ff6b6b;
   color: var(--color-white);
   transform: translateY(-2px);
@@ -261,6 +263,16 @@
   flex-direction: column;
   gap: 0.75rem;
   align-items: center;
+}
+
+.auth-buttons-mobile .btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+  width: 100px;
+  text-align: center;
 }
 
 .auth-buttons-mobile .user-welcome {

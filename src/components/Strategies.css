@@ -30,6 +30,26 @@
   font-size: 1.2rem;
   color: var(--color-text-secondary);
   font-family: 'Inter', sans-serif;
+  margin-bottom: 1.5rem;
+}
+
+.backend-highlight {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.highlight-badge {
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--color-green);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
 }
 
 /* User welcome section */
@@ -121,13 +141,87 @@
 .auth-prompt p {
   color: var(--color-text-secondary);
   font-family: 'Inter', sans-serif;
+  margin-bottom: 2rem;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 /* Main content */
 .strategies-content {
+  width: 100%;
+}
+
+/* Tabs */
+.strategies-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--color-light-gray);
+  padding-bottom: 1rem;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.tab-button:hover {
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-button.active {
+  color: var(--color-green);
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+
+
+/* Features Preview */
+.features-preview {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
+  margin-top: 3rem;
+}
+
+.feature-card {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--color-light-gray);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  border-color: var(--color-green);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 136, 0.1);
+}
+
+.feature-card h3 {
+  color: var(--color-green);
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+}
+
+.feature-card p {
+  color: var(--color-text-secondary);
+  line-height: 1.5;
 }
 
 /* Filters sidebar */
@@ -240,6 +334,16 @@
   }
   
   .action-buttons .btn {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .auth-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .auth-buttons .btn {
     width: 100%;
     max-width: 300px;
   }
