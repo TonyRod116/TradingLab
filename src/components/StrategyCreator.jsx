@@ -150,12 +150,13 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
     return true;
   }, [strategyData, rules]);
 
-  const handleSaveStrategy = useCallback(async () => {
+  const handleSaveStrategyAndBacktest = useCallback(async () => {
     if (!validateStrategy()) return;
     
     setLoading(true);
     
     try {
+      // First, create the strategy
       const response = await fetch('http://localhost:8000/strategies/', {
         method: 'POST',
         headers: {
@@ -183,11 +184,59 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
       if (response.ok) {
         const result = await response.json();
         console.log('Strategy created:', result);
-        toast.success('Strategy created successfully!', {
+        
+        toast.success('Strategy created successfully! Starting backtest...', {
           position: "top-right",
           autoClose: 3000,
         });
-        onStrategyCreated();
+        
+        // Now run the backtest
+        try {
+          const backtestResponse = await fetch(`http://localhost:8000/strategies/${result.id}/backtest/run/`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              start_date: '2024-01-01',
+              end_date: '2024-12-31',
+              initial_capital: 100000
+            })
+          });
+          
+          if (backtestResponse.ok) {
+            const backtestResult = await backtestResponse.json();
+            console.log('Backtest completed:', backtestResult);
+            
+            toast.success('Strategy saved and backtest completed!', {
+              position: "top-right",
+              autoClose: 5000,
+            });
+            
+            // Navigate to strategies page to see results
+            onStrategyCreated();
+          } else {
+            const backtestError = await backtestResponse.json();
+            console.error('Backtest failed:', backtestError);
+            
+            toast.warning('Strategy saved but backtest failed. You can run it manually later.', {
+              position: "top-right",
+              autoClose: 5000,
+            });
+            
+            onStrategyCreated();
+          }
+        } catch (backtestError) {
+          console.error('Error running backtest:', backtestError);
+          
+          toast.warning('Strategy saved but backtest failed. You can run it manually later.', {
+            position: "top-right",
+            autoClose: 5000,
+          });
+          
+          onStrategyCreated();
+        }
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || 'Failed to create strategy', {
@@ -515,11 +564,11 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
             </button>
           ) : (
             <button
-              onClick={handleSaveStrategy}
+              onClick={handleSaveStrategyAndBacktest}
               className="btn btn-primary"
               disabled={loading || !canProceedToNext()}
             >
-              {loading ? 'Saving...' : <><FaSave /> Save Strategy</>}
+              {loading ? 'Saving & Backtesting...' : <><FaSave /> Save Strategy & Backtest</>}
             </button>
           )}
         </div>

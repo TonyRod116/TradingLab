@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getToken } from '../utils/auth';
-import { FaChartLine, FaCog, FaPlus } from 'react-icons/fa';
+import { FaChartLine, FaCog, FaPlus, FaEdit, FaTrash, FaPlay, FaPause } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import axios from 'axios';
 import Header from './Header';
 import './Profile.css';
@@ -22,6 +23,7 @@ const Profile = () => {
   });
   
   const [strategies, setStrategies] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const isOwnProfile = useMemo(() => {
     return isAuthenticated && currentUser?.id === parseInt(user_id);
@@ -33,38 +35,10 @@ const Profile = () => {
       return;
     }
 
-    // Load profile data from backend
-    const loadProfileData = async () => {
-      try {
-        const token = getToken();
-        if (!token) {
-          return;
-        }
-        
-        const response = await axios.get('http://localhost:8000/users/profile/', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.data) {
-          setProfile(prev => ({
-            ...prev,
-            username: response.data.username || prev.username,
-            bio: response.data.bio || 'No bio yet. Click edit to add one!',
-            profile_image: response.data.profile_image || null
-          }));
-        }
-      } catch (error) {
-        console.error('Error loading profile data:', error);
-        // If fails, use only context data
-      }
-    };
-
     if (currentUser) {
-      // Set basic context data
+      // Set basic context data first
       const userProfile = {
-        username: profile.username || currentUser.username || 'Trader',
+        username: currentUser.username || 'Trader',
         email: currentUser.email || 'user@example.com',
         bio: currentUser.bio || 'No bio yet. Click edit to add one!',
         profile_image: currentUser.profile_image || null,
@@ -73,10 +47,75 @@ const Profile = () => {
       };
       setProfile(userProfile);
       
-      // Load updated data from backend
+      // Try to load additional data from backend (optional)
+      const loadProfileData = async () => {
+        try {
+          const token = getToken();
+          if (!token) return;
+          
+          const response = await axios.get('http://localhost:8000/users/profile/', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.data) {
+            setProfile(prev => ({
+              ...prev,
+              username: response.data.username || prev.username,
+              bio: response.data.bio || prev.bio,
+              profile_image: response.data.profile_image || prev.profile_image
+            }));
+          }
+        } catch (error) {
+          // Continue with context data only
+        }
+      };
+      
       loadProfileData();
     }
   }, [currentUser, isAuthenticated, navigate]);
+
+  const loadUserStrategies = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    setLoading(true);
+    try {
+      const token = getToken();
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      
+      const response = await fetch(`http://localhost:8000/strategies/?user_id=${user_id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setStrategies(data.results || data);
+        setProfile(prev => ({
+          ...prev,
+          strategies_count: (data.results || data).length
+        }));
+      } else {
+        setStrategies([]);
+      }
+    } catch (error) {
+      setStrategies([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated, user_id]);
+
+  // Load user strategies when component mounts or user_id changes
+  useEffect(() => {
+    if (isAuthenticated && user_id) {
+      loadUserStrategies();
+    }
+  }, [isAuthenticated, user_id, loadUserStrategies]);
 
   const handleEditProfile = useCallback(() => {
     navigate('/users/profile');
@@ -85,6 +124,36 @@ const Profile = () => {
   const handleCreateStrategy = useCallback(() => {
     navigate('/strategies');
   }, [navigate]);
+
+  const handleEditStrategy = useCallback((strategyId) => {
+    navigate(`/strategies/edit/${strategyId}`);
+  }, [navigate]);
+
+  const handleDeleteStrategy = useCallback(async (strategyId) => {
+    if (!window.confirm('Are you sure you want to delete this strategy?')) return;
+    
+    try {
+      const token = getToken();
+      const response = await fetch(`http://localhost:8000/strategies/${strategyId}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        toast.success('Strategy deleted successfully');
+        loadUserStrategies(); // Reload strategies
+      } else {
+        toast.error('Failed to delete strategy');
+      }
+    } catch (error) {
+      console.error('Error deleting strategy:', error);
+      toast.error('Error deleting strategy');
+    }
+  }, [loadUserStrategies]);
+
+
 
   const renderProfileAvatar = () => {
     return (
@@ -156,7 +225,9 @@ const Profile = () => {
     <div className="strategies-grid">
       {strategies.map((strategy) => (
         <div key={strategy.id} className="strategy-card">
-          <h3>{strategy.name}</h3>
+          <div className="strategy-header">
+            <h3>{strategy.name}</h3>
+          </div>
           <p>{strategy.description}</p>
           <div className="strategy-metrics">
             <div className="metric">
@@ -172,6 +243,22 @@ const Profile = () => {
               <span className="metric-value">{strategy.total_return || 'N/A'}</span>
             </div>
           </div>
+          {isOwnProfile && (
+            <div className="strategy-actions">
+              <button
+                className="btn btn-sm btn-secondary"
+                onClick={() => handleEditStrategy(strategy.id)}
+              >
+                <FaEdit /> Edit
+              </button>
+              <button
+                className="btn btn-sm btn-danger"
+                onClick={() => handleDeleteStrategy(strategy.id)}
+              >
+                <FaTrash /> Delete
+              </button>
+            </div>
+          )}
         </div>
       ))}
     </div>
@@ -181,17 +268,41 @@ const Profile = () => {
     <div className="strategies-section">
       <div className="section-header">
         <h2>Trading Strategies</h2>
-        <button className="btn btn-create-strategy" onClick={handleCreateStrategy}>
-          Create Strategy
-        </button>
+        {isOwnProfile && (
+          <button className="btn btn-create-strategy" onClick={handleCreateStrategy}>
+            Create Strategy
+          </button>
+        )}
       </div>
 
-      {strategies.length === 0 ? renderEmptyStrategies() : renderStrategiesGrid()}
+      {loading ? (
+        <div className="loading-strategies">
+          <p>Loading strategies...</p>
+        </div>
+      ) : strategies.length === 0 ? (
+        renderEmptyStrategies()
+      ) : (
+        renderStrategiesGrid()
+      )}
     </div>
   );
 
   if (!isAuthenticated) {
     return null;
+  }
+
+  // Show loading state if no profile data yet
+  if (!profile.username) {
+    return (
+      <div className="profile-page">
+        <Header />
+        <div className="profile-container">
+          <div className="loading-profile">
+            <p>Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
