@@ -1,6 +1,9 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import './styles/toastify.css'
 import App from './App.jsx'
 import Login from './components/Login.jsx'
 import Signup from './components/Signup.jsx'
@@ -28,6 +31,24 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/strategies" element={<Strategies />} />
         </Routes>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={true}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+          limit={3}
+          toastStyle={{
+            background: '#1a1a1a',
+            border: '1px solid var(--color-green)',
+            color: 'var(--color-white)'
+          }}
+        />
       </BrowserRouter>
     </AuthProvider>
   </React.StrictMode>,

@@ -7,12 +7,15 @@ import {
   FaLightbulb,
   FaDatabase,
   FaTachometerAlt,
-  FaShieldAlt
+  FaShieldAlt,
+  FaCopy
 } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import Header from './Header';
 import StrategyList from './StrategyList';
 import StrategyCreator from './StrategyCreator';
+import StrategyTemplates from './StrategyTemplates';
 import RuleBuilder from './RuleBuilder';
 import './Strategies.css';
 
@@ -21,11 +24,11 @@ const Strategies = () => {
   const [activeTab, setActiveTab] = useState('my-strategies');
   const [strategies, setStrategies] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const loadStrategies = useCallback(async () => {
     if (!isAuthenticated) return;
     
+    console.log('Loading strategies...');
     setLoading(true);
     try {
       const response = await fetch('http://localhost:8000/api/strategies/strategies/', {
@@ -37,11 +40,22 @@ const Strategies = () => {
       if (response.ok) {
         const data = await response.json();
         setStrategies(data);
+        console.log('Strategies loaded successfully:', data.length);
       } else {
-        setError('Failed to load strategies');
+        console.error('Failed to load strategies, status:', response.status);
+        toast.error('Failed to load strategies', {
+          position: "top-right",
+          autoClose: 4000,
+          toastId: 'load-strategies-error' // Prevent duplicate toasts
+        });
       }
     } catch (err) {
-      setError('Network error loading strategies');
+      console.error('Network error loading strategies:', err);
+      toast.error('Network error loading strategies', {
+        position: "top-right",
+        autoClose: 4000,
+        toastId: 'load-strategies-network-error' // Prevent duplicate toasts
+      });
     } finally {
       setLoading(false);
     }
@@ -54,6 +68,12 @@ const Strategies = () => {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
+
+  const handleTemplateSelect = useCallback((template) => {
+    // Navigate to strategy creator with the selected template
+    setActiveTab('create-strategy');
+    // The template will be passed to StrategyCreator via props
+  }, []);
 
   const renderAuthenticatedView = () => (
     <div className="strategies-container">
@@ -75,12 +95,17 @@ const Strategies = () => {
           My Strategies
         </button>
         <button 
+          className={`tab-button ${activeTab === 'templates' ? 'active' : ''}`}
+          onClick={() => handleTabChange('templates')}
+        >
+          <FaCopy /> Strategy Templates
+        </button>
+        <button 
           className={`tab-button ${activeTab === 'create-strategy' ? 'active' : ''}`}
           onClick={() => handleTabChange('create-strategy')}
         >
           Create Strategy
         </button>
-
       </div>
 
       <div className="strategies-content">
@@ -88,8 +113,14 @@ const Strategies = () => {
           <StrategyList 
             strategies={strategies} 
             loading={loading} 
-            error={error}
             onRefresh={loadStrategies}
+          />
+        )}
+        
+        {activeTab === 'templates' && (
+          <StrategyTemplates 
+            onTemplateSelect={handleTemplateSelect}
+            onCreateStrategy={() => handleTabChange('create-strategy')}
           />
         )}
         
@@ -99,8 +130,6 @@ const Strategies = () => {
             onBack={() => handleTabChange('my-strategies')}
           />
         )}
-        
-
       </div>
     </div>
   );
@@ -127,6 +156,10 @@ const Strategies = () => {
       </div>
 
       <div className="features-preview">
+        <div className="feature-card">
+          <h3>Strategy Templates</h3>
+          <p>Start with proven strategies like RSI Mean Reversion, Moving Average Crossover, and more</p>
+        </div>
         <div className="feature-card">
           <h3>Rule Builder</h3>
           <p>Create complex strategies using technical indicators, price action, and volume</p>

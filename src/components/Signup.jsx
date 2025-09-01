@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import Header from './Header';
 import './Auth.css';
@@ -12,8 +13,6 @@ const Signup = () => {
     confirmPassword: ''
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   
   const { signup, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
@@ -37,23 +36,16 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess('');
 
     // Validate password confirmation
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match', {
+        position: "top-right",
+        autoClose: 4000,
+      });
       setLoading(false);
       return;
     }
-
-    // Log the data before sending it
-    console.log('Datos a enviar:', {
-      username: formData.username,
-      email: formData.email,
-      password: formData.password,
-      confirmPassword: formData.confirmPassword
-    });
 
     const result = await signup(
       formData.username, 
@@ -63,12 +55,18 @@ const Signup = () => {
     );
     
     if (result.success) {
-      setSuccess('Account created successfully! Redirecting to strategies...');
+      toast.success('Account created successfully! Welcome to TradeLab!', {
+        position: "top-right",
+        autoClose: 3000,
+      });
       setTimeout(() => {
         navigate(result.redirectTo || '/strategies');
       }, 1500);
     } else {
-      setError(result.error);
+      toast.error(result.error, {
+        position: "top-right",
+        autoClose: 4000,
+      });
     }
     
     setLoading(false);
@@ -84,11 +82,7 @@ const Signup = () => {
             <p>You are already authenticated</p>
           </div>
           
-          {success && (
-            <div className="auth-success">
-              {success}
-            </div>
-          )}
+
           
           <div className="auth-footer">
             <p>Redirecting to strategies page...</p>
@@ -107,17 +101,7 @@ const Signup = () => {
           <p>Join TradeLab and start backtesting strategies</p>
         </div>
         
-        {error && (
-          <div className="auth-error">
-            {error}
-          </div>
-        )}
-        
-        {success && (
-          <div className="auth-success">
-            {success}
-          </div>
-        )}
+
         
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">

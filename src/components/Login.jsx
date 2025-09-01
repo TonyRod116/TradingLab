@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import Header from './Header';
 import './Auth.css';
@@ -10,8 +11,6 @@ const Login = () => {
     password: ''
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
@@ -35,18 +34,22 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess('');
 
     const result = await login(formData.identifier, formData.password);
     
     if (result.success) {
-      setSuccess('Redirecting to strategies...');
+      toast.success(`Welcome back, ${user?.username || 'Trader'}!`, {
+        position: "top-right",
+        autoClose: 2000,
+      });
       setTimeout(() => {
         navigate(result.redirectTo || '/strategies');
       }, 1500);
     } else {
-      setError(result.error);
+      toast.error(result.error, {
+        position: "top-right",
+        autoClose: 4000,
+      });
     }
     
     setLoading(false);
@@ -61,12 +64,6 @@ const Login = () => {
           <div className="auth-header">
             <h1>Welcome back, {user?.username || 'Trader'}!</h1>
           </div>
-          
-          {success && (
-            <div className="auth-success">
-              {success}
-            </div>
-          )}
           
           <div className="auth-footer">
             <p>Redirecting to strategies page...</p>
@@ -85,17 +82,7 @@ const Login = () => {
           <p>Sign in to your TradeLab account</p>
         </div>
         
-        {error && (
-          <div className="auth-error">
-            {error}
-          </div>
-        )}
-        
-        {success && (
-          <div className="auth-success">
-            {success}
-          </div>
-        )}
+
         
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">

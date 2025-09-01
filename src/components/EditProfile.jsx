@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Header from './Header';
@@ -15,8 +16,6 @@ const EditProfile = () => {
   });
   const [previewImage, setPreviewImage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   
   useEffect(() => {
     if (!isAuthenticated) {
@@ -56,7 +55,10 @@ const EditProfile = () => {
       console.error('Error loading profile:', err);
       console.error('Response data:', err.response?.data);
       console.error('Status:', err.response?.status);
-      setError('Failed to load profile data');
+      toast.error('Failed to load profile data', {
+        position: "top-right",
+        autoClose: 4000,
+      });
     }
   }, []);
   
@@ -74,13 +76,19 @@ const EditProfile = () => {
     
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      setError('Please select a valid image file');
+      toast.error('Please select a valid image file', {
+        position: "top-right",
+        autoClose: 4000,
+      });
       return;
     }
     
     // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5MB');
+      toast.error('Image size must be less than 5MB', {
+        position: "top-right",
+        autoClose: 4000,
+      });
       return;
     }
     
@@ -95,15 +103,14 @@ const EditProfile = () => {
       setPreviewImage(e.target.result);
     };
     reader.readAsDataURL(file);
-    setError(''); // Clear any previous errors
+
   }, []);
   
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     
     setLoading(true);
-    setError('');
-    setSuccess('');
+
     
     try {
       let cloudinaryUrl = null;
@@ -129,7 +136,10 @@ const EditProfile = () => {
                              cloudinaryError.response?.data?.error || 
                              'Unknown Cloudinary error';
           
-          setError(`Failed to upload image: ${errorMessage}`);
+          toast.error(`Failed to upload image: ${errorMessage}`, {
+            position: "top-right",
+            autoClose: 4000,
+          });
           setLoading(false);
           return;
         }
@@ -158,14 +168,20 @@ const EditProfile = () => {
         }
       );
       
-      setSuccess('Profile updated successfully!');
+      toast.success('Profile updated successfully!', {
+        position: "top-right",
+        autoClose: 3000,
+      });
       setTimeout(() => {
         navigate(`/users/profile/${currentUser.id}`);
       }, 1500);
       
     } catch (err) {
       const errorMessage = err.response?.data?.error || 'Failed to update profile';
-      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 4000,
+      });
     } finally {
       setLoading(false);
     }

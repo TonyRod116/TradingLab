@@ -1,0 +1,93 @@
+/* Custom Toastify styles to match the app theme */
+.Toastify__toast-container {
+  z-index: 9999;
+  position: fixed !important;
+}
+
+.Toastify__toast-container--top-right {
+  top: 1rem !important;
+  right: 1rem !important;
+}
+
+.Toastify__toast {
+  background: #1a1a1a !important;
+  border: 1px solid var(--color-green) !important;
+  border-radius: 8px !important;
+  color: var(--color-white) !important;
+  font-family: 'Inter', sans-serif !important;
+  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.2) !important;
+}
+
+.Toastify__toast--success {
+  background: #1a1a1a !important;
+  border: 1px solid var(--color-green) !important;
+}
+
+.Toastify__toast--error {
+  background: #1a1a1a !important;
+  border: 1px solid #ff6b6b !important;
+}
+
+.Toastify__toast--warning {
+  background: #1a1a1a !important;
+  border: 1px solid #ffc107 !important;
+}
+
+.Toastify__toast--info {
+  background: #1a1a1a !important;
+  border: 1px solid #17a2b8 !important;
+}
+
+.Toastify__toast-body {
+  color: var(--color-white) !important;
+  font-weight: 500 !important;
+}
+
+.Toastify__progress-bar {
+  background: var(--color-green) !important;
+}
+
+.Toastify__progress-bar--error {
+  background: #ff6b6b !important;
+}
+
+.Toastify__progress-bar--warning {
+  background: #ffc107 !important;
+}
+
+.Toastify__progress-bar--info {
+  background: #17a2b8 !important;
+}
+
+.Toastify__close-button {
+  color: var(--color-white) !important;
+  opacity: 0.7 !important;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1 !important;
+}
+
+.Toastify__toast-icon {
+  margin-right: 12px !important;
+}
+
+/* Success icon color */
+.Toastify__toast--success .Toastify__toast-icon svg {
+  fill: var(--color-green) !important;
+}
+
+/* Error icon color */
+.Toastify__toast--error .Toastify__toast-icon svg {
+  fill: #ff6b6b !important;
+}
+
+/* Warning icon color */
+.Toastify__toast--warning .Toastify__toast-icon svg {
+  fill: #ffc107 !important;
+}
+
+/* Info icon color */
+.Toastify__toast--info .Toastify__toast-icon svg {
+  fill: #17a2b8 !important;
+}

@@ -108,19 +108,21 @@
 }
 
 .auth-buttons .btn {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.8rem;
-  transition: all 0.3s ease;
-  width: 100px;
-  text-align: center;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 0.8rem !important;
+  transition: all 0.3s ease !important;
+  width: 100px !important;
+  text-align: center !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
 }
 
 .auth-buttons .btn-login {
-  background: transparent;
-  color: var(--color-green);
-  border: 2px solid var(--color-green);
+  background: transparent !important;
+  color: var(--color-green) !important;
+  border: 2px solid var(--color-green) !important;
   width: 100px !important;
 }
 
@@ -132,9 +134,9 @@
 }
 
 .auth-buttons .btn-signup {
-  background: var(--color-green);
-  color: var(--color-black);
-  border: 2px solid var(--color-green);
+  background: var(--color-green) !important;
+  color: var(--color-black) !important;
+  border: 2px solid var(--color-green) !important;
   width: 100px !important;
 }
 
@@ -146,9 +148,9 @@
 }
 
 .auth-buttons .btn-profile {
-  background: transparent;
-  color: var(--color-green);
-  border: 2px solid var(--color-green);
+  background: transparent !important;
+  color: var(--color-green) !important;
+  border: 2px solid var(--color-green) !important;
   width: 100px !important;
 }
 
@@ -166,9 +168,9 @@
 }
 
 .auth-buttons .btn-logout {
-  background: transparent;
-  color: #ff6b6b;
-  border: 2px solid #ff6b6b;
+  background: transparent !important;
+  color: #ff6b6b !important;
+  border: 2px solid #ff6b6b !important;
   width: 100px !important;
 }
 
@@ -266,13 +268,15 @@
 }
 
 .auth-buttons-mobile .btn {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.8rem;
-  transition: all 0.3s ease;
-  width: 100px;
-  text-align: center;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 0.8rem !important;
+  transition: all 0.3s ease !important;
+  width: 100px !important;
+  text-align: center !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
 }
 
 .auth-buttons-mobile .user-welcome {

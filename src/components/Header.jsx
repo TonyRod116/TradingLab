@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import './Header.css';
 
@@ -23,6 +24,10 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
+    toast.success('Logged out successfully', {
+      position: "top-right",
+      autoClose: 2000,
+    });
     navigate('/strategies');
   };
 

@@ -188,7 +188,48 @@
   border: 1px solid rgba(0, 255, 136, 0.3);
 }
 
+/* Global Select Styling for Strategies Page */
+.strategies-page select {
+  background: var(--color-dark-gray);
+  color: var(--color-white);
+  border: 1px solid var(--color-light-gray);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
 
+.strategies-page select:focus {
+  outline: none;
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+}
+
+.strategies-page select option {
+  background: var(--color-dark-gray);
+  color: var(--color-white);
+  padding: 0.75rem;
+  border: none;
+}
+
+.strategies-page select option:hover {
+  background: var(--color-green);
+  color: var(--color-black);
+}
+
+.strategies-page select optgroup {
+  background: var(--color-black);
+  color: var(--color-green);
+  font-weight: 600;
+  padding: 0.5rem;
+  border: none;
+}
+
+.strategies-page select optgroup option {
+  background: var(--color-dark-gray);
+  color: var(--color-white);
+  padding-left: 1.5rem;
+}
 
 /* Features Preview */
 .features-preview {
@@ -214,14 +255,16 @@
 }
 
 .feature-card h3 {
-  color: var(--color-green);
+  color: var(--color-white);
   margin-bottom: 1rem;
   font-size: 1.3rem;
+  font-weight: 600;
 }
 
 .feature-card p {
   color: var(--color-text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
+  margin: 0;
 }
 
 /* Filters sidebar */
@@ -315,27 +358,12 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .strategies-content {
-    grid-template-columns: 1fr;
-  }
-  
   .strategies-header h1 {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
   
-  .user-welcome-section h2,
-  .auth-prompt h2 {
-    font-size: 1.5rem;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .action-buttons .btn {
-    width: 100%;
-    max-width: 300px;
+  .strategies-header p {
+    font-size: 1rem;
   }
   
   .auth-buttons {
@@ -343,8 +371,17 @@
     align-items: center;
   }
   
-  .auth-buttons .btn {
+  .btn {
     width: 100%;
     max-width: 300px;
+  }
+  
+  .strategies-tabs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .tab-button {
+    text-align: center;
   }
 }
