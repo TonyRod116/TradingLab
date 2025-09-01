@@ -14,10 +14,12 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
     timeframe: '1m',
     position_size: 1,
     max_positions: 1,
-    stop_loss_type: 'ticks',
-    stop_loss_value: 20,
-    take_profit_type: 'ticks',
-    take_profit_value: 40
+    stop_loss_type: 'percentage',
+    stop_loss_value: 0.5,
+    take_profit_type: 'percentage',
+    take_profit_value: 2.0,
+    round_turn_commissions: 4.00,
+    slippage: 0.5
   });
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
   }, []);
 
   const handleAddRule = useCallback((rule) => {
-    setRules(prev => [...prev, { ...rule, id: Date.now(), order: prev.length + 1 }]);
+    setRules(prev => [...prev, { ...rule, order: prev.length + 1 }]);
   }, []);
 
   const handleRemoveRule = useCallback((ruleId) => {
@@ -69,11 +71,25 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
       case 1: // Basic Information
         return strategyData.name.trim() && strategyData.description.trim();
       case 2: // Risk Management
-        return strategyData.position_size > 0 && strategyData.stop_loss_value > 0 && strategyData.take_profit_value > 0;
+        return strategyData.position_size > 0 && 
+               strategyData.stop_loss_value > 0 && 
+               strategyData.take_profit_value > 0 &&
+               strategyData.round_turn_commissions >= 0 &&
+               strategyData.slippage >= 0;
       case 3: // Entry Rules
         return rules.filter(rule => rule.section === 'entry').length > 0;
       case 4: // Exit Rules
         return rules.filter(rule => rule.section === 'exit').length > 0;
+      case 5: // Final step - can save if all previous validations pass
+        return strategyData.name.trim() && 
+               strategyData.description.trim() && 
+               strategyData.position_size > 0 && 
+               strategyData.stop_loss_value > 0 && 
+               strategyData.take_profit_value > 0 &&
+               strategyData.round_turn_commissions >= 0 &&
+               strategyData.slippage >= 0 &&
+               rules.filter(rule => rule.section === 'entry').length > 0 &&
+               rules.filter(rule => rule.section === 'exit').length > 0;
       default:
         return false;
     }
@@ -84,17 +100,14 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
   }, [currentStep]);
 
   const nextStep = useCallback(() => {
-    console.log('Next step clicked. Current step:', currentStep);
     if (canProceedToNext()) {
       const nextStepNumber = Math.min(currentStep + 1, 5);
-      console.log('Moving to step:', nextStepNumber);
       setCurrentStep(nextStepNumber);
     }
   }, [canProceedToNext, currentStep]);
 
   const previousStep = useCallback(() => {
     const prevStepNumber = Math.max(currentStep - 1, 1);
-    console.log('Moving to previous step:', prevStepNumber);
     setCurrentStep(prevStepNumber);
   }, [currentStep]);
 
@@ -143,7 +156,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
     setLoading(true);
     
     try {
-      const response = await fetch('http://localhost:8000/api/strategies/strategies/', {
+      const response = await fetch('http://localhost:8000/strategies/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
@@ -366,6 +379,38 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
             </div>
           </div>
         </div>
+        
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="round_turn_commissions">Round Turn Commissions ($)</label>
+            <input
+              type="number"
+              id="round_turn_commissions"
+              name="round_turn_commissions"
+              value={strategyData.round_turn_commissions}
+              onChange={handleInputChange}
+              step="0.1"
+              min="0"
+              placeholder="4.00"
+            />
+            <small>Total commission cost per round turn (entry + exit)</small>
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="slippage">Slippage (Ticks)</label>
+            <input
+              type="number"
+              id="slippage"
+              name="slippage"
+              value={strategyData.slippage}
+              onChange={handleInputChange}
+              step="0.1"
+              min="0"
+              placeholder="0.5"
+            />
+            <small>Expected slippage per trade in ticks</small>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -411,7 +456,6 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
   );
 
   const renderCurrentStep = () => {
-    console.log('Rendering step:', currentStep);
     switch (currentStep) {
       case 1:
         return renderBasicInfo();
@@ -431,11 +475,6 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
       <div className="strategy-creator-header">
         <h2>🚀 Create New Strategy</h2>
         <p>Build your automated trading strategy step by step</p>
-        <div className="backend-info">
-          <span className="backend-badge">📊 Parquet Backend</span>
-          <span className="backend-badge">⚡ Pre-calculated Indicators</span>
-          <span className="backend-badge">🚀 Fast Backtesting</span>
-        </div>
       </div>
 
 

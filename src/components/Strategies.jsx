@@ -31,7 +31,7 @@ const Strategies = () => {
     console.log('Loading strategies...');
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/strategies/strategies/', {
+      const response = await fetch('http://localhost:8000/strategies/', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -79,12 +79,7 @@ const Strategies = () => {
     <div className="strategies-container">
               <div className="strategies-header">
           <h1><FaRocket className="header-icon" /> Strategy Management</h1>
-          <p>Create, manage, and backtest your trading strategies using pre-calculated indicators</p>
-          <div className="backend-highlight">
-            <span className="highlight-badge"><FaDatabase className="badge-icon" /> Parquet Backend</span>
-            <span className="highlight-badge"><FaLightbulb className="badge-icon" /> 48 Pre-calculated Indicators</span>
-            <span className="highlight-badge"><FaTachometerAlt className="badge-icon" /> Optimized for Fast Backtesting</span>
-          </div>
+          <p>Create, manage, and backtest your trading strategies</p>
         </div>
 
       <div className="strategies-tabs">
@@ -92,7 +87,7 @@ const Strategies = () => {
           className={`tab-button ${activeTab === 'my-strategies' ? 'active' : ''}`}
           onClick={() => handleTabChange('my-strategies')}
         >
-          My Strategies
+          Community Strategies
         </button>
         <button 
           className={`tab-button ${activeTab === 'templates' ? 'active' : ''}`}
@@ -138,12 +133,7 @@ const Strategies = () => {
     <div className="strategies-container">
       <div className="strategies-header">
         <h1><FaRocket className="header-icon" /> Strategy Backtesting Platform</h1>
-        <p>Create and test your trading strategies with our advanced rule builder powered by pre-calculated indicators</p>
-        <div className="backend-highlight">
-          <span className="highlight-badge"><FaDatabase className="badge-icon" /> Parquet Backend</span>
-          <span className="highlight-badge"><FaLightbulb className="badge-icon" /> 48 Pre-calculated Indicators</span>
-          <span className="highlight-badge"><FaTachometerAlt className="badge-icon" /> Optimized for Fast Backtesting</span>
-        </div>
+        <p>Create and test your trading strategies with our advanced rule builder</p>
       </div>
 
       <div className="auth-prompt">

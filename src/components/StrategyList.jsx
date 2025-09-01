@@ -7,7 +7,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
 
   const handleActivate = async (strategyId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/strategies/strategies/${strategyId}/activate/`, {
+      const response = await fetch(`http://localhost:8000/strategies/${strategyId}/activate/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -24,7 +24,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
 
   const handlePause = async (strategyId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/strategies/strategies/${strategyId}/pause/`, {
+      const response = await fetch(`http://localhost:8000/strategies/${strategyId}/pause/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -43,7 +43,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
     if (!window.confirm('Are you sure you want to delete this strategy?')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/strategies/strategies/${strategyId}/`, {
+      const response = await fetch(`http://localhost:8000/strategies/${strategyId}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -60,7 +60,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
 
   const handleBacktest = async (strategyId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/strategies/strategies/${strategyId}/backtest/run/`, {
+      const response = await fetch(`http://localhost:8000/strategies/${strategyId}/backtest/run/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
@@ -135,9 +135,9 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
           <p>Create your first trading strategy using our advanced Rule Builder!</p>
           <p className="empty-features">
             <strong>Available features:</strong><br/>
-            • Pre-calculated technical indicators<br/>
+            • Technical indicators<br/>
             • Complex conditional rules<br/>
-            • Optimized backtesting<br/>
+            • Backtesting<br/>
             • Predefined templates
           </p>
         </div>

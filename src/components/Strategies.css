@@ -15,6 +15,7 @@
 /* Header section */
 .strategies-header {
   text-align: center;
+  margin-top: 2rem;
   margin-bottom: 3rem;
 }
 
@@ -33,24 +34,7 @@
   margin-bottom: 1.5rem;
 }
 
-.backend-highlight {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 1rem;
-}
 
-.highlight-badge {
-  background: rgba(0, 255, 136, 0.1);
-  color: var(--color-green);
-  border: 1px solid rgba(0, 255, 136, 0.3);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  font-family: 'Inter', sans-serif;
-}
 
 /* User welcome section */
 .user-welcome-section {
@@ -160,6 +144,7 @@
 .strategies-tabs {
   display: flex;
   gap: 1rem;
+  justify-content: center;
   margin-bottom: 2rem;
   border-bottom: 1px solid var(--color-light-gray);
   padding-bottom: 1rem;
