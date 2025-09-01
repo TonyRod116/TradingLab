@@ -48,69 +48,69 @@ const RuleBuilder = ({ onAddRule, onRemoveRule, onMoveRule, rules, activeSection
   // Available indicators and their configurations - Based on your Parquet backend
   const indicators = {
     moving_averages: [
-      { name: 'sma_20', label: 'SMA 20 (Media móvil simple)', type: 'indicator', description: 'Media móvil simple de 20 períodos' },
-      { name: 'sma_50', label: 'SMA 50 (Media móvil simple)', type: 'indicator', description: 'Media móvil simple de 50 períodos' },
-      { name: 'ema_20', label: 'EMA 20 (Media móvil exponencial)', type: 'indicator', description: 'Media móvil exponencial de 20 períodos' },
-      { name: 'ema_50', label: 'EMA 50 (Media móvil exponencial)', type: 'indicator', description: 'Media móvil exponencial de 50 períodos' },
-      { name: 'vwap', label: 'VWAP (Precio promedio ponderado por volumen)', type: 'indicator', description: 'Precio promedio ponderado por volumen' }
+      { name: 'sma_20', label: 'SMA 20 (Simple Moving Average)', type: 'indicator', description: '20-period simple moving average' },
+      { name: 'sma_50', label: 'SMA 50 (Simple Moving Average)', type: 'indicator', description: '50-period simple moving average' },
+      { name: 'ema_20', label: 'EMA 20 (Exponential Moving Average)', type: 'indicator', description: '20-period exponential moving average' },
+      { name: 'ema_50', label: 'EMA 50 (Exponential Moving Average)', type: 'indicator', description: '50-period exponential moving average' },
+      { name: 'vwap', label: 'VWAP (Volume Weighted Average Price)', type: 'indicator', description: 'Volume weighted average price' }
     ],
     vwap_bands: [
-      { name: 'vwap_plus_0_5', label: 'VWAP +0.5σ', type: 'indicator', description: 'VWAP + 0.5 desviaciones estándar' },
-      { name: 'vwap_plus_1_0', label: 'VWAP +1.0σ', type: 'indicator', description: 'VWAP + 1.0 desviaciones estándar' },
-      { name: 'vwap_plus_1_5', label: 'VWAP +1.5σ', type: 'indicator', description: 'VWAP + 1.5 desviaciones estándar' },
-      { name: 'vwap_plus_2_0', label: 'VWAP +2.0σ', type: 'indicator', description: 'VWAP + 2.0 desviaciones estándar' },
-      { name: 'vwap_plus_2_5', label: 'VWAP +2.5σ', type: 'indicator', description: 'VWAP + 2.5 desviaciones estándar' },
-      { name: 'vwap_minus_0_5', label: 'VWAP -0.5σ', type: 'indicator', description: 'VWAP - 0.5 desviaciones estándar' },
-      { name: 'vwap_minus_1_0', label: 'VWAP -1.0σ', type: 'indicator', description: 'VWAP - 1.0 desviaciones estándar' },
-      { name: 'vwap_minus_1_5', label: 'VWAP -1.5σ', type: 'indicator', description: 'VWAP - 1.5 desviaciones estándar' },
-      { name: 'vwap_minus_2_0', label: 'VWAP -2.0σ', type: 'indicator', description: 'VWAP - 2.0 desviaciones estándar' },
-      { name: 'vwap_minus_2_5', label: 'VWAP -2.5σ', type: 'indicator', description: 'VWAP - 2.5 desviaciones estándar' }
+      { name: 'vwap_plus_0_5', label: 'VWAP +0.5σ', type: 'indicator', description: 'VWAP + 0.5 standard deviations' },
+      { name: 'vwap_plus_1_0', label: 'VWAP +1.0σ', type: 'indicator', description: 'VWAP + 1.0 standard deviations' },
+      { name: 'vwap_plus_1_5', label: 'VWAP +1.5σ', type: 'indicator', description: 'VWAP + 1.5 standard deviations' },
+      { name: 'vwap_plus_2_0', label: 'VWAP +2.0σ', type: 'indicator', description: 'VWAP + 2.0 standard deviations' },
+      { name: 'vwap_plus_2_5', label: 'VWAP +2.5σ', type: 'indicator', description: 'VWAP + 2.5 standard deviations' },
+      { name: 'vwap_minus_0_5', label: 'VWAP -0.5σ', type: 'indicator', description: 'VWAP - 0.5 standard deviations' },
+      { name: 'vwap_minus_1_0', label: 'VWAP -1.0σ', type: 'indicator', description: 'VWAP - 1.0 standard deviations' },
+      { name: 'vwap_minus_1_5', label: 'VWAP -1.5σ', type: 'indicator', description: 'VWAP - 1.5 standard deviations' },
+      { name: 'vwap_minus_2_0', label: 'VWAP -2.0σ', type: 'indicator', description: 'VWAP - 2.0 standard deviations' },
+      { name: 'vwap_minus_2_5', label: 'VWAP -2.5σ', type: 'indicator', description: 'VWAP - 2.5 standard deviations' }
     ],
     momentum: [
-      { name: 'rsi', label: 'RSI (Índice de fuerza relativa)', type: 'indicator', description: 'Índice de fuerza relativa de 14 períodos' },
-      { name: 'rsi_20', label: 'RSI 20 (Sobreventa extrema)', type: 'indicator', description: 'Nivel RSI de sobreventa extrema (20.0)' },
-      { name: 'rsi_30', label: 'RSI 30 (Sobreventa estándar)', type: 'indicator', description: 'Nivel RSI de sobreventa estándar (30.0)' },
-      { name: 'rsi_50', label: 'RSI 50 (Línea neutral)', type: 'indicator', description: 'Nivel RSI neutral (50.0)' },
-      { name: 'rsi_70', label: 'RSI 70 (Sobrecompra estándar)', type: 'indicator', description: 'Nivel RSI de sobrecompra estándar (70.0)' },
-      { name: 'rsi_80', label: 'RSI 80 (Sobrecompra extrema)', type: 'indicator', description: 'Nivel RSI de sobrecompra extrema (80.0)' },
-      { name: 'macd', label: 'MACD (Convergencia/divergencia de medias móviles)', type: 'indicator', description: 'Línea MACD principal' },
-      { name: 'macd_signal', label: 'MACD Signal', type: 'indicator', description: 'Línea de señal MACD' },
-      { name: 'macd_histogram', label: 'MACD Histogram', type: 'indicator', description: 'Histograma MACD' },
-      { name: 'stochastic_k', label: 'Stochastic %K', type: 'indicator', description: 'Estocástico %K de 14 períodos' },
-      { name: 'stochastic_d', label: 'Stochastic %D', type: 'indicator', description: 'Estocástico %D de 14 períodos' }
+      { name: 'rsi', label: 'RSI (Relative Strength Index)', type: 'indicator', description: '14-period relative strength index' },
+      { name: 'rsi_20', label: 'RSI 20 (Extreme oversold)', type: 'indicator', description: 'Extreme oversold RSI level (20.0)' },
+      { name: 'rsi_30', label: 'RSI 30 (Standard oversold)', type: 'indicator', description: 'Standard oversold RSI level (30.0)' },
+      { name: 'rsi_50', label: 'RSI 50 (Neutral line)', type: 'indicator', description: 'Neutral RSI level (50.0)' },
+      { name: 'rsi_70', label: 'RSI 70 (Standard overbought)', type: 'indicator', description: 'Standard overbought RSI level (70.0)' },
+      { name: 'rsi_80', label: 'RSI 80 (Extreme overbought)', type: 'indicator', description: 'Extreme overbought RSI level (80.0)' },
+      { name: 'macd', label: 'MACD (Moving Average Convergence/Divergence)', type: 'indicator', description: 'Main MACD line' },
+      { name: 'macd_signal', label: 'MACD Signal', type: 'indicator', description: 'MACD signal line' },
+      { name: 'macd_histogram', label: 'MACD Histogram', type: 'indicator', description: 'MACD histogram' },
+      { name: 'stochastic_k', label: 'Stochastic %K', type: 'indicator', description: '14-period stochastic %K' },
+      { name: 'stochastic_d', label: 'Stochastic %D', type: 'indicator', description: '14-period stochastic %D' }
     ],
     volatility: [
-      { name: 'atr', label: 'ATR (Rango verdadero promedio)', type: 'indicator', description: 'Rango verdadero promedio de 14 períodos' },
-      { name: 'bb_upper', label: 'Bollinger Bands Upper', type: 'indicator', description: 'Banda superior de Bollinger (20,2)' },
-      { name: 'bb_middle', label: 'Bollinger Bands Middle', type: 'indicator', description: 'Banda media de Bollinger (20,2)' },
-      { name: 'bb_lower', label: 'Bollinger Bands Lower', type: 'indicator', description: 'Banda inferior de Bollinger (20,2)' }
+      { name: 'atr', label: 'ATR (Average True Range)', type: 'indicator', description: '14-period average true range' },
+      { name: 'bb_upper', label: 'Bollinger Bands Upper', type: 'indicator', description: 'Upper Bollinger Band (20,2)' },
+      { name: 'bb_middle', label: 'Bollinger Bands Middle', type: 'indicator', description: 'Middle Bollinger Band (20,2)' },
+      { name: 'bb_lower', label: 'Bollinger Bands Lower', type: 'indicator', description: 'Lower Bollinger Band (20,2)' }
     ],
     price_data: [
-      { name: 'open', label: 'Open (Precio de apertura)', type: 'price', description: 'Precio de apertura del período' },
-      { name: 'high', label: 'High (Precio más alto)', type: 'price', description: 'Precio más alto del período' },
-      { name: 'low', label: 'Low (Precio más bajo)', type: 'price', description: 'Precio más bajo del período' },
-      { name: 'close', label: 'Close (Precio de cierre)', type: 'price', description: 'Precio de cierre del período' },
-      { name: 'volume', label: 'Volume (Volumen)', type: 'volume', description: 'Volumen del período' }
+      { name: 'open', label: 'Open (Opening Price)', type: 'price', description: 'Period opening price' },
+      { name: 'high', label: 'High (Highest Price)', type: 'price', description: 'Period highest price' },
+      { name: 'low', label: 'Low (Lowest Price)', type: 'price', description: 'Period lowest price' },
+      { name: 'close', label: 'Close (Closing Price)', type: 'price', description: 'Period closing price' },
+      { name: 'volume', label: 'Volume', type: 'volume', description: 'Period volume' }
     ]
   };
 
   const operators = [
-    { value: 'gt', label: '>', description: 'Mayor que' },
-    { value: 'lt', label: '<', description: 'Menor que' },
-    { value: 'gte', label: '>=', description: 'Mayor o igual que' },
-    { value: 'lte', label: '<=', description: 'Menor o igual que' },
-    { value: 'eq', label: '==', description: 'Igual a' },
-    { value: 'ne', label: '!=', description: 'Diferente de' },
-    { value: 'cross_up', label: 'Cross Up', description: 'Cruza hacia arriba' },
-    { value: 'cross_down', label: 'Cross Down', description: 'Cruza hacia abajo' }
+    { value: 'gt', label: '>', description: 'Greater than' },
+    { value: 'lt', label: '<', description: 'Less than' },
+    { value: 'gte', label: '>=', description: 'Greater or equal to' },
+    { value: 'lte', label: '<=', description: 'Less or equal to' },
+    { value: 'eq', label: '==', description: 'Equal to' },
+    { value: 'ne', label: '!=', description: 'Not equal to' },
+    { value: 'cross_up', label: 'Cross Up', description: 'Crosses up' },
+    { value: 'cross_down', label: 'Cross Down', description: 'Crosses down' }
   ];
 
   const actions = [
-    { value: 'buy', label: 'Buy', description: 'Comprar' },
-    { value: 'sell', label: 'Sell', description: 'Vender' },
-    { value: 'close', label: 'Close', description: 'Cerrar posición' },
-    { value: 'modify', label: 'Modify', description: 'Modificar orden' },
-    { value: 'wait', label: 'Wait', description: 'Esperar' }
+    { value: 'buy', label: 'Buy', description: 'Buy' },
+    { value: 'sell', label: 'Sell', description: 'Sell' },
+    { value: 'close', label: 'Close', description: 'Close position' },
+    { value: 'modify', label: 'Modify', description: 'Modify order' },
+    { value: 'wait', label: 'Wait', description: 'Wait' }
   ];
 
   const handleInputChange = useCallback((e) => {

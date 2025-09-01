@@ -28,7 +28,7 @@ const EditProfile = () => {
   
   const loadProfile = useCallback(async () => {
     try {
-      // Verificar que el token esté disponible
+      // Check if token is available
       const token = localStorage.getItem('access_token');
       console.log('Token available:', !!token);
       
@@ -115,13 +115,13 @@ const EditProfile = () => {
     try {
       let cloudinaryUrl = null;
       
-      // Si hay una nueva imagen, subirla a Cloudinary primero
+      // If there's a new image, upload to Cloudinary first
       if (formData.profile_image) {
         const cloudinaryFormData = new FormData();
         cloudinaryFormData.append('file', formData.profile_image);
         cloudinaryFormData.append('upload_preset', 'tradinglab');
         
-        // Crear instancia de axios sin interceptores para Cloudinary
+        // Create axios instance without interceptors for Cloudinary
         const cloudinaryAxios = axios.create();
         
         try {
@@ -145,7 +145,7 @@ const EditProfile = () => {
         }
       }
       
-      // Preparar datos para el backend
+      // Prepare data for backend
       const backendData = new FormData();
       
       if (formData.bio) {

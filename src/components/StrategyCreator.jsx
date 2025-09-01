@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { FaArrowLeft, FaSave, FaChevronRight, FaChevronLeft, FaCog, FaChartLine, FaShieldAlt, FaShoppingCart, FaMoneyBillWave, FaCopy, FaEdit } from 'react-icons/fa';
+import { FaArrowLeft, FaSave, FaChevronRight, FaChevronLeft, FaCog, FaShieldAlt, FaShoppingCart, FaMoneyBillWave } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { strategyTemplates } from '../data/strategyTemplates';
-import RuleBuilder from './RuleBuilder';
+
+import SimpleRuleBuilder from './SimpleRuleBuilder';
 import './StrategyCreator.css';
 
 const StrategyCreator = ({ onStrategyCreated, onBack }) => {
@@ -24,10 +24,9 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
 
   const steps = [
     { id: 1, title: 'Basic Information', icon: <FaCog />, description: 'Strategy name, description, and timeframe' },
-    { id: 2, title: 'Strategy Template', icon: <FaCopy />, description: 'Choose from popular strategies or start from scratch' },
-    { id: 3, title: 'Risk Management', icon: <FaShieldAlt />, description: 'Position size, stop loss, and take profit' },
-    { id: 4, title: 'Entry Rules', icon: <FaShoppingCart />, description: 'When to buy - define your entry conditions' },
-    { id: 5, title: 'Exit Rules', icon: <FaMoneyBillWave />, description: 'When to sell - define your exit conditions' }
+    { id: 2, title: 'Risk Management', icon: <FaShieldAlt />, description: 'Position size, stop loss, and take profit' },
+    { id: 3, title: 'Entry Rules', icon: <FaShoppingCart />, description: 'When to buy - define your entry conditions' },
+    { id: 4, title: 'Exit Rules', icon: <FaMoneyBillWave />, description: 'When to sell - define your exit conditions' }
   ];
 
 
@@ -63,39 +62,17 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
     });
   }, []);
 
-  const handleTemplateSelect = useCallback((template) => {
-    console.log('Template selected:', template);
-    
-    // Apply template rules
-    const templateRules = [
-      ...template.entryRules.map(rule => ({ ...rule, section: 'entry', id: Date.now() + Math.random() })),
-      ...template.exitRules.map(rule => ({ ...rule, section: 'exit', id: Date.now() + Math.random() }))
-    ];
-    
-    setRules(templateRules.map((rule, index) => ({ ...rule, order: index + 1 })));
-    
-    // Update strategy data with template info
-    setStrategyData(prev => ({
-      ...prev,
-      name: `${template.name} Strategy`,
-      description: template.description
-    }));
-    
-    // Move to next step
-    setCurrentStep(3);
-  }, []);
+
 
   const canProceedToNext = useCallback(() => {
     switch (currentStep) {
       case 1: // Basic Information
         return strategyData.name.trim() && strategyData.description.trim();
-      case 2: // Strategy Template
-        return true; // Always can proceed from template selection
-      case 3: // Risk Management
+      case 2: // Risk Management
         return strategyData.position_size > 0 && strategyData.stop_loss_value > 0 && strategyData.take_profit_value > 0;
-      case 4: // Entry Rules
+      case 3: // Entry Rules
         return rules.filter(rule => rule.section === 'entry').length > 0;
-      case 5: // Exit Rules
+      case 4: // Exit Rules
         return rules.filter(rule => rule.section === 'exit').length > 0;
       default:
         return false;
@@ -298,72 +275,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
     </div>
   );
 
-  const renderStrategyTemplate = () => (
-    <div className="step-content">
-      <div className="step-header">
-        <h3>Strategy Template</h3>
-        <p>Choose from popular strategies or start from scratch</p>
-      </div>
-      
-      <div className="templates-content">
-        <div className="templates-grid">
-          {strategyTemplates.map((template) => (
-            <div key={template.id} className="template-card">
-                          <div className="template-header">
-              <h4>{template.name}</h4>
-            </div>
-              
-              <p className="template-description">{template.description}</p>
-              
-              <div className="template-rules-preview">
-                <div className="rules-preview-section">
-                  <h5>Entry Rules ({template.entryRules.length})</h5>
-                  <ul>
-                    {template.entryRules.map((rule, index) => (
-                      <li key={index}>{rule.name}</li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div className="rules-preview-section">
-                  <h5>Exit Rules ({template.exitRules.length})</h5>
-                  <ul>
-                    {template.exitRules.map((rule, index) => (
-                      <li key={index}>{rule.name}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              
-              <button
-                onClick={() => handleTemplateSelect(template)}
-                className="btn btn-primary btn-sm"
-              >
-                <FaCopy /> Use This Template
-              </button>
-            </div>
-          ))}
-          
-          <div className="template-card start-from-scratch">
-            <div className="template-header">
-              <h4>Start from Scratch</h4>
-            </div>
-            
-            <p className="template-description">
-              Build your strategy completely from scratch with full control over every aspect.
-            </p>
-            
-            <button
-              onClick={() => setCurrentStep(3)}
-              className="btn btn-secondary btn-sm"
-            >
-              <FaEdit /> Start Building
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+
 
   const renderRiskManagement = () => (
     <div className="step-content">
@@ -466,11 +378,11 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
       </div>
       
       <div className="rules-content">
-        <RuleBuilder 
+        <SimpleRuleBuilder 
           onAddRule={handleAddRule}
           onRemoveRule={handleRemoveRule}
           onMoveRule={handleMoveRule}
-          rules={rules}
+          rules={rules.filter(rule => rule.section === 'entry')}
           activeSection="entry"
           readOnly={false}
         />
@@ -486,11 +398,11 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
       </div>
       
       <div className="rules-content">
-        <RuleBuilder 
+        <SimpleRuleBuilder 
           onAddRule={handleAddRule}
           onRemoveRule={handleRemoveRule}
           onMoveRule={handleMoveRule}
-          rules={rules}
+          rules={rules.filter(rule => rule.section === 'exit')}
           activeSection="exit"
           readOnly={false}
         />
@@ -504,12 +416,10 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
       case 1:
         return renderBasicInfo();
       case 2:
-        return renderStrategyTemplate();
-      case 3:
         return renderRiskManagement();
-      case 4:
+      case 3:
         return renderEntryRules();
-      case 5:
+      case 4:
         return renderExitRules();
       default:
         return renderBasicInfo();

@@ -131,14 +131,14 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
       <div className="strategy-list-empty">
         <div className="empty-state">
           <div className="empty-icon">📊</div>
-          <h3>No hay estrategias aún</h3>
-          <p>¡Crea tu primera estrategia de trading usando nuestro Rule Builder avanzado!</p>
+          <h3>No strategies yet</h3>
+          <p>Create your first trading strategy using our advanced Rule Builder!</p>
           <p className="empty-features">
-            <strong>Características disponibles:</strong><br/>
-            • Indicadores técnicos precalculados<br/>
-            • Reglas condicionales complejas<br/>
-            • Backtesting optimizado<br/>
-            • Plantillas predefinidas
+            <strong>Available features:</strong><br/>
+            • Pre-calculated technical indicators<br/>
+            • Complex conditional rules<br/>
+            • Optimized backtesting<br/>
+            • Predefined templates
           </p>
         </div>
       </div>

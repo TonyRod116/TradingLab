@@ -82,7 +82,7 @@ const Strategies = () => {
           <p>Create, manage, and backtest your trading strategies using pre-calculated indicators</p>
           <div className="backend-highlight">
             <span className="highlight-badge"><FaDatabase className="badge-icon" /> Parquet Backend</span>
-            <span className="highlight-badge"><FaLightbulb className="badge-icon" /> 25+ Pre-calculated Indicators</span>
+            <span className="highlight-badge"><FaLightbulb className="badge-icon" /> 48 Pre-calculated Indicators</span>
             <span className="highlight-badge"><FaTachometerAlt className="badge-icon" /> Optimized for Fast Backtesting</span>
           </div>
         </div>
@@ -141,7 +141,7 @@ const Strategies = () => {
         <p>Create and test your trading strategies with our advanced rule builder powered by pre-calculated indicators</p>
         <div className="backend-highlight">
           <span className="highlight-badge"><FaDatabase className="badge-icon" /> Parquet Backend</span>
-          <span className="highlight-badge"><FaLightbulb className="badge-icon" /> 25+ Pre-calculated Indicators</span>
+          <span className="highlight-badge"><FaLightbulb className="badge-icon" /> 48 Pre-calculated Indicators</span>
           <span className="highlight-badge"><FaTachometerAlt className="badge-icon" /> Optimized for Fast Backtesting</span>
         </div>
       </div>

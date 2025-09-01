@@ -33,7 +33,7 @@ const Profile = () => {
       return;
     }
 
-    // Cargar datos del perfil desde el backend
+    // Load profile data from backend
     const loadProfileData = async () => {
       try {
         const token = getToken();
@@ -57,12 +57,12 @@ const Profile = () => {
         }
       } catch (error) {
         console.error('Error loading profile data:', error);
-        // Si falla, usar solo los datos del contexto
+        // If fails, use only context data
       }
     };
 
     if (currentUser) {
-      // Establecer datos básicos del contexto
+      // Set basic context data
       const userProfile = {
         username: profile.username || currentUser.username || 'Trader',
         email: currentUser.email || 'user@example.com',
@@ -73,7 +73,7 @@ const Profile = () => {
       };
       setProfile(userProfile);
       
-      // Cargar datos actualizados del backend
+      // Load updated data from backend
       loadProfileData();
     }
   }, [currentUser, isAuthenticated, navigate]);
