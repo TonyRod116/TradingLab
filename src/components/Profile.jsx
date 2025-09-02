@@ -6,6 +6,7 @@ import { FaChartLine, FaCog, FaPlus, FaEdit, FaTrash, FaPlay, FaPause } from 're
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import Header from './Header';
+import ConfirmDialog from './ConfirmDialog';
 import './Profile.css';
 
 const Profile = () => {
@@ -24,9 +25,14 @@ const Profile = () => {
   
   const [strategies, setStrategies] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    strategyId: null,
+    strategyName: ''
+  });
 
   const isOwnProfile = useMemo(() => {
-    return isAuthenticated && currentUser?.id === parseInt(user_id);
+    return isAuthenticated && String(currentUser?.id) === String(user_id);
   }, [isAuthenticated, currentUser?.id, user_id]);
 
   useEffect(() => {
@@ -53,7 +59,7 @@ const Profile = () => {
           const token = getToken();
           if (!token) return;
           
-          const response = await axios.get('http://localhost:8000/users/profile/', {
+          const response = await axios.get('http://localhost:8000/api/users/profile/', {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -87,7 +93,7 @@ const Profile = () => {
         return;
       }
       
-      const response = await fetch(`http://localhost:8000/strategies/?user_id=${user_id}`, {
+      const response = await fetch(`http://localhost:8000/api/strategies/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -101,9 +107,11 @@ const Profile = () => {
           strategies_count: (data.results || data).length
         }));
       } else {
+        console.error('Failed to load strategies:', response.status, response.statusText);
         setStrategies([]);
       }
     } catch (error) {
+      console.error('Error loading strategies:', error);
       setStrategies([]);
     } finally {
       setLoading(false);
@@ -122,19 +130,27 @@ const Profile = () => {
   }, [navigate]);
 
   const handleCreateStrategy = useCallback(() => {
-    navigate('/strategies');
+    navigate('/strategies?tab=create-strategy');
   }, [navigate]);
 
   const handleEditStrategy = useCallback((strategyId) => {
     navigate(`/strategies/edit/${strategyId}`);
   }, [navigate]);
 
-  const handleDeleteStrategy = useCallback(async (strategyId) => {
-    if (!window.confirm('Are you sure you want to delete this strategy?')) return;
+  const handleDeleteStrategy = useCallback((strategyId, strategyName) => {
+    setConfirmDialog({
+      isOpen: true,
+      strategyId,
+      strategyName
+    });
+  }, []);
+
+  const confirmDeleteStrategy = useCallback(async () => {
+    if (!confirmDialog.strategyId) return;
     
     try {
       const token = getToken();
-      const response = await fetch(`http://localhost:8000/strategies/${strategyId}/`, {
+      const response = await fetch(`http://localhost:8000/api/strategies/${confirmDialog.strategyId}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -150,8 +166,22 @@ const Profile = () => {
     } catch (error) {
       console.error('Error deleting strategy:', error);
       toast.error('Error deleting strategy');
+    } finally {
+      setConfirmDialog({
+        isOpen: false,
+        strategyId: null,
+        strategyName: ''
+      });
     }
-  }, [loadUserStrategies]);
+  }, [confirmDialog.strategyId, loadUserStrategies]);
+
+  const cancelDeleteStrategy = useCallback(() => {
+    setConfirmDialog({
+      isOpen: false,
+      strategyId: null,
+      strategyName: ''
+    });
+  }, []);
 
 
 
@@ -253,7 +283,7 @@ const Profile = () => {
               </button>
               <button
                 className="btn btn-sm btn-danger"
-                onClick={() => handleDeleteStrategy(strategy.id)}
+                onClick={() => handleDeleteStrategy(strategy.id, strategy.name)}
               >
                 <FaTrash /> Delete
               </button>
@@ -318,6 +348,17 @@ const Profile = () => {
           {renderStrategiesSection()}
         </div>
       </div>
+      
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={cancelDeleteStrategy}
+        onConfirm={confirmDeleteStrategy}
+        title="Delete Strategy"
+        message={`Are you sure you want to delete "${confirmDialog.strategyName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 };

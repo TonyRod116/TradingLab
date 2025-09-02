@@ -169,7 +169,7 @@ export function AuthProvider({ children }) {
         payload.email = identifier;
       }
       
-      const response = await axios.post('/users/login/', payload);
+      const response = await axios.post('/auth/login/', payload);
       
       const { access, refresh } = response.data;
       

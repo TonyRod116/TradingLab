@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   FaChartLine, 
   FaPlus, 
@@ -21,17 +22,18 @@ import './Strategies.css';
 
 const Strategies = () => {
   const { user: currentUser, isAuthenticated } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('my-strategies');
   const [strategies, setStrategies] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   const loadStrategies = useCallback(async () => {
     if (!isAuthenticated) return;
     
-    console.log('Loading strategies...');
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/strategies/', {
+      const response = await fetch('http://localhost:8000/api/strategies/', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -39,10 +41,8 @@ const Strategies = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setStrategies(data);
-        console.log('Strategies loaded successfully:', data.length);
+        setStrategies(data.results || data);
       } else {
-        console.error('Failed to load strategies, status:', response.status);
         toast.error('Failed to load strategies', {
           position: "top-right",
           autoClose: 4000,
@@ -50,7 +50,6 @@ const Strategies = () => {
         });
       }
     } catch (err) {
-      console.error('Network error loading strategies:', err);
       toast.error('Network error loading strategies', {
         position: "top-right",
         autoClose: 4000,
@@ -65,14 +64,22 @@ const Strategies = () => {
     loadStrategies();
   }, [loadStrategies]);
 
+  // Handle URL tab parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['my-strategies', 'templates', 'create-strategy'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
 
   const handleTemplateSelect = useCallback((template) => {
     // Navigate to strategy creator with the selected template
+    setSelectedTemplate(template);
     setActiveTab('create-strategy');
-    // The template will be passed to StrategyCreator via props
   }, []);
 
   const renderAuthenticatedView = () => (
@@ -122,7 +129,11 @@ const Strategies = () => {
         {activeTab === 'create-strategy' && (
           <StrategyCreator 
             onStrategyCreated={loadStrategies}
-            onBack={() => handleTabChange('my-strategies')}
+            onBack={() => {
+              setSelectedTemplate(null);
+              handleTabChange('my-strategies');
+            }}
+            template={selectedTemplate}
           />
         )}
       </div>

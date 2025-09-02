@@ -74,10 +74,10 @@
 .nav-link.active::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  bottom: -1.7rem;
   left: 0;
   width: 100%;
-  height: 2px;
+  height: 3px;
   background: var(--color-green);
   border-radius: 1px;
   animation: slideIn 0.3s ease;
@@ -162,9 +162,10 @@
 }
 
 .auth-buttons .btn-profile.active {
-  background: var(--color-green);
-  color: var(--color-black);
-  box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+  background: var(--color-green) !important;
+  color: var(--color-black) !important;
+  border: 2px solid var(--color-green) !important;
+  box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3) !important;
 }
 
 .auth-buttons .btn-logout {

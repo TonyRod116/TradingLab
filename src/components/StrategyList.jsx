@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { FaPlay, FaPause, FaEdit, FaTrash, FaChartLine, FaEye } from 'react-icons/fa';
+import ConfirmDialog from './ConfirmDialog';
 import './StrategyList.css';
 
 const StrategyList = ({ strategies, loading, error, onRefresh }) => {
   const [selectedStrategy, setSelectedStrategy] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    strategyId: null,
+    strategyName: ''
+  });
 
   const handleActivate = async (strategyId) => {
     try {
-      const response = await fetch(`http://localhost:8000/strategies/${strategyId}/activate/`, {
+      const response = await fetch(`http://localhost:8000/api/strategies/${strategyId}/activate/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -24,7 +30,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
 
   const handlePause = async (strategyId) => {
     try {
-      const response = await fetch(`http://localhost:8000/strategies/${strategyId}/pause/`, {
+      const response = await fetch(`http://localhost:8000/api/strategies/${strategyId}/pause/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -39,11 +45,19 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
     }
   };
 
-  const handleDelete = async (strategyId) => {
-    if (!window.confirm('Are you sure you want to delete this strategy?')) return;
+  const handleDelete = (strategyId, strategyName) => {
+    setConfirmDialog({
+      isOpen: true,
+      strategyId,
+      strategyName
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!confirmDialog.strategyId) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/strategies/${strategyId}/`, {
+      const response = await fetch(`http://localhost:8000/api/strategies/${confirmDialog.strategyId}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -55,12 +69,26 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
       }
     } catch (err) {
       console.error('Error deleting strategy:', err);
+    } finally {
+      setConfirmDialog({
+        isOpen: false,
+        strategyId: null,
+        strategyName: ''
+      });
     }
+  };
+
+  const cancelDelete = () => {
+    setConfirmDialog({
+      isOpen: false,
+      strategyId: null,
+      strategyName: ''
+    });
   };
 
   const handleBacktest = async (strategyId) => {
     try {
-      const response = await fetch(`http://localhost:8000/strategies/${strategyId}/backtest/run/`, {
+      const response = await fetch(`http://localhost:8000/api/strategies/${strategyId}/backtest/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
@@ -150,7 +178,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
   return (
     <div className="strategy-list">
       <div className="strategy-list-header">
-        <h2>My Strategies ({strategies.length})</h2>
+        <h2>Total Strategies: {strategies.length}</h2>
         <button onClick={onRefresh} className="btn btn-secondary">Refresh</button>
       </div>
 
@@ -223,7 +251,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
               </button>
               
               <button 
-                onClick={() => handleDelete(strategy.id)}
+                onClick={() => handleDelete(strategy.id, strategy.name)}
                 className="btn btn-danger btn-sm"
                 title="Delete Strategy"
               >
@@ -318,6 +346,17 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
           </div>
         </div>
       )}
+      
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        title="Delete Strategy"
+        message={`Are you sure you want to delete "${confirmDialog.strategyName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 };

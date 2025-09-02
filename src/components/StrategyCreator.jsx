@@ -1,11 +1,13 @@
-import React, { useState, useCallback } from 'react';
-import { FaArrowLeft, FaSave, FaChevronRight, FaChevronLeft, FaCog, FaShieldAlt, FaShoppingCart, FaMoneyBillWave } from 'react-icons/fa';
+import React, { useState, useCallback, useEffect } from 'react';
+import { FaArrowLeft, FaSave, FaChevronRight, FaChevronLeft, FaCog, FaShieldAlt, FaShoppingCart, FaMoneyBillWave, FaSpinner } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 import SimpleRuleBuilder from './SimpleRuleBuilder';
+import BacktestResults from './BacktestResults';
+import strategyService from '../services/StrategyService';
 import './StrategyCreator.css';
 
-const StrategyCreator = ({ onStrategyCreated, onBack }) => {
+const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [strategyData, setStrategyData] = useState({
     name: '',
@@ -15,14 +17,71 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
     position_size: 1,
     max_positions: 1,
     stop_loss_type: 'percentage',
-    stop_loss_value: 0.5,
+    stop_loss_value: 0.2,
     take_profit_type: 'percentage',
-    take_profit_value: 2.0,
+    take_profit_value: 1.0,
     round_turn_commissions: 4.00,
     slippage: 0.5
   });
   const [rules, setRules] = useState([]);
+  
+
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [backtestResults, setBacktestResults] = useState(null);
+
+  // Load template rules when template is provided
+  useEffect(() => {
+    if (template) {
+      // Set strategy name and description from template
+      setStrategyData(prev => ({
+        ...prev,
+        name: template.name,
+        description: template.description
+      }));
+
+      // Convert template rules to the format expected by SimpleRuleBuilder
+      const templateRules = [];
+      
+      // Add entry rules
+      template.entryRules.forEach((rule, index) => {
+        templateRules.push({
+          id: `entry_${index}`,
+          name: `Entry Rule ${index + 1}`,
+          section: 'entry',
+          type: 'entry',
+          action_type: 'buy', // Default to buy for entry rules
+          order: index + 1,
+          conditions: rule.conditions.map(condition => ({
+            left_operand: condition.left_operand,
+            operator: condition.operator,
+            right_operand: condition.right_operand,
+            logical_operator: condition.logical_operator || 'and'
+          }))
+        });
+      });
+
+      // Add exit rules
+      template.exitRules.forEach((rule, index) => {
+        templateRules.push({
+          id: `exit_${index}`,
+          name: `Exit Rule ${index + 1}`,
+          section: 'exit',
+          type: 'exit',
+          action_type: 'close', // Exit rules always close position
+          order: index + 1,
+          conditions: rule.conditions.map(condition => ({
+            left_operand: condition.left_operand,
+            operator: condition.operator,
+            right_operand: condition.right_operand,
+            logical_operator: condition.logical_operator || 'and'
+          }))
+        });
+      });
+
+      setRules(templateRules);
+    }
+  }, [template]);
 
   const steps = [
     { id: 1, title: 'Basic Information', icon: <FaCog />, description: 'Strategy name, description, and timeframe' },
@@ -150,109 +209,149 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
     return true;
   }, [strategyData, rules]);
 
+  const formatEntryRules = useCallback((rules) => {
+    const entryRules = rules.filter(rule => rule.section === 'entry');
+    const formatted = {};
+    
+    entryRules.forEach(rule => {
+      if (rule.conditions && rule.conditions.length > 0) {
+        rule.conditions.forEach(condition => {
+          // RSI oversold condition
+          if (condition.left_operand === 'rsi' && condition.operator === 'lt' && condition.right_operand === 'rsi_30') {
+            formatted.rsi_oversold = 30;
+          }
+          // Price above moving average (EMA crossover)
+          if (condition.left_operand === 'ema_20' && condition.operator === 'cross_up' && condition.right_operand === 'ema_50') {
+            formatted.price_above_ma = 20;
+          }
+          // Close above SMA
+          if (condition.left_operand === 'close' && condition.operator === 'gt' && condition.right_operand === 'sma_20') {
+            formatted.price_above_ma = 20;
+          }
+          // Close above VWAP
+          if (condition.left_operand === 'close' && condition.operator === 'gt' && condition.right_operand === 'vwap') {
+            formatted.price_above_ma = 20;
+          }
+        });
+      }
+    });
+    
+    return formatted;
+  }, []);
+
+  const formatExitRules = useCallback((rules) => {
+    const exitRules = rules.filter(rule => rule.section === 'exit');
+    const formatted = {};
+    
+    exitRules.forEach(rule => {
+      if (rule.conditions && rule.conditions.length > 0) {
+        rule.conditions.forEach(condition => {
+          // RSI overbought condition
+          if (condition.left_operand === 'rsi' && condition.operator === 'gt' && condition.right_operand === 'rsi_70') {
+            formatted.rsi_overbought = 70;
+          }
+          // EMA death cross
+          if (condition.left_operand === 'ema_20' && condition.operator === 'cross_down' && condition.right_operand === 'ema_50') {
+            formatted.time_based = true;
+          }
+          // Close below VWAP
+          if (condition.left_operand === 'close' && condition.operator === 'lt' && condition.right_operand === 'vwap') {
+            formatted.time_based = true;
+          }
+        });
+      }
+    });
+    
+    // If no specific exit rules found, add time-based exit
+    if (Object.keys(formatted).length === 0) {
+      formatted.time_based = true;
+    }
+    
+    return formatted;
+  }, []);
+
   const handleSaveStrategyAndBacktest = useCallback(async () => {
     if (!validateStrategy()) return;
     
     setLoading(true);
+    setLoadingMessage('Creating strategy...');
     
     try {
-      // First, create the strategy
-      const response = await fetch('http://localhost:8000/strategies/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...strategyData,
-          rules: rules.map(rule => ({
-            name: rule.name,
-            rule_type: rule.rule_type,
-            condition_type: rule.condition_type,
-            action_type: rule.action_type,
-            left_operand: rule.left_operand,
-            operator: rule.operator,
-            right_operand: rule.right_operand,
-            logical_operator: rule.logical_operator,
-            priority: rule.priority,
-            order: rule.order,
-            is_active: true
-          }))
-        })
-      });
+      // Create strategy using service
+      const entryRules = formatEntryRules(rules);
+      const exitRules = formatExitRules(rules);
       
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Strategy created:', result);
-        
-        toast.success('Strategy created successfully! Starting backtest...', {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        
-        // Now run the backtest
-        try {
-          const backtestResponse = await fetch(`http://localhost:8000/strategies/${result.id}/backtest/run/`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              start_date: '2024-01-01',
-              end_date: '2024-12-31',
-              initial_capital: 100000
-            })
-          });
-          
-          if (backtestResponse.ok) {
-            const backtestResult = await backtestResponse.json();
-            console.log('Backtest completed:', backtestResult);
-            
-            toast.success('Strategy saved and backtest completed!', {
-              position: "top-right",
-              autoClose: 5000,
-            });
-            
-            // Navigate to strategies page to see results
-            onStrategyCreated();
-          } else {
-            const backtestError = await backtestResponse.json();
-            console.error('Backtest failed:', backtestError);
-            
-            toast.warning('Strategy saved but backtest failed. You can run it manually later.', {
-              position: "top-right",
-              autoClose: 5000,
-            });
-            
-            onStrategyCreated();
-          }
-        } catch (backtestError) {
-          console.error('Error running backtest:', backtestError);
-          
-          toast.warning('Strategy saved but backtest failed. You can run it manually later.', {
-            position: "top-right",
-            autoClose: 5000,
-          });
-          
-          onStrategyCreated();
-        }
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || 'Failed to create strategy', {
-          position: "top-right",
-          autoClose: 4000,
-        });
+      // Fallback: If no rules are formatted, use default rules
+      if (Object.keys(entryRules).length === 0) {
+        entryRules.rsi_oversold = 30;
       }
-    } catch (err) {
-      toast.error('Network error creating strategy', {
-        position: "top-right",
-        autoClose: 4000,
-      });
+      if (Object.keys(exitRules).length === 0) {
+        exitRules.time_based = true;
+      }
+      
+      // Add timestamp to name to avoid duplicates
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+      const uniqueName = `${strategyData.name} ${timestamp}`;
+      
+      const strategyPayload = {
+        name: uniqueName,
+        description: strategyData.description,
+        symbol: strategyData.symbol,
+        timeframe: strategyData.timeframe,
+        entry_rules: entryRules,
+        exit_rules: exitRules,
+        stop_loss_type: strategyData.stop_loss_type,
+        stop_loss_value: strategyData.stop_loss_value,
+        take_profit_type: strategyData.take_profit_type,
+        take_profit_value: strategyData.take_profit_value
+      };
+
+      console.log('Creating strategy with unique name:', uniqueName);
+      const strategy = await strategyService.createStrategy(strategyPayload);
+      console.log('Strategy created successfully:', strategy);
+      toast.success('Strategy saved successfully!');
+      
+      // Run backtest using service
+      setLoadingMessage('Running backtest... This may take up to 60 seconds.');
+      toast.info('Running backtest...', { autoClose: 2000 });
+      
+      const backtestParams = {
+        start_date: '2020-01-01T00:00:00Z',
+        end_date: '2024-12-31T23:59:59Z',
+        initial_capital: 100000,
+        commission: strategyData.round_turn_commissions,
+        slippage: strategyData.slippage
+      };
+
+      console.log('Running backtest for strategy ID:', strategy.id);
+      const backtestResults = await strategyService.runBacktest(strategy.id, backtestParams);
+      console.log('Backtest completed successfully:', backtestResults);
+      setBacktestResults(backtestResults);
+      
+      if (backtestResults.trades && backtestResults.trades.length > 0) {
+        toast.success(`Backtest completed! Generated ${backtestResults.trades.length} trades.`);
+      } else {
+        toast.warning('Backtest completed but no trades were executed. Check your strategy rules.');
+      }
+      
+      if (onStrategyCreated) {
+        onStrategyCreated();
+      }
+    } catch (error) {
+      if (error.message.includes('timeout')) {
+        toast.error('Request timed out. The backtest is taking longer than expected. Please try again.');
+      } else {
+        toast.error(error.message || 'Error saving strategy');
+      }
     } finally {
       setLoading(false);
+      setLoadingMessage('');
     }
-  }, [strategyData, rules, validateStrategy, onStrategyCreated]);
+  }, [strategyData, rules, validateStrategy, formatEntryRules, formatExitRules, onStrategyCreated]);
+
+  const handleCloseBacktestResults = useCallback(() => {
+    setBacktestResults(null);
+  }, []);
 
   const renderStepIndicator = () => (
     <div className="step-indicator">
@@ -520,60 +619,87 @@ const StrategyCreator = ({ onStrategyCreated, onBack }) => {
   };
 
   return (
-    <div className="strategy-creator">
-      <div className="strategy-creator-header">
-        <h2>🚀 Create New Strategy</h2>
-        <p>Build your automated trading strategy step by step</p>
-      </div>
+    <>
+      <div className="strategy-creator">
+        <div className="strategy-creator-header">
+          <h2>🚀 Create New Strategy</h2>
+          <p>Build your automated trading strategy step by step</p>
+        </div>
 
+        {renderStepIndicator()}
 
+        <div className="strategy-form">
+          {renderCurrentStep()}
+        </div>
 
-      {renderStepIndicator()}
-
-      <div className="strategy-form">
-        {renderCurrentStep()}
-      </div>
-
-      <div className="strategy-form-actions">
-        <button 
-          onClick={onBack}
-          className="btn btn-secondary"
-          disabled={loading}
-        >
-          <FaArrowLeft /> Back to Strategies
-        </button>
-        
-        <div className="step-navigation">
-          {canGoBack() && (
-            <button
-              onClick={previousStep}
-              className="btn btn-secondary"
-              disabled={loading}
-            >
-              <FaChevronLeft /> Previous
-            </button>
-          )}
+        <div className="strategy-form-actions">
+          <button 
+            onClick={onBack}
+            className="btn btn-secondary"
+            disabled={loading}
+          >
+            <FaArrowLeft /> Back to Strategies
+          </button>
           
-          {currentStep < 5 ? (
-            <button
-              onClick={nextStep}
-              className="btn btn-primary"
-              disabled={!canProceedToNext() || loading}
-            >
-              Next <FaChevronRight />
-            </button>
-          ) : (
-            <button
-              onClick={handleSaveStrategyAndBacktest}
-              className="btn btn-primary"
-              disabled={loading || !canProceedToNext()}
-            >
-              {loading ? 'Saving & Backtesting...' : <><FaSave /> Save Strategy & Backtest</>}
-            </button>
-          )}
+          <div className="step-navigation">
+            {canGoBack() && (
+              <button
+                onClick={previousStep}
+                className="btn btn-secondary"
+                disabled={loading}
+              >
+                <FaChevronLeft /> Previous
+              </button>
+            )}
+            
+            {currentStep < 5 ? (
+              <button
+                onClick={nextStep}
+                className="btn btn-primary"
+                disabled={!canProceedToNext() || loading}
+              >
+                Next <FaChevronRight />
+              </button>
+            ) : (
+              <button
+                onClick={handleSaveStrategyAndBacktest}
+                className="btn btn-primary"
+                disabled={loading || !canProceedToNext()}
+              >
+                {loading ? (
+                  <>
+                    <FaSpinner className="spinner" /> {loadingMessage || 'Saving & Backtesting...'}
+                  </>
+                ) : (
+                  <><FaSave /> Save Strategy & Backtest</>
+                )}
+              </button>
+            )}
+            
+            {loading && (
+              <button
+                onClick={() => {
+                  setLoading(false);
+                  setLoadingMessage('');
+                  toast.info('Operation cancelled');
+                }}
+                className="btn btn-warning"
+                style={{ marginLeft: '10px' }}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {backtestResults && (
+        <BacktestResults 
+          results={backtestResults} 
+          onClose={handleCloseBacktestResults} 
+        />
+      )}
+    </>
   );
 };
 

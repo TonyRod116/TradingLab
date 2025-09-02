@@ -45,6 +45,12 @@ const SimpleRuleBuilder = ({ onAddRule, onRemoveRule, onMoveRule, rules, activeS
 
   // Available indicators and their configurations
   const indicators = {
+    price: [
+      { value: 'close', label: 'Close Price' },
+      { value: 'high', label: 'High Price' },
+      { value: 'low', label: 'Low Price' },
+      { value: 'open', label: 'Open Price' }
+    ],
     moving_averages: [
       { value: 'sma_20', label: 'SMA 20' },
       { value: 'sma_50', label: 'SMA 50' },
@@ -88,12 +94,6 @@ const SimpleRuleBuilder = ({ onAddRule, onRemoveRule, onMoveRule, rules, activeS
       { value: 'volume_sma', label: 'Volume SMA' },
       { value: 'obv', label: 'OBV' },
       { value: 'ad_line', label: 'A/D Line' }
-    ],
-    price: [
-      { value: 'close', label: 'Close Price' },
-      { value: 'high', label: 'High Price' },
-      { value: 'low', label: 'Low Price' },
-      { value: 'open', label: 'Open Price' }
     ]
   };
 
@@ -300,6 +300,22 @@ const SimpleRuleBuilder = ({ onAddRule, onRemoveRule, onMoveRule, rules, activeS
     );
   }, [handleConditionChange]);
 
+  const getOrderedIndicators = useCallback(() => {
+    if (activeSection === 'exit') {
+      // For exit rules, put volatility first
+      const orderedEntries = Object.entries(indicators);
+      const volatilityIndex = orderedEntries.findIndex(([category]) => category === 'volatility');
+      
+      if (volatilityIndex > 0) {
+        const volatilityEntry = orderedEntries.splice(volatilityIndex, 1)[0];
+        return [volatilityEntry, ...orderedEntries];
+      }
+    }
+    
+    // For entry rules, use default order
+    return Object.entries(indicators);
+  }, [activeSection]);
+
   const renderConditionForm = useCallback(() => (
     <div className="conditions-form">
       <h4>Conditions</h4>
@@ -324,7 +340,7 @@ const SimpleRuleBuilder = ({ onAddRule, onRemoveRule, onMoveRule, rules, activeS
               onChange={(e) => handleConditionChange(index, 'left_operand', e.target.value)}
             >
               <option value="">Select Indicator</option>
-              {Object.entries(indicators).map(([category, items]) => (
+              {getOrderedIndicators().map(([category, items]) => (
                 <optgroup key={category} label={category.replace('_', ' ').toUpperCase()}>
                   {items.map(item => (
                     <option key={item.value} value={item.value}>{item.label}</option>
@@ -387,23 +403,29 @@ const SimpleRuleBuilder = ({ onAddRule, onRemoveRule, onMoveRule, rules, activeS
       </div>
       
               <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Action *</label>
-            <select
-              name="action_type"
-              value={ruleForm.action_type}
-              onChange={handleInputChange}
-            >
-              {activeSection === 'entry' ? (
-                <>
-                  <option value="buy">Buy (Long)</option>
-                  <option value="sell">Sell (Short)</option>
-                </>
-              ) : (
-                <option value="close">Close Position</option>
-              )}
-            </select>
-          </div>
+          {activeSection === 'entry' && (
+            <div className="form-group">
+              <label>Action *</label>
+              <select
+                name="action_type"
+                value={ruleForm.action_type}
+                onChange={handleInputChange}
+              >
+                <option value="buy">Buy (Long)</option>
+                <option value="sell">Sell (Short)</option>
+              </select>
+            </div>
+          )}
+          
+          {activeSection === 'exit' && (
+            <div className="form-group">
+              <label>Action</label>
+              <div className="action-display">
+                <span className="action-badge">Close Position</span>
+                <span className="action-description">Exit rules automatically close positions</span>
+              </div>
+            </div>
+          )}
 
         {renderConditionForm()}
 
