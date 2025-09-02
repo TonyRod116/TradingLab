@@ -204,7 +204,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
             <div className="strategy-stats">
               <div className="stat-item">
                 <span className="stat-label">Win Rate</span>
-                <span className="stat-value">{strategy.win_rate ? parseFloat(strategy.win_rate).toFixed(2) : 'N/A'}%</span>
+                <span className="stat-value">{strategy.win_rate !== null && strategy.win_rate !== undefined ? parseFloat(strategy.win_rate).toFixed(2) : '0.00'}%</span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Total Trades</span>
@@ -212,7 +212,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
               </div>
               <div className="stat-item">
                 <span className="stat-label">Profit Factor</span>
-                <span className="stat-value">{strategy.profit_factor ? parseFloat(strategy.profit_factor).toFixed(2) : 'N/A'}</span>
+                <span className="stat-value">{strategy.profit_factor !== null && strategy.profit_factor !== undefined ? parseFloat(strategy.profit_factor).toFixed(2) : '0.00'}</span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Total Return</span>

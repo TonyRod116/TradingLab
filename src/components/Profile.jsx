@@ -5,6 +5,7 @@ import { getToken } from '../utils/auth';
 import { FaChartLine, FaCog, FaPlus, FaEdit, FaTrash, FaPlay, FaPause } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { cleanStrategyName } from '../utils/strategyUtils';
 import Header from './Header';
 import ConfirmDialog from './ConfirmDialog';
 import './Profile.css';
@@ -256,34 +257,40 @@ const Profile = () => {
       {strategies.map((strategy) => (
         <div key={strategy.id} className="strategy-card">
           <div className="strategy-header">
-            <h3>{strategy.name}</h3>
+            <h3>{cleanStrategyName(strategy.name)}</h3>
           </div>
           <p>{strategy.description}</p>
           <div className="strategy-metrics">
             <div className="metric">
-              <span className="metric-label">Sharpe Ratio:</span>
-              <span className="metric-value">{strategy.sharpe_ratio || 'N/A'}</span>
+              <span className="metric-label">Win Rate:</span>
+              <span className="metric-value">{strategy.win_rate !== null && strategy.win_rate !== undefined ? parseFloat(strategy.win_rate).toFixed(2) : '0.00'}%</span>
             </div>
             <div className="metric">
-              <span className="metric-label">Max Drawdown:</span>
-              <span className="metric-value">{strategy.max_drawdown || 'N/A'}</span>
+              <span className="metric-label">Total Trades:</span>
+              <span className="metric-value">{strategy.total_trades || 'N/A'}</span>
+            </div>
+            <div className="metric">
+              <span className="metric-label">Profit Factor:</span>
+              <span className="metric-value">{strategy.profit_factor !== null && strategy.profit_factor !== undefined ? parseFloat(strategy.profit_factor).toFixed(2) : '0.00'}</span>
             </div>
             <div className="metric">
               <span className="metric-label">Total Return:</span>
-              <span className="metric-value">{strategy.total_return || 'N/A'}</span>
+              <span className="metric-value">{strategy.total_return_percent ? parseFloat(strategy.total_return_percent).toFixed(2) : 'N/A'}%</span>
+            </div>
+            <div className="metric">
+              <span className="metric-label">Max Drawdown:</span>
+              <span className="metric-value">{strategy.max_drawdown ? parseFloat(strategy.max_drawdown).toFixed(2) : 'N/A'}%</span>
+            </div>
+            <div className="metric">
+              <span className="metric-label">Sharpe Ratio:</span>
+              <span className="metric-value">{strategy.sharpe_ratio ? parseFloat(strategy.sharpe_ratio).toFixed(2) : 'N/A'}</span>
             </div>
           </div>
           {isOwnProfile && (
             <div className="strategy-actions">
               <button
-                className="btn btn-sm btn-secondary"
-                onClick={() => handleEditStrategy(strategy.id)}
-              >
-                <FaEdit /> Edit
-              </button>
-              <button
                 className="btn btn-sm btn-danger"
-                onClick={() => handleDeleteStrategy(strategy.id, strategy.name)}
+                onClick={() => handleDeleteStrategy(strategy.id, cleanStrategyName(strategy.name))}
               >
                 <FaTrash /> Delete
               </button>
