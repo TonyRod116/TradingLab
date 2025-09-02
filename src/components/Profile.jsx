@@ -263,7 +263,25 @@ const Profile = () => {
           <div className="strategy-metrics">
             <div className="metric">
               <span className="metric-label">Win Rate:</span>
-              <span className="metric-value">{strategy.win_rate !== null && strategy.win_rate !== undefined ? parseFloat(strategy.win_rate).toFixed(2) : '0.00'}%</span>
+              <span className="metric-value">
+                {(() => {
+                  const winRate = strategy.win_rate;
+                  console.log('Win Rate debug:', { winRate, type: typeof winRate, parsed: parseFloat(winRate) });
+                  
+                  if (winRate === null || winRate === undefined) {
+                    return 'N/A';
+                  }
+                  
+                  const parsedWinRate = parseFloat(winRate);
+                  
+                  // Check if it's a valid number, not negative, and not greater than 100%
+                  if (isNaN(parsedWinRate) || parsedWinRate < 0 || parsedWinRate > 100) {
+                    return 'N/A';
+                  }
+                  
+                  return parsedWinRate.toFixed(2) + '%';
+                })()}
+              </span>
             </div>
             <div className="metric">
               <span className="metric-label">Total Trades:</span>

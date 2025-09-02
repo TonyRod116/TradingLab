@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { FaArrowLeft, FaSave, FaChevronRight, FaChevronLeft, FaCog, FaShieldAlt, FaShoppingCart, FaMoneyBillWave, FaSpinner } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaArrowLeft, FaSave, FaChevronRight, FaChevronLeft, FaCog, FaShieldAlt, FaShoppingCart, FaMoneyBillWave, FaSpinner, FaRocket } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 import SimpleRuleBuilder from './SimpleRuleBuilder';
 import BacktestResults from './BacktestResults';
@@ -8,6 +10,7 @@ import strategyService from '../services/StrategyService';
 import './StrategyCreator.css';
 
 const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [strategyData, setStrategyData] = useState({
     name: '',
@@ -87,7 +90,8 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     { id: 1, title: 'Basic Information', icon: <FaCog />, description: 'Strategy name, description, and timeframe' },
     { id: 2, title: 'Risk Management', icon: <FaShieldAlt />, description: 'Position size, stop loss, and take profit' },
     { id: 3, title: 'Entry Rules', icon: <FaShoppingCart />, description: 'When to buy - define your entry conditions' },
-    { id: 4, title: 'Exit Rules', icon: <FaMoneyBillWave />, description: 'When to sell - define your exit conditions' }
+    { id: 4, title: 'Exit Rules', icon: <FaMoneyBillWave />, description: 'When to sell - define your exit conditions' },
+    { id: 5, title: 'Backtest', icon: <FaRocket />, description: 'Review strategy and run backtest' }
   ];
 
 
@@ -270,14 +274,22 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     return formatted;
   }, []);
 
-  const handleSaveStrategyAndBacktest = useCallback(async () => {
-    if (!validateStrategy()) return;
+  const handleRunBacktest = useCallback(async () => {
+    console.log('Starting backtest...');
+    console.log('Strategy data:', strategyData);
+    console.log('Rules:', rules);
     
+    if (!validateStrategy()) {
+      console.log('Strategy validation failed');
+      return;
+    }
+    
+    console.log('Strategy validation passed, starting backtest...');
     setLoading(true);
-    setLoadingMessage('Creating strategy...');
+    setLoadingMessage('Running backtest... This may take up to 5 minutes for complex strategies.');
     
     try {
-      // Create strategy using service
+      // Create temporary strategy for backtest only
       const entryRules = formatEntryRules(rules);
       const exitRules = formatExitRules(rules);
       
@@ -291,10 +303,10 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       
       // Add timestamp to name to avoid duplicates
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
-      const uniqueName = `${strategyData.name} ${timestamp}`;
+      const tempName = `temp_backtest_${Date.now()}_${timestamp}`;
       
       const strategyPayload = {
-        name: uniqueName,
+        name: tempName,
         description: strategyData.description,
         symbol: strategyData.symbol,
         timeframe: strategyData.timeframe,
@@ -306,13 +318,17 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         take_profit_value: strategyData.take_profit_value
       };
 
+      console.log('Creating temporary strategy...');
       const strategy = await strategyService.createStrategy(strategyPayload);
-      toast.success('Strategy saved successfully!');
+      console.log('Strategy created:', strategy);
+      
+      // Show success toast when strategy is created and backtest starts
+      toast.success('Strategy created successfully! Starting backtest calculation...', {
+        position: "top-right",
+        autoClose: 3000,
+      });
       
       // Run backtest using service
-      setLoadingMessage('Running backtest... This may take up to 60 seconds.');
-      toast.info('Running backtest...', { autoClose: 2000 });
-      
       const backtestParams = {
         start_date: '2020-01-01T00:00:00Z',
         end_date: '2024-12-31T23:59:59Z',
@@ -321,8 +337,17 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         slippage: strategyData.slippage
       };
 
+      console.log('Running backtest with params:', backtestParams);
       const backtestResults = await strategyService.runBacktest(strategy.id, backtestParams);
-      setBacktestResults(backtestResults);
+      console.log('Backtest results:', backtestResults);
+      
+      // Add strategy_id to results so we can update it later
+      const resultsWithStrategyId = {
+        ...backtestResults,
+        strategy_id: strategy.id
+      };
+      
+      setBacktestResults(resultsWithStrategyId);
       
       if (backtestResults.trades && backtestResults.trades.length > 0) {
         toast.success(`Backtest completed! Generated ${backtestResults.trades.length} trades.`);
@@ -330,24 +355,128 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         toast.warning('Backtest completed but no trades were executed. Check your strategy rules.');
       }
       
-      if (onStrategyCreated) {
-        onStrategyCreated();
-      }
     } catch (error) {
-      if (error.message.includes('timeout')) {
-        toast.error('Request timed out. The backtest is taking longer than expected. Please try again.');
+      console.error('Backtest error:', error);
+      if (error.name === 'AbortError' || error.message.includes('timeout')) {
+        toast.warning('Backtest is taking longer than expected. It may still be running in the background. Please check your strategies list in a few minutes.');
       } else {
-        toast.error(error.message || 'Error saving strategy');
+        toast.error(`Error running backtest: ${error.message || 'Unknown error'}`);
       }
     } finally {
       setLoading(false);
       setLoadingMessage('');
     }
-  }, [strategyData, rules, validateStrategy, formatEntryRules, formatExitRules, onStrategyCreated]);
+  }, [strategyData, rules, validateStrategy, formatEntryRules, formatExitRules]);
 
   const handleCloseBacktestResults = useCallback(() => {
     setBacktestResults(null);
   }, []);
+
+  const handleSaveResults = useCallback(async () => {
+    if (!backtestResults) return;
+    
+    try {
+      // The strategy is already saved from the backtest, we just need to update its name
+      // to make it permanent (remove the "temp_backtest_" prefix)
+      // Add timestamp to avoid name conflicts
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+      const finalName = `${strategyData.name}_${timestamp}`;
+      
+      console.log('Updating strategy name from temp to final:', finalName);
+      console.log('Strategy ID:', backtestResults.strategy_id);
+      
+      // Format rules for the update
+      const entryRules = formatEntryRules(rules);
+      const exitRules = formatExitRules(rules);
+      
+      // Fallback: If no rules are formatted, use default rules
+      if (Object.keys(entryRules).length === 0) {
+        entryRules.rsi_oversold = 30;
+      }
+      if (Object.keys(exitRules).length === 0) {
+        exitRules.time_based = true;
+      }
+      
+      // Prepare complete strategy data for PUT request
+      const completeStrategyData = {
+        name: finalName,
+        description: strategyData.description,
+        symbol: strategyData.symbol,
+        timeframe: strategyData.timeframe,
+        entry_rules: entryRules,
+        exit_rules: exitRules,
+        stop_loss_type: strategyData.stop_loss_type,
+        stop_loss_value: strategyData.stop_loss_value,
+        take_profit_type: strategyData.take_profit_type,
+        take_profit_value: strategyData.take_profit_value
+      };
+      
+      console.log('Updating strategy with complete data:', completeStrategyData);
+      
+      // Use strategyService which uses PUT method
+      try {
+        const updatedStrategy = await strategyService.updateStrategy(backtestResults.strategy_id, completeStrategyData);
+        console.log('Strategy updated successfully:', updatedStrategy);
+      } catch (updateError) {
+        console.error('StrategyService update failed:', updateError);
+        
+        // Try alternative approach: create a new strategy with the final name
+        console.log('Trying alternative approach: creating new strategy with final name...');
+        
+        const newStrategy = await strategyService.createStrategy(completeStrategyData);
+        console.log('New strategy created:', newStrategy);
+        
+        // Run backtest for the new strategy
+        const backtestParams = {
+          start_date: '2020-01-01T00:00:00Z',
+          end_date: '2024-12-31T23:59:59Z',
+          initial_capital: 100000,
+          commission: strategyData.round_turn_commissions,
+          slippage: strategyData.slippage
+        };
+        
+        console.log('Running backtest for new strategy...');
+        const finalBacktestResults = await strategyService.runBacktest(newStrategy.id, backtestParams);
+        console.log('Final backtest completed:', finalBacktestResults);
+        
+        // Delete the temporary strategy
+        try {
+          await strategyService.deleteStrategy(backtestResults.strategy_id);
+          console.log('Temporary strategy deleted successfully');
+        } catch (deleteError) {
+          console.warn('Could not delete temporary strategy:', deleteError);
+        }
+      }
+      
+      toast.success('Strategy saved successfully!');
+      
+      // Navigate to user profile
+      const userId = localStorage.getItem('user_id');
+      if (userId) {
+        navigate(`/users/${userId}`);
+      } else {
+        navigate('/strategies');
+      }
+      
+    } catch (error) {
+      console.error('Error saving strategy:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error headers:', error.response?.headers);
+      
+      // More detailed error message
+      let errorMessage = 'Error saving strategy';
+      if (error.response?.data?.detail) {
+        errorMessage += `: ${error.response.data.detail}`;
+      } else if (error.response?.data?.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      } else if (error.message) {
+        errorMessage += `: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
+    }
+  }, [backtestResults, strategyData, rules, formatEntryRules, formatExitRules, navigate]);
 
   const renderStepIndicator = () => (
     <div className="step-indicator">
@@ -399,6 +528,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
               <option value="1m">1 Minute</option>
               <option value="5m">5 Minutes</option>
               <option value="15m">15 Minutes</option>
+              <option value="30m">30 Minutes</option>
               <option value="1h">1 Hour</option>
               <option value="4h">4 Hours</option>
               <option value="1d">1 Day</option>
@@ -599,6 +729,118 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     </div>
   );
 
+  // Helper function to convert operators to readable symbols
+  const formatOperator = (operator) => {
+    const operatorMap = {
+      'gt': '>',
+      'lt': '<',
+      'gte': '≥',
+      'lte': '≤',
+      'eq': '=',
+      'ne': '≠',
+      'and': 'AND',
+      'or': 'OR'
+    };
+    return operatorMap[operator] || operator;
+  };
+
+  const renderBacktestStep = () => (
+    <div className="step-content">
+      <div className="step-header">
+        <h3>Strategy Summary</h3>
+        <p>Review your strategy before running the backtest</p>
+      </div>
+      
+      <div className="strategy-summary">
+        <div className="summary-section">
+          <h4>Basic Information</h4>
+          <div className="summary-grid">
+            <div className="summary-item">
+              <span className="summary-label">Strategy Name:</span>
+              <span className="summary-value">{strategyData.name}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Description:</span>
+              <span className="summary-value">{strategyData.description}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Symbol:</span>
+              <span className="summary-value">{strategyData.symbol}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Timeframe:</span>
+              <span className="summary-value">{strategyData.timeframe}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="summary-section">
+          <h4>Risk Management</h4>
+          <div className="summary-grid">
+            <div className="summary-item">
+              <span className="summary-label">Position Size:</span>
+              <span className="summary-value">{strategyData.position_size}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Stop Loss:</span>
+              <span className="summary-value">{strategyData.stop_loss_value}%</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Take Profit:</span>
+              <span className="summary-value">{strategyData.take_profit_value}%</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Commission:</span>
+              <span className="summary-value">${strategyData.round_turn_commissions}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="summary-section">
+          <h4>Entry Rules</h4>
+          <div className="rules-summary">
+            {rules.filter(rule => rule.section === 'entry').map((rule, index) => (
+              <div key={rule.id} className="rule-details">
+                <div className="rule-item">
+                  <span className="rule-number">{index + 1}.</span>
+                  <span className="rule-text">
+                    {rule.conditions.map((condition, condIndex) => (
+                      <span key={condIndex} className="rule-condition">
+                        {condition.left_operand || 'Unknown'} {formatOperator(condition.operator) || ''} {condition.right_operand || 'N/A'}
+                        {condIndex < rule.conditions.length - 1 && ` ${formatOperator(condition.logical_operator) || 'AND'} `}
+                      </span>
+                    ))}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="summary-section">
+          <h4>Exit Rules</h4>
+          <div className="rules-summary">
+            {rules.filter(rule => rule.section === 'exit').map((rule, index) => (
+              <div key={rule.id} className="rule-details">
+                <div className="rule-item">
+                  <span className="rule-number">{index + 1}.</span>
+                  <span className="rule-text">
+                    {rule.conditions.map((condition, condIndex) => (
+                      <span key={condIndex} className="rule-condition">
+                        {condition.left_operand || 'Unknown'} {formatOperator(condition.operator) || ''} {condition.right_operand || 'N/A'}
+                        {condIndex < rule.conditions.length - 1 && ` ${formatOperator(condition.logical_operator) || 'AND'} `}
+                      </span>
+                    ))}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
@@ -609,6 +851,8 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         return renderEntryRules();
       case 4:
         return renderExitRules();
+      case 5:
+        return renderBacktestStep();
       default:
         return renderBasicInfo();
     }
@@ -658,16 +902,16 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
               </button>
             ) : (
               <button
-                onClick={handleSaveStrategyAndBacktest}
+                onClick={handleRunBacktest}
                 className="btn btn-primary"
                 disabled={loading || !canProceedToNext()}
               >
                 {loading ? (
                   <>
-                    <FaSpinner className="spinner" /> {loadingMessage || 'Saving & Backtesting...'}
+                    <FaSpinner className="spinner" /> {loadingMessage || 'Running Backtest...'}
                   </>
                 ) : (
-                  <><FaSave /> Save Strategy & Backtest</>
+                  <><FaRocket /> Backtest</>
                 )}
               </button>
             )}
@@ -692,7 +936,8 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       {backtestResults && (
         <BacktestResults 
           results={backtestResults} 
-          onClose={handleCloseBacktestResults} 
+          onClose={handleCloseBacktestResults}
+          onSave={handleSaveResults}
         />
       )}
     </>

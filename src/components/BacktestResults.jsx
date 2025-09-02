@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FaChartLine, FaTrophy, FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 import './BacktestResults.css';
 
-const BacktestResults = ({ results, onClose }) => {
+const BacktestResults = ({ results, onClose, onSave }) => {
   const [activeTab, setActiveTab] = useState('overview');
   
 
@@ -225,7 +225,7 @@ const BacktestResults = ({ results, onClose }) => {
           <button className="btn btn-secondary" onClick={onClose}>
             Close
           </button>
-          <button className="btn btn-primary">
+          <button className="btn btn-primary" onClick={onSave}>
             Save Results
           </button>
         </div>

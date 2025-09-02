@@ -168,7 +168,7 @@ class StrategyService {
    */
   async runBacktest(strategyId, backtestParams) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for backtest
+    const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout for backtest
     
     try {
       const response = await fetch(`${this.baseURL}/api/strategies/${strategyId}/backtest/`, {
