@@ -258,6 +258,9 @@ const Profile = () => {
         <div key={strategy.id} className="strategy-card">
           <div className="strategy-header">
             <h3>{cleanStrategyName(strategy.name)}</h3>
+            <div className="strategy-meta">
+              <span className="symbol-timeframe">{strategy.symbol} • {strategy.timeframe}</span>
+            </div>
           </div>
           <p>{strategy.description}</p>
           <div className="strategy-metrics">
