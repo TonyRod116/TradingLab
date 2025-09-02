@@ -1,0 +1,262 @@
+/* Backtest Charts Styles */
+.backtest-charts {
+  width: 100%;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 16px;
+  border: 1px solid var(--color-light-gray);
+  margin-top: 2rem;
+}
+
+.charts-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.charts-header h3 {
+  color: var(--color-green);
+  font-size: 1.8rem;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(135deg, var(--color-green), #00ff88);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.charts-header p {
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  margin: 0;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.chart-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.chart-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-green);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 255, 136, 0.1);
+}
+
+.chart-item h4 {
+  color: var(--color-white);
+  font-size: 1.2rem;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Specific chart styles */
+.equity-chart {
+  grid-column: 1 / -1;
+}
+
+.equity-chart h4 {
+  color: var(--color-green);
+}
+
+.drawdown-chart h4 {
+  color: #dc3545;
+}
+
+.trades-chart h4 {
+  color: #ffc107;
+}
+
+.distribution-chart h4 {
+  color: #17a2b8;
+}
+
+.monthly-chart h4 {
+  color: #6f42c1;
+}
+
+.winloss-chart h4 {
+  color: #fd7e14;
+}
+
+/* Loading and Error States */
+.charts-loading,
+.charts-error,
+.charts-no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.spinner {
+  font-size: 2rem;
+  color: var(--color-green);
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.no-data-icon {
+  font-size: 3rem;
+  color: var(--color-green);
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.charts-error {
+  color: #dc3545;
+}
+
+/* Recharts Custom Styles */
+.recharts-wrapper {
+  font-family: inherit;
+}
+
+.recharts-cartesian-axis-tick-value {
+  fill: var(--color-text-secondary) !important;
+  font-size: 12px;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(255, 255, 255, 0.1) !important;
+}
+
+.recharts-tooltip-wrapper {
+  outline: none;
+}
+
+.recharts-legend-wrapper {
+  color: var(--color-white) !important;
+}
+
+/* Custom tooltip styles */
+.recharts-tooltip-content {
+  background: rgba(0, 0, 0, 0.9) !important;
+  border: 1px solid var(--color-green) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+.recharts-tooltip-label {
+  color: var(--color-white) !important;
+  font-weight: 600;
+}
+
+.recharts-tooltip-item {
+  color: var(--color-white) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .chart-grid {
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  }
+  
+  .equity-chart {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .backtest-charts {
+    padding: 1rem;
+  }
+  
+  .chart-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .chart-item {
+    padding: 1rem;
+  }
+  
+  .charts-header h3 {
+    font-size: 1.5rem;
+  }
+  
+  .chart-item h4 {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .backtest-charts {
+    padding: 0.5rem;
+  }
+  
+  .chart-item {
+    padding: 0.75rem;
+  }
+  
+  .charts-header h3 {
+    font-size: 1.3rem;
+  }
+  
+  .chart-item h4 {
+    font-size: 1rem;
+  }
+}
+
+/* Animation for chart items */
+.chart-item {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger animation for multiple charts */
+.chart-item:nth-child(1) { animation-delay: 0.1s; }
+.chart-item:nth-child(2) { animation-delay: 0.2s; }
+.chart-item:nth-child(3) { animation-delay: 0.3s; }
+.chart-item:nth-child(4) { animation-delay: 0.4s; }
+.chart-item:nth-child(5) { animation-delay: 0.5s; }
+.chart-item:nth-child(6) { animation-delay: 0.6s; }
+
+/* Custom scrollbar for chart containers */
+.chart-item::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chart-item::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.chart-item::-webkit-scrollbar-thumb {
+  background: var(--color-green);
+  border-radius: 3px;
+}
+
+.chart-item::-webkit-scrollbar-thumb:hover {
+  background: #00ff88;
+}

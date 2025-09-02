@@ -30,7 +30,7 @@ const EditProfile = () => {
     try {
       // Check if token is available
       const token = localStorage.getItem('access_token');
-      console.log('Token available:', !!token);
+
       
       const response = await axios.get('http://localhost:8000/users/profile/', {
         headers: {
@@ -39,9 +39,7 @@ const EditProfile = () => {
       });
       const data = response.data;
       
-      console.log('Profile data received:', data);
-      console.log('Bio field:', data.bio);
-      console.log('Profile image field:', data.profile_image);
+
       
       setFormData({
         bio: data.bio || '',

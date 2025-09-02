@@ -158,7 +158,7 @@ const RuleBuilder = ({ onAddRule, onRemoveRule, onMoveRule, rules, activeSection
 
   const handleSubmit = useCallback(() => {
     if (!ruleForm.name.trim()) {
-      console.log('Rule name is empty');
+
       return;
     }
     
@@ -169,7 +169,7 @@ const RuleBuilder = ({ onAddRule, onRemoveRule, onMoveRule, rules, activeSection
       );
       
       if (!hasValidCondition) {
-        console.log('No valid conditions');
+
         return;
       }
     }
@@ -181,7 +181,7 @@ const RuleBuilder = ({ onAddRule, onRemoveRule, onMoveRule, rules, activeSection
       order: rules.length + 1
     };
     
-    console.log('Adding new rule:', newRule);
+
     onAddRule(newRule);
     setShowRuleForm(false);
     setRuleForm({

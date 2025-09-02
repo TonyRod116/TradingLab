@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaPlay, FaPause, FaEdit, FaTrash, FaChartLine, FaEye } from 'react-icons/fa';
 import ConfirmDialog from './ConfirmDialog';
+import { cleanStrategyName } from '../utils/strategyUtils';
 import './StrategyList.css';
 
 const StrategyList = ({ strategies, loading, error, onRefresh }) => {
@@ -49,7 +50,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
     setConfirmDialog({
       isOpen: true,
       strategyId,
-      strategyName
+      strategyName: cleanStrategyName(strategyName)
     });
   };
 
@@ -105,7 +106,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
       
       if (response.ok) {
         const result = await response.json();
-        console.log('Backtest result:', result);
+
         // Here you could show the backtest results in a modal or navigate to results page
       }
     } catch (err) {
@@ -190,7 +191,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
                 {getStrategyTypeIcon(strategy.strategy_type)}
               </div>
               <div className="strategy-info">
-                <h3>{strategy.name}</h3>
+                <h3>{cleanStrategyName(strategy.name)}</h3>
                 <p>{strategy.description}</p>
                 <div className="strategy-meta">
                   <span className="symbol">{strategy.symbol}</span>

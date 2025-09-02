@@ -306,9 +306,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         take_profit_value: strategyData.take_profit_value
       };
 
-      console.log('Creating strategy with unique name:', uniqueName);
       const strategy = await strategyService.createStrategy(strategyPayload);
-      console.log('Strategy created successfully:', strategy);
       toast.success('Strategy saved successfully!');
       
       // Run backtest using service
@@ -323,9 +321,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         slippage: strategyData.slippage
       };
 
-      console.log('Running backtest for strategy ID:', strategy.id);
       const backtestResults = await strategyService.runBacktest(strategy.id, backtestParams);
-      console.log('Backtest completed successfully:', backtestResults);
       setBacktestResults(backtestResults);
       
       if (backtestResults.trades && backtestResults.trades.length > 0) {
