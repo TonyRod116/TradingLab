@@ -194,9 +194,9 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
                 <h3>{cleanStrategyName(strategy.name)}</h3>
                 <p>{strategy.description}</p>
                 <div className="strategy-meta">
+                  <span className="created-by">by {strategy.created_by || 'Unknown User'}</span>
                   <span className="symbol">{strategy.symbol}</span>
                   <span className="timeframe">{strategy.timeframe}</span>
-                  {getStatusBadge(strategy.status)}
                 </div>
               </div>
             </div>
@@ -204,61 +204,31 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
             <div className="strategy-stats">
               <div className="stat-item">
                 <span className="stat-label">Win Rate</span>
-                <span className="stat-value">{strategy.win_rate}%</span>
+                <span className="stat-value">{strategy.win_rate ? parseFloat(strategy.win_rate).toFixed(2) : 'N/A'}%</span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Total Trades</span>
-                <span className="stat-value">{strategy.total_trades}</span>
+                <span className="stat-value">{strategy.total_trades || 'N/A'}</span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Profit Factor</span>
-                <span className="stat-value">{strategy.profit_factor}</span>
+                <span className="stat-value">{strategy.profit_factor ? parseFloat(strategy.profit_factor).toFixed(2) : 'N/A'}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Total Return</span>
+                <span className="stat-value">{strategy.total_return_percent ? parseFloat(strategy.total_return_percent).toFixed(2) : 'N/A'}%</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Max Drawdown</span>
+                <span className="stat-value">{strategy.max_drawdown ? parseFloat(strategy.max_drawdown).toFixed(2) : 'N/A'}%</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Sharpe Ratio</span>
+                <span className="stat-value">{strategy.sharpe_ratio ? parseFloat(strategy.sharpe_ratio).toFixed(2) : 'N/A'}</span>
               </div>
             </div>
 
-            <div className="strategy-actions">
-              {strategy.status === 'active' ? (
-                <button 
-                  onClick={() => handlePause(strategy.id)}
-                  className="btn btn-warning btn-sm"
-                  title="Pause Strategy"
-                >
-                  <FaPause />
-                </button>
-              ) : (
-                <button 
-                  onClick={() => handleActivate(strategy.id)}
-                  className="btn btn-success btn-sm"
-                  title="Activate Strategy"
-                >
-                  <FaPlay />
-                </button>
-              )}
-              
-              <button 
-                onClick={() => handleBacktest(strategy.id)}
-                className="btn btn-primary btn-sm"
-                title="Run Backtest"
-              >
-                <FaChartLine />
-              </button>
-              
-              <button 
-                onClick={() => setSelectedStrategy(strategy)}
-                className="btn btn-info btn-sm"
-                title="View Details"
-              >
-                <FaEye />
-              </button>
-              
-              <button 
-                onClick={() => handleDelete(strategy.id, strategy.name)}
-                className="btn btn-danger btn-sm"
-                title="Delete Strategy"
-              >
-                <FaTrash />
-              </button>
-            </div>
+
           </div>
         ))}
       </div>
