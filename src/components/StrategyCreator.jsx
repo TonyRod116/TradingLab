@@ -19,7 +19,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     description: '',
     symbol: 'ES',
     timeframe: '1m',
-    initial_capital: 10000,
+    initial_capital: 100000,
     position_size: 1,
     max_positions: 1,
     stop_loss_type: 'atr',
@@ -300,9 +300,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
   }, []);
 
   const handleRunBacktest = useCallback(async () => {
-    console.log('Starting backtest...');
-    console.log('Strategy data:', strategyData);
-    console.log('Rules:', rules);
+
     
     if (!validateStrategy()) {
       console.log('Strategy validation failed');
