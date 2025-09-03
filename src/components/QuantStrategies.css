@@ -19,8 +19,9 @@
 }
 
 .quant-header p {
-  color: var(--color-gray);
+  color: var(--color-white);
   font-size: 1.1rem;
+  opacity: 0.9;
 }
 
 /* Subtabs */
@@ -30,6 +31,7 @@
   margin-bottom: 2rem;
   border-bottom: 2px solid var(--color-dark-gray);
   padding-bottom: 1rem;
+  justify-content: center;
 }
 
 .subtab-button {
@@ -65,6 +67,11 @@
   margin-top: 2rem;
 }
 
+.templates-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .templates-header {
   text-align: center;
   margin-bottom: 2rem;
@@ -77,6 +84,11 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+}
+
+.templates-header p {
+  color: var(--color-white);
+  opacity: 0.9;
 }
 
 .templates-grid {
@@ -122,7 +134,8 @@
 }
 
 .template-description {
-  color: var(--color-gray);
+  color: var(--color-white);
+  opacity: 0.9;
   margin-bottom: 1rem;
   line-height: 1.5;
 }
@@ -206,7 +219,8 @@
 }
 
 .template-info p {
-  color: var(--color-gray);
+  color: var(--color-white);
+  opacity: 0.9;
   margin: 0;
 }
 
@@ -245,7 +259,8 @@
 }
 
 .code-instructions ol {
-  color: var(--color-gray);
+  color: var(--color-white);
+  opacity: 0.9;
   padding-left: 1.5rem;
 }
 
@@ -321,6 +336,11 @@
   margin-top: 2rem;
 }
 
+.natural-language-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
 .natural-language-header {
   text-align: center;
   margin-bottom: 2rem;
@@ -333,6 +353,11 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+}
+
+.natural-language-header p {
+  color: var(--color-white);
+  opacity: 0.9;
 }
 
 .strategy-input-section {
@@ -375,7 +400,7 @@
 }
 
 .strategy-textarea::placeholder {
-  color: var(--color-gray);
+  color: var(--color-light-gray);
 }
 
 .example-strategies {
@@ -389,20 +414,24 @@
 
 .example-buttons {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.75rem;
+  justify-content: center;
 }
 
 .example-btn {
   background: var(--color-dark-gray);
   border: 2px solid var(--color-green);
   color: var(--color-white);
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .example-btn:hover {
@@ -520,7 +549,8 @@
 }
 
 .status-details p {
-  color: var(--color-gray);
+  color: var(--color-white);
+  opacity: 0.9;
   margin: 0.5rem 0;
 }
 
@@ -550,8 +580,9 @@
   border: 1px solid var(--color-dark-gray);
   border-radius: 6px;
   padding: 1rem;
-  color: var(--color-gray);
+  color: var(--color-white);
   line-height: 1.5;
+  opacity: 0.9;
 }
 
 .capability-item strong {
@@ -587,7 +618,13 @@
   }
   
   .example-buttons {
-    flex-direction: column;
+    flex-wrap: wrap;
+    flex-direction: row;
+  }
+  
+  .example-btn {
+    flex: 1 1 calc(50% - 0.375rem);
+    min-width: 140px;
   }
   
   .action-buttons {

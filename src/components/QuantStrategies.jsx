@@ -264,6 +264,8 @@ const QuantStrategies = () => {
         <p>Describe your trading strategy in plain English and we'll convert it to QuantConnect code</p>
       </div>
       
+      <div className="natural-language-content">
+      
       <div className="strategy-input-section">
         <div className="input-group">
           <label htmlFor="strategy-description">Strategy Description</label>
@@ -297,6 +299,12 @@ const QuantStrategies = () => {
               onClick={() => setNaturalLanguageInput("Trade Gold futures using Bollinger Bands during the COVID period")}
             >
               Gold Bollinger Bands
+            </button>
+            <button 
+              className="example-btn"
+              onClick={() => setNaturalLanguageInput("Buy Bitcoin when MACD crosses above signal line and volume is above average, sell when price drops 5%")}
+            >
+              Crypto MACD Strategy
             </button>
           </div>
         </div>
@@ -381,17 +389,19 @@ const QuantStrategies = () => {
           </div>
         </div>
       </div>
+      </div>
     </div>
   );
 
   const renderTemplates = () => (
     <div className="quant-templates">
       <div className="templates-header">
-        <h3><FaRocket /> Strategy Templates</h3>
+        <h3><FaRocket /> Quant Templates</h3>
         <p>Choose from proven QuantConnect strategy templates</p>
       </div>
       
-      <div className="templates-grid">
+      <div className="templates-content">
+        <div className="templates-grid">
         {strategyTemplates.map((template) => (
           <div key={template.id} className="template-card">
             <div className="template-header">
@@ -422,6 +432,7 @@ const QuantStrategies = () => {
             </div>
           </div>
         ))}
+        </div>
       </div>
     </div>
   );
@@ -449,7 +460,7 @@ const QuantStrategies = () => {
           className={`subtab-button ${activeSubTab === 'templates' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('templates')}
         >
-          <FaRocket /> Strategy Templates
+          <FaRocket /> Quant Templates
         </button>
 
 
