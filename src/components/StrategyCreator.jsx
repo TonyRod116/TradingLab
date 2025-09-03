@@ -426,6 +426,19 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       
       // Backend supports: percentage, points, pips, atr
       // No conversion needed - send the original types
+      
+      // Extract all detailed backtest data
+      const performance = backtestResults.performance || {};
+      const trades = backtestResults.trades || [];
+      
+      // Calculate additional metrics from trades
+      const winningTrades = trades.filter(trade => trade.pnl > 0);
+      const losingTrades = trades.filter(trade => trade.pnl < 0);
+      const avgWin = winningTrades.length > 0 ? winningTrades.reduce((sum, trade) => sum + trade.pnl, 0) / winningTrades.length : 0;
+      const avgLoss = losingTrades.length > 0 ? losingTrades.reduce((sum, trade) => sum + trade.pnl, 0) / losingTrades.length : 0;
+      const largestWin = winningTrades.length > 0 ? Math.max(...winningTrades.map(trade => trade.pnl)) : 0;
+      const largestLoss = losingTrades.length > 0 ? Math.min(...losingTrades.map(trade => trade.pnl)) : 0;
+      
       const completeStrategyData = {
         name: finalName,
         description: strategyData.description,
@@ -436,10 +449,50 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         stop_loss_type: strategyData.stop_loss_type,
         stop_loss_value: strategyData.stop_loss_value,
         take_profit_type: strategyData.take_profit_type,
-        take_profit_value: strategyData.take_profit_value
+        take_profit_value: strategyData.take_profit_value,
+        // Detailed backtest metrics
+        total_return: performance.total_return || 0,
+        total_return_percent: performance.total_return_percent || 0,
+        total_trades: performance.total_trades || trades.length,
+        winning_trades: performance.winning_trades || winningTrades.length,
+        losing_trades: performance.losing_trades || losingTrades.length,
+        win_rate: performance.win_rate || (trades.length > 0 ? (winningTrades.length / trades.length) * 100 : 0),
+        profit_factor: performance.profit_factor || 0,
+        sharpe_ratio: performance.sharpe_ratio || 0,
+        max_drawdown: performance.max_drawdown || 0,
+        max_drawdown_percent: performance.max_drawdown_percent || 0,
+        avg_win: avgWin,
+        avg_loss: avgLoss,
+        largest_win: largestWin,
+        largest_loss: largestLoss,
+        initial_capital: backtestResults.initial_capital || 100000,
+        final_capital: backtestResults.final_capital || (backtestResults.initial_capital + (performance.total_return || 0)),
+        // Additional metrics
+        sortino_ratio: performance.sortino_ratio || 0,
+        calmar_ratio: performance.calmar_ratio || 0,
+        volatility: performance.volatility || 0,
+        max_consecutive_wins: performance.max_consecutive_wins || 0,
+        max_consecutive_losses: performance.max_consecutive_losses || 0,
+        avg_trade_duration: performance.avg_trade_duration || 0,
+        // Backtest metadata
+        backtest_start_date: backtestResults.start_date,
+        backtest_end_date: backtestResults.end_date,
+        backtest_commission: backtestResults.commission || strategyData.round_turn_commissions,
+        backtest_slippage: backtestResults.slippage || strategyData.slippage
       };
       
       console.log('Updating strategy with complete data:', completeStrategyData);
+      console.log('Detailed metrics being saved:');
+      console.log('- Total trades:', completeStrategyData.total_trades);
+      console.log('- Winning trades:', completeStrategyData.winning_trades);
+      console.log('- Losing trades:', completeStrategyData.losing_trades);
+      console.log('- Win rate:', completeStrategyData.win_rate);
+      console.log('- Average win:', completeStrategyData.avg_win);
+      console.log('- Average loss:', completeStrategyData.avg_loss);
+      console.log('- Largest win:', completeStrategyData.largest_win);
+      console.log('- Largest loss:', completeStrategyData.largest_loss);
+      console.log('- Sharpe ratio:', completeStrategyData.sharpe_ratio);
+      console.log('- Max drawdown:', completeStrategyData.max_drawdown);
       
       // Use strategyService which uses PUT method
       try {
@@ -476,15 +529,17 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         }
       }
       
-      toast.success('Strategy saved successfully!');
+      toast.success('Strategy saved successfully! Redirecting to your profile...');
       
-      // Navigate to user profile
-      const userId = localStorage.getItem('user_id');
-      if (userId) {
-        navigate(`/users/${userId}`);
-      } else {
-        navigate('/strategies');
-      }
+      // Navigate to user profile after a short delay
+      setTimeout(() => {
+        const userId = localStorage.getItem('user_id');
+        if (userId) {
+          navigate(`/users/profile/${userId}`);
+        } else {
+          navigate('/strategies');
+        }
+      }, 1500);
       
     } catch (error) {
       console.error('Error saving strategy:', error);
@@ -502,7 +557,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         errorMessage += `: ${error.message}`;
       }
       
-      toast.error(errorMessage);
+      toast.error(`Failed to save strategy: ${errorMessage}`);
     }
   }, [backtestResults, strategyData, rules, formatEntryRules, formatExitRules, navigate]);
 

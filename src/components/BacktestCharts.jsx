@@ -19,6 +19,7 @@ import './BacktestCharts.css';
 const BacktestCharts = ({ backtestId, backtestData: propBacktestData, trades: propTrades }) => {
   const [backtestData, setBacktestData] = useState(propBacktestData);
   const [trades, setTrades] = useState(propTrades || []);
+  const [equityCurve, setEquityCurve] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -57,19 +58,37 @@ const BacktestCharts = ({ backtestId, backtestData: propBacktestData, trades: pr
           'Content-Type': 'application/json'
         }
       });
+
+      // Obtener equity curve usando el nuevo endpoint
+      const equityCurveResponse = await fetch(`http://localhost:8000/api/backtest-results/${backtestId}/equity_curve/`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
       console.log('Backtest response status:', backtestResponse.status);
       console.log('Trades response status:', tradesResponse.status);
+      console.log('Equity curve response status:', equityCurveResponse.status);
       
       if (backtestResponse.ok && tradesResponse.ok) {
         const backtest = await backtestResponse.json();
         const tradesData = await tradesResponse.json();
+        let equityCurveData = [];
+        
+        if (equityCurveResponse.ok) {
+          equityCurveData = await equityCurveResponse.json();
+          console.log('Equity curve data received:', equityCurveData);
+        } else {
+          console.warn('Equity curve not available, using fallback');
+        }
         
         console.log('Backtest data received:', backtest);
         console.log('Trades data received:', tradesData);
         
         setBacktestData(backtest);
         setTrades(tradesData);
+        setEquityCurve(equityCurveData);
       } else {
         // Log the actual response content to see what's being returned
         const backtestText = await backtestResponse.text();
@@ -149,13 +168,14 @@ const BacktestCharts = ({ backtestId, backtestData: propBacktestData, trades: pr
           color: 'white',
           fontSize: '10px'
         }}>
-          DEBUG: Backtest ID: {backtestId}, Trades: {trades?.length || 0}
+          DEBUG: Backtest ID: {backtestId}, Trades: {trades?.length || 0}, Equity Points: {equityCurve?.length || 0}
         </div>
       </div>
       
       <div className="chart-grid">
         <EquityCurveChart 
           trades={trades} 
+          equityCurve={equityCurve}
           initialCapital={backtestData.initial_capital}
           startDate={backtestData.start_date}
           endDate={backtestData.end_date}
@@ -163,6 +183,7 @@ const BacktestCharts = ({ backtestId, backtestData: propBacktestData, trades: pr
         
         <DrawdownChart 
           trades={trades} 
+          equityCurve={equityCurve}
           initialCapital={backtestData.initial_capital}
         />
         
@@ -179,8 +200,19 @@ const BacktestCharts = ({ backtestId, backtestData: propBacktestData, trades: pr
 };
 
 // Equity Curve Chart
-const EquityCurveChart = ({ trades, initialCapital, startDate, endDate }) => {
+const EquityCurveChart = ({ trades, equityCurve, initialCapital, startDate, endDate }) => {
   const calculateEquityCurve = () => {
+    // Si tenemos datos reales de equity curve del backend, usarlos
+    if (equityCurve && equityCurve.length > 0) {
+      return equityCurve.map(point => ({
+        date: new Date(point.timestamp).toISOString().split('T')[0],
+        value: parseFloat(point.equity_value),
+        drawdown: parseFloat(point.drawdown || 0),
+        trade: point.trade
+      }));
+    }
+    
+    // Fallback: calcular desde trades si no hay datos de equity curve
     const equityData = [];
     let currentCapital = parseFloat(initialCapital);
     
@@ -260,8 +292,19 @@ const EquityCurveChart = ({ trades, initialCapital, startDate, endDate }) => {
 };
 
 // Drawdown Chart
-const DrawdownChart = ({ trades, initialCapital }) => {
+const DrawdownChart = ({ trades, equityCurve, initialCapital }) => {
   const calculateDrawdown = () => {
+    // Si tenemos datos reales de equity curve del backend, usarlos
+    if (equityCurve && equityCurve.length > 0) {
+      return equityCurve.map((point, index) => ({
+        trade_id: index + 1,
+        drawdown: parseFloat(point.drawdown || 0),
+        date: new Date(point.timestamp).toISOString().split('T')[0],
+        capital: parseFloat(point.equity_value)
+      }));
+    }
+    
+    // Fallback: calcular desde trades si no hay datos de equity curve
     const drawdownData = [];
     let currentCapital = parseFloat(initialCapital);
     let peakValue = currentCapital;
