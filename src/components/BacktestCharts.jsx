@@ -78,13 +78,7 @@ const EquityCurveChart = ({ trades, equityCurve, initialCapital, startDate, endD
     if (!trades || trades.length === 0) return [];
     
     const equityData = [];
-    // Fix: If initialCapital seems too high (likely backend error), use 10000
-    let capitalValue = parseFloat(initialCapital || 10000);
-    if (capitalValue > 50000) {
-      console.log('EquityCurveChart - Initial capital seems too high, using 10000 instead');
-      capitalValue = 10000;
-    }
-    let currentCapital = capitalValue;
+    let currentCapital = parseFloat(initialCapital || 10000);
     
     // Simple calculation: just show cumulative P&L per trade
     trades.forEach((trade, index) => {
@@ -159,13 +153,7 @@ const DrawdownChart = ({ trades, equityCurve, initialCapital }) => {
     
     // Fallback: calcular desde trades si no hay datos de equity curve
     const drawdownData = [];
-    // Fix: If initialCapital seems too high (likely backend error), use 10000
-    let capitalValue = parseFloat(initialCapital || 10000);
-    if (capitalValue > 50000) {
-      console.log('DrawdownChart - Initial capital seems too high, using 10000 instead');
-      capitalValue = 10000;
-    }
-    let currentCapital = capitalValue;
+    let currentCapital = parseFloat(initialCapital || 10000);
     let peakValue = currentCapital;
     
     trades.forEach((trade, index) => {

@@ -472,7 +472,6 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         avg_loss: avgLoss,
         largest_win: largestWin,
         largest_loss: largestLoss,
-        initial_capital: backtestResults.initial_capital || 100000,
         final_capital: backtestResults.final_capital || (backtestResults.initial_capital + (performance.total_return || 0)),
         // Additional metrics
         sortino_ratio: performance.sortino_ratio || 0,

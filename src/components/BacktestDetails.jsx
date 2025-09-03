@@ -17,6 +17,7 @@ const BacktestDetails = () => {
   const [backtestData, setBacktestData] = useState(null);
   const [trades, setTrades] = useState([]);
   const [equityCurve, setEquityCurve] = useState([]);
+  const [strategyUsername, setStrategyUsername] = useState(null);
 
   useEffect(() => {
     if (strategyId) {
@@ -29,39 +30,43 @@ const BacktestDetails = () => {
       setLoading(true);
       const token = getToken();
       
-      console.log('Loading backtest details for strategy ID:', strategyId);
-      
       // Load strategy details
       const strategyResponse = await axios.get(`http://localhost:8000/api/strategies/${strategyId}/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('Strategy data loaded:', strategyResponse.data);
-      console.log('Strategy keys:', Object.keys(strategyResponse.data));
-      console.log('Latest backtest:', strategyResponse.data.latest_backtest);
-      
       setStrategy(strategyResponse.data);
+
+      // Try to get username from strategies list endpoint (which includes created_by)
+      try {
+        const strategiesResponse = await axios.get(`http://localhost:8000/api/strategies/`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const strategies = strategiesResponse.data.results || strategiesResponse.data;
+        const currentStrategy = strategies.find(s => s.id === parseInt(strategyId));
+        if (currentStrategy && currentStrategy.created_by) {
+          setStrategyUsername(currentStrategy.created_by);
+        }
+      } catch (usernameError) {
+        console.warn('Could not load username from strategies list:', usernameError);
+      }
 
       // Use latest_backtest data for metrics since that's where the actual backtest results are
       if (strategyResponse.data.latest_backtest) {
-        console.log('Using latest_backtest data for metrics');
         setBacktestData(strategyResponse.data.latest_backtest);
       } else {
-        console.log('No latest_backtest found, using strategy data');
         setBacktestData(strategyResponse.data);
       }
 
       // Try to load additional data if available
       if (strategyResponse.data.latest_backtest) {
         const backtestId = strategyResponse.data.latest_backtest.id;
-        console.log('Found latest backtest ID:', backtestId);
         
         // Load trades data
         try {
           const tradesResponse = await axios.get(`http://localhost:8000/api/strategies/backtest-results/${backtestId}/trades/`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          console.log('Trades data loaded:', tradesResponse.data);
           setTrades(tradesResponse.data);
         } catch (tradesError) {
           console.warn('Could not load trades data:', tradesError);
@@ -69,10 +74,8 @@ const BacktestDetails = () => {
         }
 
         // Note: Equity curve endpoint doesn't exist yet, skipping for now
-        console.log('Skipping equity curve data load - endpoint not available');
         setEquityCurve([]);
       } else {
-        console.log('No latest_backtest found, using strategy data only');
         setTrades([]);
         setEquityCurve([]);
       }
@@ -146,7 +149,7 @@ const BacktestDetails = () => {
             <div className="strategy-meta">
               <span className="symbol">{strategy.symbol}</span>
               <span className="timeframe">{strategy.timeframe}</span>
-              <span className="created-by">by {strategy.created_by}</span>
+              <span className="created-by">by {strategyUsername || strategy.created_by || strategy.user || strategy.author || 'Unknown User'}</span>
             </div>
           </div>
 
@@ -272,27 +275,14 @@ const BacktestDetails = () => {
               <div className="metrics-grid-small">
                                       <div className="metric-item">
                         <span className="metric-label">Initial Capital</span>
-                        <span className="metric-value">{formatCurrency((() => {
-                          const capital = backtestData.initial_capital || strategy.initial_capital;
-                          // Fix: If capital seems too high (likely backend error), use 10000
-                          let capitalValue = parseFloat(capital || 10000);
-                          if (capitalValue > 50000) {
-                            capitalValue = 10000;
-                          }
-                          return capitalValue;
-                        })())}</span>
+                        <span className="metric-value">{formatCurrency(backtestData.initial_capital || strategy.initial_capital || 10000)}</span>
                       </div>
                       <div className="metric-item">
                         <span className="metric-label">Final Capital</span>
                         <span className="metric-value">{formatCurrency((() => {
-                          const capital = backtestData.initial_capital || strategy.initial_capital;
-                          // Fix: If capital seems too high (likely backend error), use 10000
-                          let capitalValue = parseFloat(capital || 10000);
-                          if (capitalValue > 50000) {
-                            capitalValue = 10000;
-                          }
+                          const initialCapital = parseFloat(backtestData.initial_capital || strategy.initial_capital || 10000);
                           const totalReturn = parseFloat(backtestData.total_return || 0);
-                          return capitalValue + totalReturn;
+                          return initialCapital + totalReturn;
                         })())}</span>
                       </div>
                       <div className="metric-item">
