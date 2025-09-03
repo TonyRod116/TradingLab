@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api.js';
 import { 
   setToken as setTokenStorage, 
   getToken, 
@@ -37,7 +38,7 @@ export function AuthProvider({ children }) {
 
   // Setup axios interceptors
   useEffect(() => {
-    axios.defaults.baseURL = 'http://localhost:8000';
+    axios.defaults.baseURL = API_BASE_URL;
     
     const requestInterceptor = axios.interceptors.request.use(
       (config) => {

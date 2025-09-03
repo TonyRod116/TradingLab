@@ -6,6 +6,7 @@ import { FaChartLine, FaCog, FaPlus, FaEdit, FaTrash, FaPlay, FaPause } from 're
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { cleanStrategyName } from '../utils/strategyUtils';
+import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
 import Header from './Header';
 import ConfirmDialog from './ConfirmDialog';
 import MiniEquityChart from './MiniEquityChart';
@@ -61,7 +62,7 @@ const Profile = () => {
           const token = getToken();
           if (!token) return;
           
-          const response = await axios.get('http://localhost:8000/api/users/profile/', {
+          const response = await axios.get(getApiUrl(API_ENDPOINTS.PROFILE), {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -95,7 +96,7 @@ const Profile = () => {
         return;
       }
       
-      const response = await fetch(`http://localhost:8000/api/strategies/`, {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.STRATEGIES), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -156,7 +157,7 @@ const Profile = () => {
     
     try {
       const token = getToken();
-      const response = await fetch(`http://localhost:8000/api/strategies/${confirmDialog.strategyId}/`, {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.STRATEGY_DETAIL(confirmDialog.strategyId)), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

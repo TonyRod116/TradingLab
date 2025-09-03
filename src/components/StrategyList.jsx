@@ -6,6 +6,7 @@ import FavoriteButton from './FavoriteButton';
 import { cleanStrategyName } from '../utils/strategyUtils';
 import MiniEquityChart from './MiniEquityChart';
 import favoritesService from '../services/FavoritesService';
+import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
 import './StrategyList.css';
 
 const StrategyList = ({ strategies, loading, error, onRefresh }) => {
@@ -59,7 +60,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
 
   const handleActivate = async (strategyId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/strategies/${strategyId}/activate/`, {
+      const response = await fetch(getApiUrl(`/api/strategies/${strategyId}/activate/`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -76,7 +77,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
 
   const handlePause = async (strategyId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/strategies/${strategyId}/pause/`, {
+      const response = await fetch(getApiUrl(`/api/strategies/${strategyId}/pause/`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -103,7 +104,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
     if (!confirmDialog.strategyId) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/strategies/${confirmDialog.strategyId}/`, {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.STRATEGY_DETAIL(confirmDialog.strategyId)), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -134,7 +135,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
 
   const handleBacktest = async (strategyId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/strategies/${strategyId}/backtest/`, {
+      const response = await fetch(getApiUrl(`/api/strategies/${strategyId}/backtest/`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,

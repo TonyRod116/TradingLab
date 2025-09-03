@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
+import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
 import Header from './Header';
 import StrategyList from './StrategyList';
 import FavoritesList from './FavoritesList';
@@ -35,7 +36,7 @@ const Strategies = () => {
     
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/strategies/', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.STRATEGIES), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }

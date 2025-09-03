@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
 import Header from './Header';
 import './EditProfile.css';
 
@@ -32,7 +33,7 @@ const EditProfile = () => {
       const token = localStorage.getItem('access_token');
 
       
-      const response = await axios.get('http://localhost:8000/users/profile/', {
+      const response = await axios.get(getApiUrl(API_ENDPOINTS.PROFILE), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -156,7 +157,7 @@ const EditProfile = () => {
       
       // Enviar al backend
       const response = await axios.put(
-        'http://localhost:8000/users/profile/',
+        getApiUrl(API_ENDPOINTS.PROFILE),
         backendData,
         {
           headers: {

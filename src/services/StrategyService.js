@@ -3,7 +3,9 @@
  * Uses the backend API for all strategy and backtesting operations
  */
 
-const BASE_URL = 'http://localhost:8000';
+import { API_BASE_URL } from '../config/api.js';
+
+const BASE_URL = API_BASE_URL;
 
 class StrategyService {
   constructor() {

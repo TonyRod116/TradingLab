@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { getToken } from '../utils/auth';
 import { cleanStrategyName } from '../utils/strategyUtils';
+import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
 import BacktestCharts from './BacktestCharts';
 import Header from './Header';
 import './BacktestDetails.css';
@@ -31,7 +32,7 @@ const BacktestDetails = () => {
       const token = getToken();
       
       // Load strategy details
-      const strategyResponse = await axios.get(`http://localhost:8000/api/strategies/${strategyId}/`, {
+      const strategyResponse = await axios.get(getApiUrl(API_ENDPOINTS.STRATEGY_DETAIL(strategyId)), {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -39,7 +40,7 @@ const BacktestDetails = () => {
 
       // Try to get username from strategies list endpoint (which includes created_by)
       try {
-        const strategiesResponse = await axios.get(`http://localhost:8000/api/strategies/`, {
+        const strategiesResponse = await axios.get(getApiUrl(API_ENDPOINTS.STRATEGIES), {
           headers: { Authorization: `Bearer ${token}` }
         });
         const strategies = strategiesResponse.data.results || strategiesResponse.data;
@@ -64,7 +65,7 @@ const BacktestDetails = () => {
         
         // Load trades data
         try {
-          const tradesResponse = await axios.get(`http://localhost:8000/api/strategies/backtest-results/${backtestId}/trades/`, {
+          const tradesResponse = await axios.get(getApiUrl(`/api/strategies/backtest-results/${backtestId}/trades/`), {
             headers: { Authorization: `Bearer ${token}` }
           });
           setTrades(tradesResponse.data);

@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import favoritesService from '../services/FavoritesService';
+import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
 import ConfirmDialog from './ConfirmDialog';
 import MiniEquityChart from './MiniEquityChart';
 import './FavoritesList.css';
@@ -28,7 +29,7 @@ const FavoritesList = ({ onRefresh }) => {
     
     try {
       // Get all strategies first (same as community backtests)
-      const response = await fetch('http://localhost:8000/api/strategies/', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.STRATEGIES), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }

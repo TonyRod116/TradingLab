@@ -2,9 +2,12 @@
  * Service for managing user favorites
  * Handles adding, removing, and fetching favorite strategies
  */
+
+import { API_BASE_URL } from '../config/api.js';
+
 class FavoritesService {
   constructor() {
-    this.baseURL = 'http://localhost:8000';
+    this.baseURL = API_BASE_URL;
   }
 
   /**

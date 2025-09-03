@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaSync, FaCheck, FaExclamationTriangle, FaChartLine, FaCog } from 'react-icons/fa';
 import axios from 'axios';
+import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
 import './QuantConnectSync.css';
 
 const QuantConnectSync = ({ onStrategiesLoaded, isConnected, onConnectionChange }) => {
@@ -50,7 +51,7 @@ const QuantConnectSync = ({ onStrategiesLoaded, isConnected, onConnectionChange 
     try {
       const token = localStorage.getItem('access_token');
       const response = await axios.post(
-        'http://localhost:8000/strategies/sync-quantconnect/',
+        getApiUrl('/strategies/sync-quantconnect/'),
         formData,
         {
           headers: {
