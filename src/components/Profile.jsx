@@ -147,6 +147,10 @@ const Profile = () => {
     });
   }, []);
 
+  const handleStrategyClick = useCallback((strategyId) => {
+    navigate(`/backtest/${strategyId}`);
+  }, [navigate]);
+
   const confirmDeleteStrategy = useCallback(async () => {
     if (!confirmDialog.strategyId) return;
     
@@ -256,7 +260,7 @@ const Profile = () => {
   const renderStrategiesGrid = () => (
     <div className="strategies-grid">
       {strategies.map((strategy) => (
-        <div key={strategy.id} className="strategy-card">
+        <div key={strategy.id} className="strategy-card" onClick={() => handleStrategyClick(strategy.id)}>
           {/* Mini Equity Chart at the top */}
           <div className="strategy-chart">
             <MiniEquityChart strategy={strategy} height={80} />
@@ -317,7 +321,10 @@ const Profile = () => {
             <div className="strategy-actions">
               <button
                 className="btn btn-sm btn-danger"
-                onClick={() => handleDeleteStrategy(strategy.id, cleanStrategyName(strategy.name))}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteStrategy(strategy.id, cleanStrategyName(strategy.name));
+                }}
               >
                 <FaTrash /> Delete
               </button>

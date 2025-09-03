@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaPlay, FaPause, FaEdit, FaTrash, FaChartLine, FaEye } from 'react-icons/fa';
 import ConfirmDialog from './ConfirmDialog';
 import { cleanStrategyName } from '../utils/strategyUtils';
@@ -6,6 +7,7 @@ import MiniEquityChart from './MiniEquityChart';
 import './StrategyList.css';
 
 const StrategyList = ({ strategies, loading, error, onRefresh }) => {
+  const navigate = useNavigate();
   const [selectedStrategy, setSelectedStrategy] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
@@ -115,6 +117,10 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
     }
   };
 
+  const handleStrategyClick = (strategyId) => {
+    navigate(`/backtest/${strategyId}`);
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       active: { class: 'status-active', text: 'Active' },
@@ -186,7 +192,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
 
       <div className="strategies-grid">
         {strategies.map((strategy) => (
-          <div key={strategy.id} className="strategy-card">
+          <div key={strategy.id} className="strategy-card" onClick={() => handleStrategyClick(strategy.id)}>
             {/* Mini Equity Chart at the top */}
             <div className="strategy-chart">
               <MiniEquityChart strategy={strategy} height={80} />

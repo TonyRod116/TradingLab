@@ -19,6 +19,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     description: '',
     symbol: 'ES',
     timeframe: '1m',
+    initial_capital: 10000,
     position_size: 1,
     max_positions: 1,
     stop_loss_type: 'atr',
@@ -156,7 +157,8 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       case 1: // Basic Information
         return strategyData.name.trim() && strategyData.description.trim();
       case 2: // Risk Management
-        return strategyData.position_size > 0 && 
+        return strategyData.initial_capital > 0 &&
+               strategyData.position_size > 0 && 
                strategyData.stop_loss_value > 0 && 
                strategyData.take_profit_value > 0 &&
                strategyData.round_turn_commissions >= 0 &&
@@ -168,6 +170,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       case 5: // Final step - can save if all previous validations pass
         return strategyData.name.trim() && 
                strategyData.description.trim() && 
+               strategyData.initial_capital > 0 &&
                strategyData.position_size > 0 && 
                strategyData.stop_loss_value > 0 && 
                strategyData.take_profit_value > 0 &&
@@ -337,6 +340,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         description: strategyData.description,
         symbol: strategyData.symbol,
         timeframe: strategyData.timeframe,
+        initial_capital: strategyData.initial_capital,
         entry_rules: entryRules,
         exit_rules: exitRules,
         stop_loss_type: strategyData.stop_loss_type,
@@ -446,6 +450,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         description: strategyData.description,
         symbol: strategyData.symbol,
         timeframe: strategyData.timeframe,
+        initial_capital: strategyData.initial_capital,
         entry_rules: entryRules,
         exit_rules: exitRules,
         stop_loss_type: strategyData.stop_loss_type,
@@ -659,6 +664,22 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       </div>
       
       <div className="form-content">
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="initial_capital">Initial Capital ($)</label>
+            <input
+              type="number"
+              id="initial_capital"
+              name="initial_capital"
+              value={strategyData.initial_capital}
+              onChange={handleInputChange}
+              step="100"
+              min="1000"
+              placeholder="10000"
+            />
+          </div>
+        </div>
+        
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="position_size">Position Size (Contracts)</label>
@@ -876,6 +897,10 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         <div className="summary-section">
           <h4>Risk Management</h4>
           <div className="summary-grid">
+            <div className="summary-item">
+              <span className="summary-label">Initial Capital:</span>
+              <span className="summary-value">${strategyData.initial_capital.toLocaleString()}</span>
+            </div>
             <div className="summary-item">
               <span className="summary-label">Position Size:</span>
               <span className="summary-value">{strategyData.position_size}</span>

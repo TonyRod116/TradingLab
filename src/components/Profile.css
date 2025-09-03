@@ -274,6 +274,7 @@
   border-radius: 12px;
   padding: 1.5rem;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .strategy-card:hover {
@@ -412,6 +413,9 @@
   margin-bottom: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 0.5rem;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .strategy-actions .btn {

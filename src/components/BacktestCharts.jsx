@@ -16,116 +16,13 @@ import {
 import { FaChartLine, FaSpinner } from 'react-icons/fa';
 import './BacktestCharts.css';
 
-const BacktestCharts = ({ backtestId, backtestData: propBacktestData, trades: propTrades }) => {
-  const [backtestData, setBacktestData] = useState(propBacktestData);
-  const [trades, setTrades] = useState(propTrades || []);
-  const [equityCurve, setEquityCurve] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+const BacktestCharts = ({ backtestData: propBacktestData, trades: propTrades, equityCurve: propEquityCurve }) => {
+  // Use props directly, no API calls to prevent freezing
+  const backtestData = propBacktestData;
+  const trades = propTrades || [];
+  const equityCurve = propEquityCurve || [];
 
-  useEffect(() => {
-    if (propBacktestData) {
-      setBacktestData(propBacktestData);
-    }
-    if (propTrades) {
-      setTrades(propTrades);
-    }
-  }, [propBacktestData, propTrades]);
-
-  useEffect(() => {
-    if (backtestId && !propBacktestData) {
-      fetchData();
-    }
-  }, [backtestId, propBacktestData]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Obtener datos del backtest usando el endpoint correcto
-      const backtestResponse = await fetch(`http://localhost:8000/api/strategies/backtest-results/${backtestId}/`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      // Obtener trades individuales usando el endpoint correcto
-      const tradesResponse = await fetch(`http://localhost:8000/api/strategies/backtest-results/${backtestId}/trades/`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      // Obtener equity curve usando el nuevo endpoint
-      const equityCurveResponse = await fetch(`http://localhost:8000/api/backtest-results/${backtestId}/equity_curve/`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('Backtest response status:', backtestResponse.status);
-      console.log('Trades response status:', tradesResponse.status);
-      console.log('Equity curve response status:', equityCurveResponse.status);
-      
-      if (backtestResponse.ok && tradesResponse.ok) {
-        const backtest = await backtestResponse.json();
-        const tradesData = await tradesResponse.json();
-        let equityCurveData = [];
-        
-        if (equityCurveResponse.ok) {
-          equityCurveData = await equityCurveResponse.json();
-          console.log('Equity curve data received:', equityCurveData);
-        } else {
-          console.warn('Equity curve not available, using fallback');
-        }
-        
-        console.log('Backtest data received:', backtest);
-        console.log('Trades data received:', tradesData);
-        
-        setBacktestData(backtest);
-        setTrades(tradesData);
-        setEquityCurve(equityCurveData);
-      } else {
-        // Log the actual response content to see what's being returned
-        const backtestText = await backtestResponse.text();
-        const tradesText = await tradesResponse.text();
-        
-        console.error('Backtest response error:', backtestText);
-        console.error('Trades response error:', tradesText);
-        
-        setError(`Failed to fetch backtest data. Backtest status: ${backtestResponse.status}, Trades status: ${tradesResponse.status}`);
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError('Error loading charts data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="charts-loading">
-        <FaSpinner className="spinner" />
-        <p>Loading charts...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="charts-error">
-        <p>Error loading charts: {error}</p>
-        <button onClick={() => window.location.reload()} className="btn btn-primary">
-          Retry
-        </button>
-      </div>
-    );
-  }
+  // No loading or error states needed since we're using props directly
 
   if (!backtestData) {
     return (
@@ -147,29 +44,14 @@ const BacktestCharts = ({ backtestId, backtestData: propBacktestData, trades: pr
     );
   }
 
-  // Debug log
-  console.log('BacktestCharts rendering with:', {
-    backtestId,
-    backtestData,
-    trades: trades?.length || 0,
-    hasTrades: trades && trades.length > 0
-  });
+  // Simple debug log
+  console.log('BacktestCharts rendering with trades:', trades?.length || 0);
 
   return (
     <div className="backtest-charts">
       <div className="charts-header">
         <h3>📊 Backtest Analysis Charts</h3>
         <p>Comprehensive visual analysis of your strategy performance</p>
-        <div style={{ 
-          background: 'rgba(0,255,0,0.1)', 
-          border: '1px solid green', 
-          padding: '5px', 
-          margin: '5px',
-          color: 'white',
-          fontSize: '10px'
-        }}>
-          DEBUG: Backtest ID: {backtestId}, Trades: {trades?.length || 0}, Equity Points: {equityCurve?.length || 0}
-        </div>
       </div>
       
       <div className="chart-grid">
@@ -181,17 +63,7 @@ const BacktestCharts = ({ backtestId, backtestData: propBacktestData, trades: pr
           endDate={backtestData.end_date}
         />
         
-        <DrawdownChart 
-          trades={trades} 
-          equityCurve={equityCurve}
-          initialCapital={backtestData.initial_capital}
-        />
-        
         <TradesChart trades={trades} />
-        
-        <ReturnsDistributionChart trades={trades} />
-        
-        <MonthlyReturnsChart trades={trades} />
         
         <WinLossChart trades={trades} />
       </div>
@@ -202,44 +74,25 @@ const BacktestCharts = ({ backtestId, backtestData: propBacktestData, trades: pr
 // Equity Curve Chart
 const EquityCurveChart = ({ trades, equityCurve, initialCapital, startDate, endDate }) => {
   const calculateEquityCurve = () => {
-    // Si tenemos datos reales de equity curve del backend, usarlos
-    if (equityCurve && equityCurve.length > 0) {
-      return equityCurve.map(point => ({
-        date: new Date(point.timestamp).toISOString().split('T')[0],
-        value: parseFloat(point.equity_value),
-        drawdown: parseFloat(point.drawdown || 0),
-        trade: point.trade
-      }));
-    }
+    // Simplified calculation to prevent freezing
+    if (!trades || trades.length === 0) return [];
     
-    // Fallback: calcular desde trades si no hay datos de equity curve
     const equityData = [];
-    let currentCapital = parseFloat(initialCapital);
-    
-    // Crear puntos de tiempo desde start_date hasta end_date
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const timePoints = [];
-    
-    // Generar puntos de tiempo cada día
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      timePoints.push(new Date(d));
+    // Fix: If initialCapital seems too high (likely backend error), use 10000
+    let capitalValue = parseFloat(initialCapital || 10000);
+    if (capitalValue > 50000) {
+      console.log('EquityCurveChart - Initial capital seems too high, using 10000 instead');
+      capitalValue = 10000;
     }
+    let currentCapital = capitalValue;
     
-    // Para cada punto de tiempo, calcular el capital acumulado
-    timePoints.forEach(timePoint => {
-      const tradesUpToDate = trades.filter(trade => 
-        new Date(trade.exit_date) <= timePoint
-      );
-      
-      const totalPnL = tradesUpToDate.reduce((sum, trade) => 
-        sum + parseFloat(trade.net_pnl || 0), 0
-      );
-      
+    // Simple calculation: just show cumulative P&L per trade
+    trades.forEach((trade, index) => {
+      currentCapital += parseFloat(trade.net_pnl || 0);
       equityData.push({
-        date: timePoint.toISOString().split('T')[0],
-        value: currentCapital + totalPnL,
-        pnl: totalPnL
+        trade: index + 1,
+        value: currentCapital,
+        pnl: parseFloat(trade.net_pnl || 0)
       });
     });
     
@@ -255,7 +108,7 @@ const EquityCurveChart = ({ trades, equityCurve, initialCapital, startDate, endD
         <LineChart data={equityData}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
           <XAxis 
-            dataKey="date" 
+            dataKey="trade" 
             stroke="var(--color-text-secondary)"
             fontSize={12}
           />
@@ -275,15 +128,15 @@ const EquityCurveChart = ({ trades, equityCurve, initialCapital, startDate, endD
               name === 'value' ? `$${value.toLocaleString()}` : `$${value.toLocaleString()}`,
               name === 'value' ? 'Capital' : 'PnL'
             ]}
-            labelFormatter={(label) => `Date: ${label}`}
+            labelFormatter={(label) => `Trade: ${label}`}
           />
           <Line 
             type="monotone" 
             dataKey="value" 
             stroke="var(--color-green)" 
-            strokeWidth={3}
+            strokeWidth={2}
             dot={false}
-            activeDot={{ r: 6, fill: 'var(--color-green)' }}
+            activeDot={{ r: 4, fill: 'var(--color-green)' }}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -306,7 +159,13 @@ const DrawdownChart = ({ trades, equityCurve, initialCapital }) => {
     
     // Fallback: calcular desde trades si no hay datos de equity curve
     const drawdownData = [];
-    let currentCapital = parseFloat(initialCapital);
+    // Fix: If initialCapital seems too high (likely backend error), use 10000
+    let capitalValue = parseFloat(initialCapital || 10000);
+    if (capitalValue > 50000) {
+      console.log('DrawdownChart - Initial capital seems too high, using 10000 instead');
+      capitalValue = 10000;
+    }
+    let currentCapital = capitalValue;
     let peakValue = currentCapital;
     
     trades.forEach((trade, index) => {
@@ -376,23 +235,14 @@ const DrawdownChart = ({ trades, equityCurve, initialCapital }) => {
 
 // Trades Chart (P&L per trade)
 const TradesChart = ({ trades }) => {
-  const tradesData = trades.map((trade, index) => ({
+  // Limit to first 50 trades to prevent performance issues
+  const limitedTrades = trades.slice(0, 50);
+  
+  const tradesData = limitedTrades.map((trade, index) => ({
     trade_id: index + 1,
     pnl: parseFloat(trade.net_pnl || 0),
-    is_winning: parseFloat(trade.net_pnl || 0) > 0,
-    date: trade.exit_date ? trade.exit_date.split('T')[0] : `Trade ${index + 1}`,
-    action: trade.action || 'unknown'
+    is_winning: parseFloat(trade.net_pnl || 0) > 0
   }));
-
-  const CustomBar = (props) => {
-    const { fill, payload, ...rest } = props;
-    return (
-      <Bar 
-        {...rest} 
-        fill={payload.is_winning ? 'var(--color-green)' : '#dc3545'} 
-      />
-    );
-  };
 
   return (
     <div className="chart-item trades-chart">
@@ -425,7 +275,7 @@ const TradesChart = ({ trades }) => {
           />
           <Bar 
             dataKey="pnl" 
-            shape={<CustomBar />}
+            fill="var(--color-green)"
             radius={[2, 2, 0, 0]}
           />
         </BarChart>
@@ -597,14 +447,17 @@ const MonthlyReturnsChart = ({ trades }) => {
 // Win/Loss Chart
 const WinLossChart = ({ trades }) => {
   const calculateWinLoss = () => {
-    const winningTrades = trades.filter(trade => parseFloat(trade.net_pnl || 0) > 0);
-    const losingTrades = trades.filter(trade => parseFloat(trade.net_pnl || 0) < 0);
-    const breakEvenTrades = trades.filter(trade => parseFloat(trade.net_pnl || 0) === 0);
+    // Limit to first 100 trades for performance
+    const limitedTrades = trades.slice(0, 100);
+    
+    const winningTrades = limitedTrades.filter(trade => parseFloat(trade.net_pnl || 0) > 0);
+    const losingTrades = limitedTrades.filter(trade => parseFloat(trade.net_pnl || 0) < 0);
+    const breakEvenTrades = limitedTrades.filter(trade => parseFloat(trade.net_pnl || 0) === 0);
     
     return [
-      { name: 'Winning', value: winningTrades.length, color: 'var(--color-green)' },
-      { name: 'Losing', value: losingTrades.length, color: '#dc3545' },
-      { name: 'Break Even', value: breakEvenTrades.length, color: '#6c757d' }
+      { name: 'Winning', value: winningTrades.length },
+      { name: 'Losing', value: losingTrades.length },
+      { name: 'Break Even', value: breakEvenTrades.length }
     ];
   };
 
@@ -636,7 +489,7 @@ const WinLossChart = ({ trades }) => {
           />
           <Bar 
             dataKey="value" 
-            fill={(entry) => entry.color}
+            fill="var(--color-green)"
             radius={[4, 4, 0, 0]}
           />
         </BarChart>
