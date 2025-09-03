@@ -27,11 +27,11 @@ class QuantConnectService {
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       } else {
         // Fallback: use a simple hash (not cryptographically secure, but works for testing)
-        console.warn('crypto.subtle not available, using fallback hash');
+
         return this.simpleHash(message);
       }
     } catch (error) {
-      console.warn('crypto.subtle failed, using fallback hash:', error);
+
       return this.simpleHash(message);
     }
   }
@@ -83,7 +83,7 @@ class QuantConnectService {
    */
   async testAuthentication() {
     try {
-      console.log('Testing QuantConnect authentication via Django backend...');
+
       
       const response = await fetch(`${this.baseURL}/test-auth/`, {
         method: 'POST',
@@ -94,7 +94,7 @@ class QuantConnectService {
       });
 
       const result = await response.json();
-      console.log('Authentication test result:', result);
+
 
       return {
         success: response.ok && result.success,
@@ -119,7 +119,7 @@ class QuantConnectService {
    */
   async createProject(name, language = 'Python') {
     try {
-      console.log(`Creating project: ${name} (${language})`);
+
       
       const response = await fetch(`${this.baseURL}/create-project/`, {
         method: 'POST',
@@ -133,7 +133,7 @@ class QuantConnectService {
       });
 
       const result = await response.json();
-      console.log('Project creation result:', result);
+
 
       return {
         success: response.ok && result.success,
@@ -156,7 +156,7 @@ class QuantConnectService {
    */
   async testProjectCreation() {
     try {
-      console.log('Testing project creation...');
+
       
       const response = await fetch(`${this.baseURL}/test-project/`, {
         method: 'POST',
@@ -167,7 +167,7 @@ class QuantConnectService {
       });
 
       const result = await response.json();
-      console.log('Project creation test result:', result);
+
 
       return {
         success: response.ok && result.success,
@@ -192,7 +192,7 @@ class QuantConnectService {
    */
   async runCompleteWorkflow(strategyJson, description) {
     try {
-      console.log('Running complete backtest workflow...');
+
       
       const response = await fetch(`${this.baseURL}/run-backtest/`, {
         method: 'POST',
@@ -206,7 +206,7 @@ class QuantConnectService {
       });
 
       const result = await response.json();
-      console.log('Backtest workflow result:', result);
+
 
       return {
         success: response.ok && result.success,

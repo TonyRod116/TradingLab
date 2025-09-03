@@ -385,7 +385,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         try {
           await strategyService.deleteStrategy(tempStrategyId);
         } catch (deleteError) {
-          console.warn('Could not delete temporary strategy after error:', deleteError);
+
         }
       }
       
@@ -406,7 +406,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       try {
         await strategyService.deleteStrategy(backtestResults.strategy_id);
       } catch (deleteError) {
-        console.warn('Could not delete temporary strategy:', deleteError);
+
       }
     }
     setBacktestResults(null);

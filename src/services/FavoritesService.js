@@ -27,7 +27,7 @@ class FavoritesService {
       const favorites = localStorage.getItem('user_favorites');
       return favorites ? JSON.parse(favorites) : [];
     } catch (error) {
-      console.warn('Error parsing favorites from localStorage:', error);
+
       return [];
     }
   }
@@ -102,11 +102,11 @@ class FavoritesService {
             });
           } else if (response.status === 404) {
             // Strategy no longer exists, remove from favorites
-            console.warn(`Strategy ${strategyId} no longer exists, removing from favorites`);
+
             await this.removeFromFavorites(strategyId);
           }
         } catch (error) {
-          console.warn(`Could not load strategy ${strategyId}:`, error);
+
         }
       }
       
@@ -126,7 +126,7 @@ class FavoritesService {
       const favorites = this.getLocalFavorites();
       return favorites.includes(strategyId);
     } catch (error) {
-      console.warn('Could not check if strategy is favorited:', error);
+
       return false;
     }
   }

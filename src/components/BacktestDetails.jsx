@@ -49,7 +49,7 @@ const BacktestDetails = () => {
           setStrategyUsername(currentStrategy.created_by);
         }
       } catch (usernameError) {
-        console.warn('Could not load username from strategies list:', usernameError);
+
       }
 
       // Use latest_backtest data for metrics since that's where the actual backtest results are
@@ -70,7 +70,7 @@ const BacktestDetails = () => {
           });
           setTrades(tradesResponse.data);
         } catch (tradesError) {
-          console.warn('Could not load trades data:', tradesError);
+
           setTrades([]);
         }
 

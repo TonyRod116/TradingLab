@@ -280,7 +280,7 @@ const Profile = () => {
               <span className="metric-value">
                 {(() => {
                   const winRate = strategy.win_rate;
-                  console.log('Win Rate debug:', { winRate, type: typeof winRate, parsed: parseFloat(winRate) });
+
                   
                   if (winRate === null || winRate === undefined) {
                     return 'N/A';

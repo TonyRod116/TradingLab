@@ -42,7 +42,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
       
       setFavoriteStatus(statusMap);
     } catch (error) {
-      console.warn('Could not load favorite status:', error);
+
     }
   }, [strategies]);
 
@@ -268,7 +268,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
                 <span className="stat-value">
                   {(() => {
                     const winRate = strategy.win_rate;
-                    console.log('Win Rate debug (StrategyList):', { winRate, type: typeof winRate, parsed: parseFloat(winRate) });
+
                     
                     if (winRate === null || winRate === undefined) {
                       return 'N/A';

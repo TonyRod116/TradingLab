@@ -13,7 +13,7 @@ import QuantConnectService from '../services/QuantConnectService';
 import './QuantStrategies.css';
 
 const QuantStrategies = () => {
-  console.log('QuantStrategies component rendering...');
+
   const [activeSubTab, setActiveSubTab] = useState('natural-language');
   const [loading, setLoading] = useState(false);
 
@@ -106,7 +106,7 @@ const QuantStrategies = () => {
           position: "top-right",
           autoClose: 3000
         });
-        console.log('Backtest result:', result.data);
+
       } else {
         toast.error(`❌ Backtest failed: ${result.error}`, {
           position: "top-right",
@@ -430,7 +430,7 @@ const QuantStrategies = () => {
 
 
 
-  console.log('QuantStrategies about to render JSX, activeSubTab:', activeSubTab);
+
   return (
     <div className="quant-strategies">
       <div className="quant-header">

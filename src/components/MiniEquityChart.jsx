@@ -48,7 +48,7 @@ const MiniEquityChart = ({ strategy, height = 60 }) => {
     const totalReturn = parseFloat(strategy.total_return) || 0;
     const finalValue = initialValue + totalReturn;
     
-    console.log('Generating mock data:', { initialValue, totalReturn, finalValue });
+
     
     const data = [];
     for (let i = 0; i < dataPoints; i++) {
@@ -71,8 +71,7 @@ const MiniEquityChart = ({ strategy, height = 60 }) => {
   const isPositive = (parseFloat(strategy.total_return) || 0) >= 0;
   const lineColor = isPositive ? '#00ff88' : '#ff6b6b';
   
-  console.log('Mock data generated:', mockData);
-  console.log('Line color:', lineColor);
+
 
   return (
     <div className="mini-equity-chart" style={{ height: `${height}px` }}>
