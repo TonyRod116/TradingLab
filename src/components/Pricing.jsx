@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
   FaGift, 
   FaRocket, 
@@ -49,7 +50,7 @@ const Pricing = () => {
             </div>
 
             <div className="pricing-cta">
-              <button className="btn btn-primary">Start Backtesting (It's Free!)</button>
+              <Link to="/strategies/" className="btn btn-primary">Start Backtesting (It's Free!)</Link>
               <p className="pricing-note">No credit card required. No hidden fees. No catch.</p>
             </div>
           </div>
@@ -148,7 +149,7 @@ const Pricing = () => {
         <div className="pricing-cta-section">
           <h2>Ready to Start Strategy Backtesting for Free?</h2>
           <p>Join the exclusive club of people who use a platform that's completely free because the developer is still in school</p>
-          <button className="btn btn-primary">Get Started (It's Still Free!)</button>
+          <Link to="/strategies/" className="btn btn-primary">Get Started (It's Still Free!)</Link>
           <p className="final-note">Seriously, it's free. I'm not kidding. This is just a school project.</p>
         </div>
       </div>

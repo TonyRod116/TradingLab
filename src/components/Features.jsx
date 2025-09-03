@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
   FaChartBar, 
   FaBolt, 
@@ -73,7 +74,7 @@ const Features = () => {
         <div className="features-cta">
           <h2>Ready to Transform Your Strategy Testing?</h2>
           <p>Join thousands of traders who use our platform to validate and optimize their strategies</p>
-          <button className="btn btn-primary">Get Started Free</button>
+          <Link to="/strategies/" className="btn btn-primary">Get Started Free</Link>
         </div>
       </div>
     </div>

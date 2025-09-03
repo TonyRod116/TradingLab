@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
   FaGraduationCap, 
   FaBolt, 
@@ -116,7 +117,7 @@ const About = () => {
         <div className="about-cta">
           <h2>Ready to Experience the Magic?</h2>
           <p>Join the exclusive club of people who use a platform built in 8 days by a sleep-deprived bootcamp student</p>
-          <button className="btn btn-primary">Try It (At Your Own Risk)</button>
+          <Link to="/strategies/" className="btn btn-primary">Try It (At Your Own Risk)</Link>
         </div>
       </div>
     </div>
