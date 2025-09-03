@@ -14,6 +14,7 @@ import About from './components/About.jsx'
 import Pricing from './components/Pricing.jsx'
 import Strategies from './components/Strategies.jsx'
 import BacktestDetails from './components/BacktestDetails.jsx'
+
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import './index.css'
 
@@ -31,6 +32,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/about" element={<About />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/strategies" element={<Strategies />} />
+
           <Route path="/backtest/:strategyId" element={<BacktestDetails />} />
         </Routes>
         <ToastContainer

@@ -21,6 +21,7 @@ import FavoritesList from './FavoritesList';
 import StrategyCreator from './StrategyCreator';
 import StrategyTemplates from './StrategyTemplates';
 import RuleBuilder from './RuleBuilder';
+import QuantStrategies from './QuantStrategies';
 import './Strategies.css';
 
 const Strategies = () => {
@@ -70,7 +71,7 @@ const Strategies = () => {
   // Handle URL tab parameter
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['my-strategies', 'templates', 'create-strategy'].includes(tabParam)) {
+    if (tabParam && ['my-strategies', 'templates', 'create-strategy', 'quant-strategies'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -88,7 +89,7 @@ const Strategies = () => {
   const renderAuthenticatedView = () => (
     <div className="strategies-container">
               <div className="strategies-header">
-          <h1><FaRocket className="header-icon" /> Strategy Management</h1>
+          <h1>Strategy Management</h1>
           <p>Create, manage, and backtest your trading strategies</p>
         </div>
 
@@ -116,6 +117,12 @@ const Strategies = () => {
           onClick={() => handleTabChange('create-strategy')}
         >
           Create Strategy
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'quant-strategies' ? 'active' : ''}`}
+          onClick={() => handleTabChange('quant-strategies')}
+        >
+          <FaChartLine /> Quant Strategies
         </button>
       </div>
 
@@ -151,6 +158,10 @@ const Strategies = () => {
             template={selectedTemplate}
           />
         )}
+        
+        {activeTab === 'quant-strategies' && (
+          <QuantStrategies />
+        )}
       </div>
     </div>
   );
@@ -158,7 +169,7 @@ const Strategies = () => {
   const renderUnauthenticatedView = () => (
     <div className="strategies-container">
       <div className="strategies-header">
-        <h1><FaRocket className="header-icon" /> Strategy Backtesting Platform</h1>
+        <h1>Strategy Backtesting Platform</h1>
         <p>Create and test your trading strategies with our advanced rule builder</p>
       </div>
 

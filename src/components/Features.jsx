@@ -6,7 +6,7 @@ import {
   FaChartLine, 
   FaCrosshairs, 
   FaLayerGroup, 
-  FaDesktop 
+  FaDesktop
 } from 'react-icons/fa';
 import Header from './Header';
 import './Features.css';
