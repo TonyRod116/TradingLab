@@ -1,0 +1,32 @@
+.mini-equity-chart {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 4px;
+  margin: 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.mini-equity-chart .recharts-wrapper {
+  font-size: 10px;
+}
+
+.mini-equity-chart .recharts-cartesian-grid-horizontal line,
+.mini-equity-chart .recharts-cartesian-grid-vertical line {
+  stroke: rgba(255, 255, 255, 0.05);
+}
+
+.mini-equity-chart .recharts-line {
+  filter: drop-shadow(0 0 2px currentColor);
+}
+
+/* Animación suave para el chart */
+.mini-equity-chart .recharts-line-path {
+  transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.mini-equity-chart:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+}

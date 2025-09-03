@@ -94,7 +94,7 @@ const Strategies = () => {
           className={`tab-button ${activeTab === 'my-strategies' ? 'active' : ''}`}
           onClick={() => handleTabChange('my-strategies')}
         >
-          Community Strategies
+          Community Backtests
         </button>
         <button 
           className={`tab-button ${activeTab === 'templates' ? 'active' : ''}`}

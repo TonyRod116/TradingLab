@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FaPlay, FaPause, FaEdit, FaTrash, FaChartLine, FaEye } from 'react-icons/fa';
 import ConfirmDialog from './ConfirmDialog';
 import { cleanStrategyName } from '../utils/strategyUtils';
+import MiniEquityChart from './MiniEquityChart';
 import './StrategyList.css';
 
 const StrategyList = ({ strategies, loading, error, onRefresh }) => {
@@ -186,10 +187,12 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
       <div className="strategies-grid">
         {strategies.map((strategy) => (
           <div key={strategy.id} className="strategy-card">
+            {/* Mini Equity Chart at the top */}
+            <div className="strategy-chart">
+              <MiniEquityChart strategy={strategy} height={80} />
+            </div>
+
             <div className="strategy-header">
-              <div className="strategy-icon">
-                {getStrategyTypeIcon(strategy.strategy_type)}
-              </div>
               <div className="strategy-info">
                 <h3>{cleanStrategyName(strategy.name)}</h3>
                 <p>{strategy.description}</p>
@@ -245,7 +248,6 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
                 <span className="stat-value">{strategy.sharpe_ratio ? parseFloat(strategy.sharpe_ratio).toFixed(2) : 'N/A'}</span>
               </div>
             </div>
-
 
           </div>
         ))}

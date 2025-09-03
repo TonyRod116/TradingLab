@@ -8,6 +8,7 @@ import axios from 'axios';
 import { cleanStrategyName } from '../utils/strategyUtils';
 import Header from './Header';
 import ConfirmDialog from './ConfirmDialog';
+import MiniEquityChart from './MiniEquityChart';
 import './Profile.css';
 
 const Profile = () => {
@@ -256,6 +257,11 @@ const Profile = () => {
     <div className="strategies-grid">
       {strategies.map((strategy) => (
         <div key={strategy.id} className="strategy-card">
+          {/* Mini Equity Chart at the top */}
+          <div className="strategy-chart">
+            <MiniEquityChart strategy={strategy} height={80} />
+          </div>
+
           <div className="strategy-header">
             <h3>{cleanStrategyName(strategy.name)}</h3>
             <div className="strategy-meta">

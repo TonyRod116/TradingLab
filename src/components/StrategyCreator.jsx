@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaSave, FaChevronRight, FaChevronLeft, FaCog, FaShieldAlt, FaShoppingCart, FaMoneyBillWave, FaSpinner, FaRocket } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 
 import SimpleRuleBuilder from './SimpleRuleBuilder';
 import BacktestResults from './BacktestResults';
@@ -11,6 +12,7 @@ import './StrategyCreator.css';
 
 const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [strategyData, setStrategyData] = useState({
     name: '',
@@ -533,10 +535,12 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       
       // Navigate to user profile after a short delay
       setTimeout(() => {
-        const userId = localStorage.getItem('user_id');
+        const userId = user?.id;
+        console.log('Navigating to profile, userId:', userId);
         if (userId) {
           navigate(`/users/profile/${userId}`);
         } else {
+          console.error('No user_id found in auth context');
           navigate('/strategies');
         }
       }, 1500);
