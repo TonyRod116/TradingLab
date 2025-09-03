@@ -9,12 +9,14 @@ import {
   FaDatabase,
   FaTachometerAlt,
   FaShieldAlt,
-  FaCopy
+  FaCopy,
+  FaBookmark
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import Header from './Header';
 import StrategyList from './StrategyList';
+import FavoritesList from './FavoritesList';
 import StrategyCreator from './StrategyCreator';
 import StrategyTemplates from './StrategyTemplates';
 import RuleBuilder from './RuleBuilder';
@@ -97,6 +99,12 @@ const Strategies = () => {
           Community Backtests
         </button>
         <button 
+          className={`tab-button ${activeTab === 'favorites' ? 'active' : ''}`}
+          onClick={() => handleTabChange('favorites')}
+        >
+          <FaBookmark /> My Favorites
+        </button>
+        <button 
           className={`tab-button ${activeTab === 'templates' ? 'active' : ''}`}
           onClick={() => handleTabChange('templates')}
         >
@@ -115,6 +123,12 @@ const Strategies = () => {
           <StrategyList 
             strategies={strategies} 
             loading={loading} 
+            onRefresh={loadStrategies}
+          />
+        )}
+        
+        {activeTab === 'favorites' && (
+          <FavoritesList 
             onRefresh={loadStrategies}
           />
         )}

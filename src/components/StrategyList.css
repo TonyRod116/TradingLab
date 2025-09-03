@@ -22,7 +22,7 @@
 }
 
 .strategy-card {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(39, 39, 39, 0.6);
   border: 1px solid var(--color-light-gray);
   border-radius: 16px;
   padding: 1.5rem;
@@ -411,4 +411,12 @@
   padding-bottom: 0.5rem;
   width: 100%;
   box-sizing: border-box;
+  position: relative;
+}
+
+.favorite-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
 }

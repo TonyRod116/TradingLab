@@ -1,19 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaPlay, FaPause, FaEdit, FaTrash, FaChartLine, FaEye } from 'react-icons/fa';
 import ConfirmDialog from './ConfirmDialog';
+import FavoriteButton from './FavoriteButton';
 import { cleanStrategyName } from '../utils/strategyUtils';
 import MiniEquityChart from './MiniEquityChart';
+import favoritesService from '../services/FavoritesService';
 import './StrategyList.css';
 
 const StrategyList = ({ strategies, loading, error, onRefresh }) => {
   const navigate = useNavigate();
   const [selectedStrategy, setSelectedStrategy] = useState(null);
+  const [favoriteStatus, setFavoriteStatus] = useState({});
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
     strategyId: null,
     strategyName: ''
   });
+
+  // Load favorite status for all strategies
+  const loadFavoriteStatus = useCallback(async () => {
+    if (!strategies || strategies.length === 0) return;
+    
+    try {
+      const favorites = await favoritesService.getFavorites();
+      const statusMap = {};
+      
+      // Initialize all strategies as not favorited
+      strategies.forEach(strategy => {
+        statusMap[strategy.id] = false;
+      });
+      
+      // Mark favorited strategies
+      favorites.forEach(fav => {
+        const strategyId = fav.strategy_id || fav.id;
+        if (statusMap.hasOwnProperty(strategyId)) {
+          statusMap[strategyId] = true;
+        }
+      });
+      
+      setFavoriteStatus(statusMap);
+    } catch (error) {
+      console.warn('Could not load favorite status:', error);
+    }
+  }, [strategies]);
+
+  // Load favorite status when strategies change
+  useEffect(() => {
+    loadFavoriteStatus();
+  }, [loadFavoriteStatus]);
+
+  const handleFavoriteToggle = useCallback((strategyId, isFavorited) => {
+    setFavoriteStatus(prev => ({
+      ...prev,
+      [strategyId]: isFavorited
+    }));
+  }, []);
 
   const handleActivate = async (strategyId) => {
     try {
@@ -196,6 +238,15 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
             {/* Mini Equity Chart at the top */}
             <div className="strategy-chart">
               <MiniEquityChart strategy={strategy} height={80} />
+              {/* Favorite button overlay */}
+              <div className="favorite-overlay">
+                <FavoriteButton
+                  strategyId={strategy.id}
+                  initialFavorited={favoriteStatus[strategy.id] || false}
+                  onToggle={handleFavoriteToggle}
+                  size="small"
+                />
+              </div>
             </div>
 
             <div className="strategy-header">
