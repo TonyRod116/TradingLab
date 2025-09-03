@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import { 
   FaChartLine, 
   FaPlay, 
-  FaCode, 
-  FaCopy, 
-  FaDownload,
   FaRocket,
   FaCheckCircle,
   FaExclamationTriangle,
@@ -20,8 +17,7 @@ const QuantStrategies = () => {
   const [activeSubTab, setActiveSubTab] = useState('natural-language');
   const [loading, setLoading] = useState(false);
 
-  const [generatedCode, setGeneratedCode] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+
   const [naturalLanguageInput, setNaturalLanguageInput] = useState('');
   const [parseResults, setParseResults] = useState(null);
   const [compilationStatus, setCompilationStatus] = useState(null);
@@ -93,37 +89,11 @@ const QuantStrategies = () => {
 
 
 
-  const handleGenerateCode = (template) => {
-    setSelectedTemplate(template);
-    const code = QuantConnectService.generatePythonCode(template, template.description);
-    setGeneratedCode(code);
-    setActiveSubTab('code-generator');
-  };
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(generatedCode);
-    toast.success('📋 Code copied to clipboard!', {
-      position: "top-right",
-      autoClose: 2000
-    });
-  };
 
-  const handleDownloadCode = () => {
-    const blob = new Blob([generatedCode], { type: 'text/python' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${selectedTemplate?.id || 'strategy'}.py`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast.success('💾 Code downloaded!', {
-      position: "top-right",
-      autoClose: 2000
-    });
-  };
+
+
+
 
   const handleRunBacktest = async (template) => {
     setLoading(true);
@@ -166,7 +136,7 @@ const QuantStrategies = () => {
     setParseResults(null);
     
     try {
-      const response = await fetch('http://localhost:8000/api/quantconnect/parse-natural-language/', {
+      const response = await fetch('/api/quantconnect/parse-natural-language/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,12 +150,10 @@ const QuantStrategies = () => {
       setParseResults(result);
       
       if (result.success) {
-        setGeneratedCode(result.code);
         toast.success('✅ Strategy parsed successfully!', {
           position: "top-right",
           autoClose: 3000
         });
-        setActiveSubTab('code-generator');
       } else {
         toast.error(`❌ Parse failed: ${result.error}`, {
           position: "top-right",
@@ -215,7 +183,7 @@ const QuantStrategies = () => {
     setCompilationStatus(null);
     
     try {
-      const response = await fetch('http://localhost:8000/api/quantconnect/create-and-compile-strategy/', {
+      const response = await fetch('/api/quantconnect/create-and-compile-strategy/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -257,7 +225,7 @@ const QuantStrategies = () => {
 
   const handleCheckCompilationStatus = async (projectId, compilationId) => {
     try {
-      const response = await fetch('http://localhost:8000/api/quantconnect/read-compilation-result/', {
+      const response = await fetch('/api/quantconnect/read-compilation-result/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -339,7 +307,7 @@ const QuantStrategies = () => {
             onClick={handleParseNaturalLanguage}
             disabled={loading || !naturalLanguageInput.trim()}
           >
-            {loading ? <FaSpinner className="spinning" /> : <FaCode />} Parse Strategy
+            {loading ? <FaSpinner className="spinning" /> : <FaLightbulb />} Parse Strategy
           </button>
           <button 
             className="btn btn-secondary"
@@ -364,16 +332,7 @@ const QuantStrategies = () => {
             </span>
           </div>
           
-          {parseResults.success && (
-            <div className="result-actions">
-              <button 
-                className="btn btn-secondary"
-                onClick={() => setActiveSubTab('code-generator')}
-              >
-                <FaCode /> View Generated Code
-              </button>
-            </div>
-          )}
+
           
           {parseResults.error && (
             <div className="result-error">
@@ -455,12 +414,6 @@ const QuantStrategies = () => {
             <div className="template-actions">
               <button 
                 className="btn btn-primary"
-                onClick={() => handleGenerateCode(template)}
-              >
-                <FaCode /> Generate Code
-              </button>
-              <button 
-                className="btn btn-secondary"
                 onClick={() => handleRunBacktest(template)}
                 disabled={loading}
               >
@@ -473,44 +426,7 @@ const QuantStrategies = () => {
     </div>
   );
 
-  const renderCodeGenerator = () => (
-    <div className="code-generator">
-      <div className="code-header">
-        <h3><FaCode /> Generated Python Code</h3>
-        <div className="code-actions">
-          <button className="btn btn-secondary" onClick={handleCopyCode}>
-            <FaCopy /> Copy Code
-          </button>
-          <button className="btn btn-secondary" onClick={handleDownloadCode}>
-            <FaDownload /> Download
-          </button>
-        </div>
-      </div>
-      
-      {selectedTemplate && (
-        <div className="template-info">
-          <h4>{selectedTemplate.name}</h4>
-          <p>{selectedTemplate.description}</p>
-        </div>
-      )}
-      
-      <div className="code-container">
-        <pre className="code-block">
-          <code>{generatedCode}</code>
-        </pre>
-      </div>
-      
-      <div className="code-instructions">
-        <h4>📋 Instructions:</h4>
-        <ol>
-          <li>Copy the generated code above</li>
-          <li>Go to <a href="https://www.quantconnect.com/terminal" target="_blank" rel="noopener noreferrer">QuantConnect Terminal</a></li>
-          <li>Create a new project and paste the code</li>
-          <li>Compile and run your backtest</li>
-        </ol>
-      </div>
-    </div>
-  );
+
 
 
 
@@ -535,19 +451,13 @@ const QuantStrategies = () => {
         >
           <FaRocket /> Strategy Templates
         </button>
-        <button 
-          className={`subtab-button ${activeSubTab === 'code-generator' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('code-generator')}
-        >
-          <FaCode /> Code Generator
-        </button>
+
 
       </div>
 
       <div className="quant-content">
         {activeSubTab === 'natural-language' && renderNaturalLanguage()}
         {activeSubTab === 'templates' && renderTemplates()}
-        {activeSubTab === 'code-generator' && renderCodeGenerator()}
       </div>
     </div>
   );

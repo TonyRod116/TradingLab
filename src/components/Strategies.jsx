@@ -110,7 +110,7 @@ const Strategies = () => {
           className={`tab-button ${activeTab === 'templates' ? 'active' : ''}`}
           onClick={() => handleTabChange('templates')}
         >
-          <FaCopy /> Strategy Templates
+          <FaCopy /> Quant Templates
         </button>
         <button 
           className={`tab-button ${activeTab === 'create-strategy' ? 'active' : ''}`}
@@ -184,7 +184,7 @@ const Strategies = () => {
 
       <div className="features-preview">
         <div className="feature-card">
-          <h3>Strategy Templates</h3>
+          <h3>Quant Templates</h3>
           <p>Start with proven strategies like RSI Mean Reversion, Moving Average Crossover, and more</p>
         </div>
         <div className="feature-card">
