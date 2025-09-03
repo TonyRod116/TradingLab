@@ -44,8 +44,7 @@ const BacktestCharts = ({ backtestData: propBacktestData, trades: propTrades, eq
     );
   }
 
-  // Simple debug log
-  console.log('BacktestCharts rendering with trades:', trades?.length || 0);
+
 
   return (
     <div className="backtest-charts">

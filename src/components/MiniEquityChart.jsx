@@ -3,8 +3,6 @@ import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid } fro
 import './MiniEquityChart.css';
 
 const MiniEquityChart = ({ strategy, height = 60 }) => {
-  console.log('MiniEquityChart - strategy data:', strategy);
-  console.log('MiniEquityChart - equity_curve:', strategy.equity_curve);
   
   // Si tenemos datos de equity curve del backend, usarlos
   if (strategy.equity_curve && strategy.equity_curve.length > 0) {

@@ -303,11 +303,8 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
 
     
     if (!validateStrategy()) {
-      console.log('Strategy validation failed');
       return;
     }
-    
-    console.log('Strategy validation passed, starting backtest...');
     setLoading(true);
     setLoadingMessage('Running backtest... This may take up to 5 minutes for complex strategies.');
     
@@ -324,15 +321,13 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         exitRules.time_based = true;
       }
       
-      console.log('Formatted entry rules:', entryRules);
-      console.log('Formatted exit rules:', exitRules);
+
       
       // Add timestamp to name to avoid duplicates
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
       const tempName = `temp_backtest_${Date.now()}_${timestamp}`;
       
-      // Backend supports: percentage, points, pips, atr
-      // No conversion needed - send the original types
+      // Backend supports: percentage, points, ticks, atr
       const strategyPayload = {
         name: tempName,
         description: strategyData.description,
@@ -347,10 +342,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         take_profit_value: strategyData.take_profit_value
       };
 
-      console.log('Creating temporary strategy...');
-      console.log('Strategy payload being sent:', JSON.stringify(strategyPayload, null, 2));
       const strategy = await strategyService.createStrategy(strategyPayload);
-      console.log('Strategy created:', strategy);
       
       // Show success toast when strategy is created and backtest starts
       toast.success('Strategy created successfully! Starting backtest calculation...', {
@@ -367,10 +359,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         slippage: strategyData.slippage
       };
 
-      console.log('Running backtest with params:', backtestParams);
-      console.log('Strategy ID for backtest:', strategy.id);
       const backtestResults = await strategyService.runBacktest(strategy.id, backtestParams);
-      console.log('Backtest results:', backtestResults);
       
       // Add strategy_id to results so we can update it later
       const resultsWithStrategyId = {
@@ -413,8 +402,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
       const finalName = `${strategyData.name}_${timestamp}`;
       
-      console.log('Updating strategy name from temp to final:', finalName);
-      console.log('Strategy ID:', backtestResults.strategy_id);
+
       
       // Format rules for the update
       const entryRules = formatEntryRules(rules);
@@ -485,31 +473,16 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         backtest_slippage: backtestResults.slippage || strategyData.slippage
       };
       
-      console.log('Updating strategy with complete data:', completeStrategyData);
-      console.log('Detailed metrics being saved:');
-      console.log('- Total trades:', completeStrategyData.total_trades);
-      console.log('- Winning trades:', completeStrategyData.winning_trades);
-      console.log('- Losing trades:', completeStrategyData.losing_trades);
-      console.log('- Win rate:', completeStrategyData.win_rate);
-      console.log('- Average win:', completeStrategyData.avg_win);
-      console.log('- Average loss:', completeStrategyData.avg_loss);
-      console.log('- Largest win:', completeStrategyData.largest_win);
-      console.log('- Largest loss:', completeStrategyData.largest_loss);
-      console.log('- Sharpe ratio:', completeStrategyData.sharpe_ratio);
-      console.log('- Max drawdown:', completeStrategyData.max_drawdown);
+
       
       // Use strategyService which uses PUT method
       try {
         const updatedStrategy = await strategyService.updateStrategy(backtestResults.strategy_id, completeStrategyData);
-        console.log('Strategy updated successfully:', updatedStrategy);
       } catch (updateError) {
         console.error('StrategyService update failed:', updateError);
         
         // Try alternative approach: create a new strategy with the final name
-        console.log('Trying alternative approach: creating new strategy with final name...');
-        
         const newStrategy = await strategyService.createStrategy(completeStrategyData);
-        console.log('New strategy created:', newStrategy);
         
         // Run backtest for the new strategy
         const backtestParams = {
@@ -520,14 +493,11 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
           slippage: strategyData.slippage
         };
         
-        console.log('Running backtest for new strategy...');
         const finalBacktestResults = await strategyService.runBacktest(newStrategy.id, backtestParams);
-        console.log('Final backtest completed:', finalBacktestResults);
         
         // Delete the temporary strategy
         try {
           await strategyService.deleteStrategy(backtestResults.strategy_id);
-          console.log('Temporary strategy deleted successfully');
         } catch (deleteError) {
           console.warn('Could not delete temporary strategy:', deleteError);
         }
@@ -538,7 +508,6 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       // Navigate to user profile after a short delay
       setTimeout(() => {
         const userId = user?.id;
-        console.log('Navigating to profile, userId:', userId);
         if (userId) {
           navigate(`/users/profile/${userId}`);
         } else {
