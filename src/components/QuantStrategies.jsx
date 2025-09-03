@@ -136,7 +136,7 @@ const QuantStrategies = () => {
     setParseResults(null);
     
     try {
-      const response = await fetch('/api/quantconnect/parse-natural-language/', {
+      const response = await fetch('http://localhost:8000/api/quantconnect/parse-natural-language/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -183,7 +183,7 @@ const QuantStrategies = () => {
     setCompilationStatus(null);
     
     try {
-      const response = await fetch('/api/quantconnect/create-and-compile-strategy/', {
+      const response = await fetch('http://localhost:8000/api/quantconnect/create-and-compile-strategy/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -225,7 +225,7 @@ const QuantStrategies = () => {
 
   const handleCheckCompilationStatus = async (projectId, compilationId) => {
     try {
-      const response = await fetch('/api/quantconnect/read-compilation-result/', {
+      const response = await fetch('http://localhost:8000/api/quantconnect/read-compilation-result/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

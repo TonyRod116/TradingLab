@@ -10,8 +10,8 @@ const getBaseURL = () => {
     return 'http://localhost:8000';
   }
   
-  // Production - use relative URLs to leverage Netlify proxy
-  return '';
+  // Production URL (Heroku)
+  return 'https://tradelab-39583a78c028.herokuapp.com';
 };
 
 // Export the base URL
