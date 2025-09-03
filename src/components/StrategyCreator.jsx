@@ -299,14 +299,16 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     return formatted;
   }, []);
 
-  const handleRunBacktest = useCallback(async () => {
 
-    
+
+  const handleRunBacktest = useCallback(async () => {
     if (!validateStrategy()) {
       return;
     }
     setLoading(true);
     setLoadingMessage('Running backtest... This may take up to 5 minutes for complex strategies.');
+    
+    let tempStrategyId = null;
     
     try {
       // Create temporary strategy for backtest only
@@ -320,8 +322,6 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       if (Object.keys(exitRules).length === 0) {
         exitRules.time_based = true;
       }
-      
-
       
       // Add timestamp to name to avoid duplicates
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
@@ -343,9 +343,10 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       };
 
       const strategy = await strategyService.createStrategy(strategyPayload);
+      tempStrategyId = strategy.id;
       
       // Show success toast when strategy is created and backtest starts
-      toast.success('Strategy created successfully! Starting backtest calculation...', {
+      toast.success('Starting backtest calculation...', {
         position: "top-right",
         autoClose: 3000,
       });
@@ -364,7 +365,8 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       // Add strategy_id to results so we can update it later
       const resultsWithStrategyId = {
         ...backtestResults,
-        strategy_id: strategy.id
+        strategy_id: strategy.id,
+        is_temporary: true
       };
       
       setBacktestResults(resultsWithStrategyId);
@@ -377,6 +379,16 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       
     } catch (error) {
       console.error('Backtest error:', error);
+      
+      // Clean up temporary strategy if it was created
+      if (tempStrategyId) {
+        try {
+          await strategyService.deleteStrategy(tempStrategyId);
+        } catch (deleteError) {
+          console.warn('Could not delete temporary strategy after error:', deleteError);
+        }
+      }
+      
       if (error.name === 'AbortError' || error.message.includes('timeout')) {
         toast.warning('Backtest is taking longer than expected. It may still be running in the background. Please check your strategies list in a few minutes.');
       } else {
@@ -388,23 +400,30 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     }
   }, [strategyData, rules, validateStrategy, formatEntryRules, formatExitRules]);
 
-  const handleCloseBacktestResults = useCallback(() => {
+  const handleCloseBacktestResults = useCallback(async () => {
+    // Clean up temporary strategy when user closes results without saving
+    if (backtestResults && backtestResults.strategy_id && backtestResults.is_temporary) {
+      try {
+        await strategyService.deleteStrategy(backtestResults.strategy_id);
+      } catch (deleteError) {
+        console.warn('Could not delete temporary strategy:', deleteError);
+      }
+    }
     setBacktestResults(null);
-  }, []);
+  }, [backtestResults]);
 
   const handleSaveResults = useCallback(async () => {
     if (!backtestResults) return;
     
     try {
-      // The strategy is already saved from the backtest, we just need to update its name
-      // to make it permanent (remove the "temp_backtest_" prefix)
+      // Create the strategy for the first time when user clicks Save
       // Add timestamp to avoid name conflicts
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
       const finalName = `${strategyData.name}_${timestamp}`;
       
 
       
-      // Format rules for the update
+      // Format rules for the new strategy
       const entryRules = formatEntryRules(rules);
       const exitRules = formatExitRules(rules);
       
@@ -475,33 +494,8 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       
 
       
-      // Use strategyService which uses PUT method
-      try {
-        const updatedStrategy = await strategyService.updateStrategy(backtestResults.strategy_id, completeStrategyData);
-      } catch (updateError) {
-        console.error('StrategyService update failed:', updateError);
-        
-        // Try alternative approach: create a new strategy with the final name
-        const newStrategy = await strategyService.createStrategy(completeStrategyData);
-        
-        // Run backtest for the new strategy
-        const backtestParams = {
-          start_date: '2020-01-01T00:00:00Z',
-          end_date: '2024-12-31T23:59:59Z',
-          initial_capital: 100000,
-          commission: strategyData.round_turn_commissions,
-          slippage: strategyData.slippage
-        };
-        
-        const finalBacktestResults = await strategyService.runBacktest(newStrategy.id, backtestParams);
-        
-        // Delete the temporary strategy
-        try {
-          await strategyService.deleteStrategy(backtestResults.strategy_id);
-        } catch (deleteError) {
-          console.warn('Could not delete temporary strategy:', deleteError);
-        }
-      }
+      // Update the temporary strategy to make it permanent
+      const updatedStrategy = await strategyService.updateStrategy(backtestResults.strategy_id, completeStrategyData);
       
       toast.success('Strategy saved successfully! Redirecting to your profile...');
       
