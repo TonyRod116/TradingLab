@@ -436,6 +436,15 @@
   margin-bottom: 0;
 }
 
+.conversion-info {
+  color: var(--color-green);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+  display: block;
+  grid-column: 1 / -1;
+}
+
 /* Form Actions */
 .strategy-form-actions {
   display: flex;

@@ -19,10 +19,10 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     timeframe: '1m',
     position_size: 1,
     max_positions: 1,
-    stop_loss_type: 'percentage',
-    stop_loss_value: 0.2,
-    take_profit_type: 'percentage',
-    take_profit_value: 1.0,
+    stop_loss_type: 'atr',
+    stop_loss_value: 2.0,
+    take_profit_type: 'atr',
+    take_profit_value: 4.0,
     round_turn_commissions: 4.00,
     slippage: 0.5
   });
@@ -103,6 +103,26 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       [name]: value
     }));
   }, []);
+
+  // Helper function to get conversion info
+  const getConversionInfo = (type, value) => {
+    if (type === 'ticks' && value) {
+      const points = (parseFloat(value) * 0.25).toFixed(2);
+      return `${value} ticks = ${points} points`;
+    }
+    return null;
+  };
+
+  // Helper function to get placeholder based on type
+  const getPlaceholder = (type) => {
+    switch(type) {
+      case 'percentage': return '0.5';
+      case 'points': return '2.0';
+      case 'ticks': return '8';
+      case 'atr': return '2.0';
+      default: return '';
+    }
+  };
 
   const handleAddRule = useCallback((rule) => {
     setRules(prev => [...prev, { ...rule, order: prev.length + 1 }]);
@@ -301,10 +321,15 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         exitRules.time_based = true;
       }
       
+      console.log('Formatted entry rules:', entryRules);
+      console.log('Formatted exit rules:', exitRules);
+      
       // Add timestamp to name to avoid duplicates
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
       const tempName = `temp_backtest_${Date.now()}_${timestamp}`;
       
+      // Backend supports: percentage, points, pips, atr
+      // No conversion needed - send the original types
       const strategyPayload = {
         name: tempName,
         description: strategyData.description,
@@ -319,6 +344,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       };
 
       console.log('Creating temporary strategy...');
+      console.log('Strategy payload being sent:', JSON.stringify(strategyPayload, null, 2));
       const strategy = await strategyService.createStrategy(strategyPayload);
       console.log('Strategy created:', strategy);
       
@@ -338,6 +364,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       };
 
       console.log('Running backtest with params:', backtestParams);
+      console.log('Strategy ID for backtest:', strategy.id);
       const backtestResults = await strategyService.runBacktest(strategy.id, backtestParams);
       console.log('Backtest results:', backtestResults);
       
@@ -397,7 +424,8 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         exitRules.time_based = true;
       }
       
-      // Prepare complete strategy data for PUT request
+      // Backend supports: percentage, points, pips, atr
+      // No conversion needed - send the original types
       const completeStrategyData = {
         name: finalName,
         description: strategyData.description,
@@ -610,9 +638,10 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
                 value={strategyData.stop_loss_type}
                 onChange={handleInputChange}
               >
-                <option value="ticks">Ticks (0.25 points)</option>
                 <option value="percentage">Percentage (%)</option>
-                <option value="atr">ATR (Average True Range)</option>
+                <option value="points">Points</option>
+                <option value="ticks">Ticks (0.25 pts each)</option>
+                <option value="atr">ATR Multiplier</option>
               </select>
               <input
                 type="number"
@@ -620,10 +649,15 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
                 name="stop_loss_value"
                 value={strategyData.stop_loss_value}
                 onChange={handleInputChange}
-                placeholder="Value"
+                placeholder={getPlaceholder(strategyData.stop_loss_type)}
                 min="0"
                 step="0.01"
               />
+              {getConversionInfo(strategyData.stop_loss_type, strategyData.stop_loss_value) && (
+                <small className="conversion-info">
+                  {getConversionInfo(strategyData.stop_loss_type, strategyData.stop_loss_value)}
+                </small>
+              )}
             </div>
           </div>
           
@@ -636,9 +670,10 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
                 value={strategyData.take_profit_type}
                 onChange={handleInputChange}
               >
-                <option value="ticks">Ticks (0.25 points)</option>
                 <option value="percentage">Percentage (%)</option>
-                <option value="atr">ATR (Average True Range)</option>
+                <option value="points">Points</option>
+                <option value="ticks">Ticks (0.25 pts each)</option>
+                <option value="atr">ATR Multiplier</option>
               </select>
               <input
                 type="number"
@@ -646,10 +681,15 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
                 name="take_profit_value"
                 value={strategyData.take_profit_value}
                 onChange={handleInputChange}
-                placeholder="Value"
+                placeholder={getPlaceholder(strategyData.take_profit_type)}
                 min="0"
                 step="0.01"
               />
+              {getConversionInfo(strategyData.take_profit_type, strategyData.take_profit_value) && (
+                <small className="conversion-info">
+                  {getConversionInfo(strategyData.take_profit_type, strategyData.take_profit_value)}
+                </small>
+              )}
             </div>
           </div>
         </div>

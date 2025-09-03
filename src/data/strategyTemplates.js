@@ -235,6 +235,82 @@ export const strategyTemplates = [
         ]
       }
     ]
+  },
+  {
+    id: 'volume_price_breakout',
+    name: 'Volume-Price Action Breakout',
+    description: 'High-probability breakout strategy using volume confirmation and price action patterns',
+    features: ['Volume Confirmation', 'Price Action Breakouts', 'Bollinger Bands', 'RSI Filter'],
+    entryRules: [
+      {
+        name: 'Breakout Entry',
+        rule_type: 'condition',
+        conditions: [
+          {
+            left_operand: 'close',
+            operator: 'gt',
+            right_operand: 'bb_upper',
+            logical_operator: 'and'
+          },
+          {
+            left_operand: 'volume',
+            operator: 'gt',
+            right_operand: 'volume_sma_20',
+            logical_operator: 'and'
+          },
+          {
+            left_operand: 'rsi',
+            operator: 'gt',
+            right_operand: 'rsi_50',
+            logical_operator: 'and'
+          },
+          {
+            left_operand: 'rsi',
+            operator: 'lt',
+            right_operand: 'rsi_70',
+            logical_operator: 'and'
+          },
+          {
+            left_operand: 'close',
+            operator: 'gt',
+            right_operand: 'vwap',
+            logical_operator: 'and'
+          }
+        ]
+      }
+    ],
+    exitRules: [
+      {
+        name: 'Breakout Failure Exit',
+        rule_type: 'condition',
+        conditions: [
+          {
+            left_operand: 'close',
+            operator: 'lt',
+            right_operand: 'bb_middle',
+            logical_operator: 'or'
+          },
+          {
+            left_operand: 'rsi',
+            operator: 'gt',
+            right_operand: 'rsi_80',
+            logical_operator: 'or'
+          },
+          {
+            left_operand: 'volume',
+            operator: 'lt',
+            right_operand: 'volume_sma_10',
+            logical_operator: 'or'
+          },
+          {
+            left_operand: 'close',
+            operator: 'lt',
+            right_operand: 'vwap',
+            logical_operator: 'or'
+          }
+        ]
+      }
+    ]
   }
 ];
 
