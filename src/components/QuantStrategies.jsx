@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import QuantConnectService from '../services/QuantConnectService';
+import { getApiUrl } from '../config/api';
 import './QuantStrategies.css';
 
 const QuantStrategies = () => {
@@ -136,7 +137,7 @@ const QuantStrategies = () => {
     setParseResults(null);
     
     try {
-      const response = await fetch('http://localhost:8000/api/quantconnect/parse-natural-language/', {
+      const response = await fetch(`${getApiUrl('/api/quantconnect/parse-natural-language/')}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -183,7 +184,7 @@ const QuantStrategies = () => {
     setCompilationStatus(null);
     
     try {
-      const response = await fetch('http://localhost:8000/api/quantconnect/create-and-compile-strategy/', {
+      const response = await fetch(`${getApiUrl('/api/quantconnect/create-and-compile-strategy/')}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -225,7 +226,7 @@ const QuantStrategies = () => {
 
   const handleCheckCompilationStatus = async (projectId, compilationId) => {
     try {
-      const response = await fetch('http://localhost:8000/api/quantconnect/read-compilation-result/', {
+      const response = await fetch(`${getApiUrl('/api/quantconnect/read-compilation-result/')}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

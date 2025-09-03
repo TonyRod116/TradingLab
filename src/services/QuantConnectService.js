@@ -7,9 +7,23 @@
 class QuantConnectService {
   constructor() {
     // Usar el backend Django en lugar de QuantConnect directamente
-    this.baseURL = 'http://localhost:8000/api/quantconnect';
+    this.baseURL = this.getBaseURL() + '/api/quantconnect';
     this.userId = 414810;
     this.apiToken = '79b91dd67dbbbfa4129888180d2de06d773de7eb4c8df86761bb7926d0d6d8cf';
+  }
+
+  /**
+   * Get base URL based on environment
+   * @returns {string} Base URL for API calls
+   */
+  getBaseURL() {
+    // Check if we're in development (localhost)
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:8000';
+    }
+    
+    // Production URL (Heroku)
+    return 'https://tradelab-39583a78c028.herokuapp.com';
   }
 
   /**

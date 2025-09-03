@@ -22,3 +22,9 @@
   status = 200
   force = true
   headers = {X-From = "Netlify"}
+
+# SPA fallback - redirect all other routes to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
