@@ -199,7 +199,7 @@
 
 .condition-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr auto;
+  grid-template-columns: 1fr 1fr 1fr auto auto;
   gap: 0.75rem;
   align-items: end;
   width: 100%;
@@ -242,6 +242,27 @@
   outline: none;
   border-color: var(--color-green);
   box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+}
+
+/* Optgroup styling for better organization */
+.condition-select optgroup {
+  font-weight: 600;
+  color: var(--color-green);
+  background: rgba(0, 255, 136, 0.1);
+  padding: 0.5rem 0;
+  margin: 0.25rem 0;
+}
+
+.condition-select optgroup option {
+  font-weight: 400;
+  color: var(--color-white);
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  padding: 0.5rem 1rem;
+}
+
+.condition-select optgroup option:hover {
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--color-green);
 }
 
 .operator-select {
@@ -363,8 +384,7 @@
   }
   
   .condition-field:nth-child(4),
-  .condition-field:nth-child(5),
-  .condition-field:nth-child(6) {
+  .condition-field:nth-child(5) {
     grid-column: span 1;
   }
 }
@@ -380,8 +400,7 @@
   }
   
   .condition-field:nth-child(4),
-  .condition-field:nth-child(5),
-  .condition-field:nth-child(6) {
+  .condition-field:nth-child(5) {
     grid-column: span 1;
   }
   
@@ -398,6 +417,97 @@
   .add-rule-btn {
     justify-content: center;
   }
+}
+
+/* Hierarchical Select Styles */
+.hierarchical-select {
+  position: relative;
+  width: 100%;
+}
+
+.hierarchical-select-trigger {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  color: var(--color-white);
+  padding: 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  min-height: 40px;
+}
+
+.hierarchical-select-trigger:hover {
+  border-color: rgba(0, 255, 136, 0.4);
+}
+
+.hierarchical-select-trigger:focus {
+  outline: none;
+  border-color: var(--color-green);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+}
+
+.dropdown-arrow {
+  color: var(--color-green);
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.hierarchical-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.category-list, .options-list {
+  padding: 0.5rem 0;
+}
+
+.category-item, .option-item {
+  padding: 0.75rem 1rem;
+  color: var(--color-white);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+.category-item:hover, .option-item:hover {
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--color-green);
+}
+
+.category-item:last-child, .option-item:last-child {
+  border-bottom: none;
+}
+
+.category-item.custom-value {
+  color: var(--color-green);
+  font-weight: 600;
+}
+
+.back-button {
+  padding: 0.75rem 1rem;
+  color: var(--color-green);
+  cursor: pointer;
+  background: rgba(0, 255, 136, 0.1);
+  border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background: rgba(0, 255, 136, 0.2);
 }
 
 /* Animation for adding/removing rules */
