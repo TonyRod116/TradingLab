@@ -1,509 +1,376 @@
-import React, { useState, useCallback } from 'react';
-import { 
-  FaPlus, 
-  FaTimes, 
-  FaEye, 
-  FaChartLine, 
-  FaChartBar, 
-  FaChartArea, 
-  FaChartPie,
-  FaArrowUp,
-  FaArrowDown,
-  FaEquals,
-  FaGreaterThan,
-  FaLessThan,
-  FaCrosshairs,
-  FaPlay,
-  FaPause,
-  FaStop,
-  FaEdit,
-  FaTrash,
-  FaSignInAlt,
-  FaSignOutAlt,
-  FaShieldAlt,
-  FaShoppingCart,
-  FaMoneyBillWave
-} from 'react-icons/fa';
-import './RuleBuilder.css';
+import React, { useState } from 'react';
+import { FaPlus, FaTrash, FaCog, FaChartLine, FaTimes, FaEquals, FaGreaterThan, FaLessThan, FaGreaterThanEqual, FaLessThanEqual, FaNotEqual } from 'react-icons/fa';
 
-const RuleBuilder = ({ onAddRule, onRemoveRule, onMoveRule, rules, activeSection, readOnly = false }) => {
-  const [showRuleForm, setShowRuleForm] = useState(false);
-  const [ruleForm, setRuleForm] = useState({
-    name: '',
-    rule_type: 'condition',
-    condition_type: 'indicator',
-    action_type: 'buy',
-    conditions: [
-      {
-        left_operand: '',
-        operator: 'gt',
-        right_operand: '',
-        logical_operator: 'and'
-      }
-    ],
-    priority: 1,
-    parameters: {}
+const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules: [] } }) => {
+  const [rules, setRules] = useState(initialRules);
+
+  // Opciones disponibles
+  const priceOptions = [
+    { value: 'close', label: 'Close Price' },
+    { value: 'open', label: 'Open Price' },
+    { value: 'high', label: 'High Price' },
+    { value: 'low', label: 'Low Price' },
+    { value: 'volume', label: 'Volume' }
+  ];
+
+  const indicatorOptions = [
+    { value: 'sma', label: 'SMA (Simple Moving Average)' },
+    { value: 'ema', label: 'EMA (Exponential Moving Average)' },
+    { value: 'rsi', label: 'RSI (Relative Strength Index)' },
+    { value: 'macd', label: 'MACD' },
+    { value: 'bollinger_upper', label: 'Bollinger Bands Upper' },
+    { value: 'bollinger_lower', label: 'Bollinger Bands Lower' },
+    { value: 'stoch', label: 'Stochastic' },
+    { value: 'williams_r', label: 'Williams %R' },
+    { value: 'atr', label: 'ATR (Average True Range)' }
+  ];
+
+  const operatorOptions = [
+    { value: '>', label: 'Greater Than', icon: FaGreaterThan },
+    { value: '<', label: 'Less Than', icon: FaLessThan },
+    { value: '>=', label: 'Greater or Equal', icon: FaGreaterThanEqual },
+    { value: '<=', label: 'Less or Equal', icon: FaLessThanEqual },
+    { value: '==', label: 'Equals', icon: FaEquals },
+    { value: '!=', label: 'Not Equals', icon: FaNotEqual }
+  ];
+
+  const logicalOperators = [
+    { value: 'AND', label: 'AND' },
+    { value: 'OR', label: 'OR' }
+  ];
+
+  const timeframes = [
+    { value: '1m', label: '1 Minute' },
+    { value: '5m', label: '5 Minutes' },
+    { value: '15m', label: '15 Minutes' },
+    { value: '1h', label: '1 Hour' },
+    { value: '1d', label: '1 Day' }
+  ];
+
+  // Estructura de una condición
+  const createCondition = () => ({
+    id: Date.now() + Math.random(),
+    type: 'price', // 'price' o 'indicator'
+    field: 'close',
+    operator: '>',
+    value: '',
+    timeframe: '1d',
+    period: 20 // Para indicadores
   });
 
-  // Available indicators and their configurations - Based on your Parquet backend
-  const indicators = {
-    moving_averages: [
-      { name: 'sma_20', label: 'SMA 20 (Simple Moving Average)', type: 'indicator', description: '20-period simple moving average' },
-      { name: 'sma_50', label: 'SMA 50 (Simple Moving Average)', type: 'indicator', description: '50-period simple moving average' },
-      { name: 'ema_20', label: 'EMA 20 (Exponential Moving Average)', type: 'indicator', description: '20-period exponential moving average' },
-      { name: 'ema_50', label: 'EMA 50 (Exponential Moving Average)', type: 'indicator', description: '50-period exponential moving average' },
-      { name: 'vwap', label: 'VWAP (Volume Weighted Average Price)', type: 'indicator', description: 'Volume weighted average price' }
-    ],
-    vwap_bands: [
-      { name: 'vwap_plus_0_5', label: 'VWAP +0.5σ', type: 'indicator', description: 'VWAP + 0.5 standard deviations' },
-      { name: 'vwap_plus_1_0', label: 'VWAP +1.0σ', type: 'indicator', description: 'VWAP + 1.0 standard deviations' },
-      { name: 'vwap_plus_1_5', label: 'VWAP +1.5σ', type: 'indicator', description: 'VWAP + 1.5 standard deviations' },
-      { name: 'vwap_plus_2_0', label: 'VWAP +2.0σ', type: 'indicator', description: 'VWAP + 2.0 standard deviations' },
-      { name: 'vwap_plus_2_5', label: 'VWAP +2.5σ', type: 'indicator', description: 'VWAP + 2.5 standard deviations' },
-      { name: 'vwap_minus_0_5', label: 'VWAP -0.5σ', type: 'indicator', description: 'VWAP - 0.5 standard deviations' },
-      { name: 'vwap_minus_1_0', label: 'VWAP -1.0σ', type: 'indicator', description: 'VWAP - 1.0 standard deviations' },
-      { name: 'vwap_minus_1_5', label: 'VWAP -1.5σ', type: 'indicator', description: 'VWAP - 1.5 standard deviations' },
-      { name: 'vwap_minus_2_0', label: 'VWAP -2.0σ', type: 'indicator', description: 'VWAP - 2.0 standard deviations' },
-      { name: 'vwap_minus_2_5', label: 'VWAP -2.5σ', type: 'indicator', description: 'VWAP - 2.5 standard deviations' }
-    ],
-    momentum: [
-      { name: 'rsi', label: 'RSI (Relative Strength Index)', type: 'indicator', description: '14-period relative strength index' },
-      { name: 'rsi_20', label: 'RSI 20 (Extreme oversold)', type: 'indicator', description: 'Extreme oversold RSI level (20.0)' },
-      { name: 'rsi_30', label: 'RSI 30 (Standard oversold)', type: 'indicator', description: 'Standard oversold RSI level (30.0)' },
-      { name: 'rsi_50', label: 'RSI 50 (Neutral line)', type: 'indicator', description: 'Neutral RSI level (50.0)' },
-      { name: 'rsi_70', label: 'RSI 70 (Standard overbought)', type: 'indicator', description: 'Standard overbought RSI level (70.0)' },
-      { name: 'rsi_80', label: 'RSI 80 (Extreme overbought)', type: 'indicator', description: 'Extreme overbought RSI level (80.0)' },
-      { name: 'macd', label: 'MACD (Moving Average Convergence/Divergence)', type: 'indicator', description: 'Main MACD line' },
-      { name: 'macd_signal', label: 'MACD Signal', type: 'indicator', description: 'MACD signal line' },
-      { name: 'macd_histogram', label: 'MACD Histogram', type: 'indicator', description: 'MACD histogram' },
-      { name: 'stochastic_k', label: 'Stochastic %K', type: 'indicator', description: '14-period stochastic %K' },
-      { name: 'stochastic_d', label: 'Stochastic %D', type: 'indicator', description: '14-period stochastic %D' }
-    ],
-    volatility: [
-      { name: 'atr', label: 'ATR (Average True Range)', type: 'indicator', description: '14-period average true range' },
-      { name: 'bb_upper', label: 'Bollinger Bands Upper', type: 'indicator', description: 'Upper Bollinger Band (20,2)' },
-      { name: 'bb_middle', label: 'Bollinger Bands Middle', type: 'indicator', description: 'Middle Bollinger Band (20,2)' },
-      { name: 'bb_lower', label: 'Bollinger Bands Lower', type: 'indicator', description: 'Lower Bollinger Band (20,2)' }
-    ],
-    price_data: [
-      { name: 'open', label: 'Open (Opening Price)', type: 'price', description: 'Period opening price' },
-      { name: 'high', label: 'High (Highest Price)', type: 'price', description: 'Period highest price' },
-      { name: 'low', label: 'Low (Lowest Price)', type: 'price', description: 'Period lowest price' },
-      { name: 'close', label: 'Close (Closing Price)', type: 'price', description: 'Period closing price' },
-      { name: 'volume', label: 'Volume', type: 'volume', description: 'Period volume' }
-    ]
+  // Estructura de una regla
+  const createRule = () => ({
+    id: Date.now() + Math.random(),
+    conditions: [createCondition()],
+    logicalOperators: [] // AND/OR entre condiciones
+  });
+
+  const addRule = (ruleType) => {
+    const newRule = createRule();
+    setRules(prev => ({
+      ...prev,
+      [ruleType]: [...prev[ruleType], newRule]
+    }));
   };
 
-  const operators = [
-    { value: 'gt', label: '>', description: 'Greater than' },
-    { value: 'lt', label: '<', description: 'Less than' },
-    { value: 'gte', label: '>=', description: 'Greater or equal to' },
-    { value: 'lte', label: '<=', description: 'Less or equal to' },
-    { value: 'eq', label: '==', description: 'Equal to' },
-    { value: 'ne', label: '!=', description: 'Not equal to' },
-    { value: 'cross_up', label: 'Cross Up', description: 'Crosses up' },
-    { value: 'cross_down', label: 'Cross Down', description: 'Crosses down' }
-  ];
-
-  const actions = [
-    { value: 'buy', label: 'Buy', description: 'Buy' },
-    { value: 'sell', label: 'Sell', description: 'Sell' },
-    { value: 'close', label: 'Close', description: 'Close position' },
-    { value: 'modify', label: 'Modify', description: 'Modify order' },
-    { value: 'wait', label: 'Wait', description: 'Wait' }
-  ];
-
-  const handleInputChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setRuleForm(prev => ({
+  const removeRule = (ruleType, ruleId) => {
+    setRules(prev => ({
       ...prev,
-      [name]: value
+      [ruleType]: prev[ruleType].filter(rule => rule.id !== ruleId)
     }));
-  }, []);
+  };
 
-  const handleConditionChange = useCallback((index, field, value) => {
-    setRuleForm(prev => ({
+  const addCondition = (ruleType, ruleId) => {
+    const newCondition = createCondition();
+    setRules(prev => ({
       ...prev,
-      conditions: prev.conditions.map((condition, i) => 
-        i === index ? { ...condition, [field]: value } : condition
+      [ruleType]: prev[ruleType].map(rule => 
+        rule.id === ruleId 
+          ? { 
+              ...rule, 
+              conditions: [...rule.conditions, newCondition],
+              logicalOperators: [...rule.logicalOperators, 'AND']
+            }
+          : rule
       )
     }));
-  }, []);
+  };
 
-  const addCondition = useCallback(() => {
-    setRuleForm(prev => ({
+  const removeCondition = (ruleType, ruleId, conditionId) => {
+    setRules(prev => ({
       ...prev,
-      conditions: [
-        ...prev.conditions,
-        {
-          left_operand: '',
-          operator: 'gt',
-          right_operand: '',
-          logical_operator: 'and'
-        }
-      ]
+      [ruleType]: prev[ruleType].map(rule => 
+        rule.id === ruleId 
+          ? { 
+              ...rule, 
+              conditions: rule.conditions.filter(cond => cond.id !== conditionId),
+              logicalOperators: rule.logicalOperators.filter((_, index) => index < rule.conditions.length - 1)
+            }
+          : rule
+      )
     }));
-  }, []);
+  };
 
-  const removeCondition = useCallback((index) => {
-    setRuleForm(prev => ({
+  const updateCondition = (ruleType, ruleId, conditionId, field, value) => {
+    setRules(prev => ({
       ...prev,
-      conditions: prev.conditions.filter((_, i) => i !== index)
+      [ruleType]: prev[ruleType].map(rule => 
+        rule.id === ruleId 
+          ? {
+              ...rule,
+              conditions: rule.conditions.map(cond => 
+                cond.id === conditionId 
+                  ? { ...cond, [field]: value }
+                  : cond
+              )
+            }
+          : rule
+      )
     }));
-  }, []);
+  };
 
-  const updateCondition = useCallback((index, field, value) => {
-    handleConditionChange(index, field, value);
-  }, [handleConditionChange]);
+  const updateLogicalOperator = (ruleType, ruleId, index, operator) => {
+    setRules(prev => ({
+      ...prev,
+      [ruleType]: prev[ruleType].map(rule => 
+        rule.id === ruleId 
+          ? {
+              ...rule,
+              logicalOperators: rule.logicalOperators.map((op, i) => 
+                i === index ? operator : op
+              )
+            }
+          : rule
+      )
+    }));
+  };
 
-  const handleSubmit = useCallback(() => {
-    if (!ruleForm.name.trim()) {
-
-      return;
+  // Notificar cambios al componente padre
+  React.useEffect(() => {
+    if (onRulesChange) {
+      onRulesChange(rules);
     }
-    
-    // For condition rules, validate that at least one condition is complete
-    if (ruleForm.rule_type === 'condition') {
-      const hasValidCondition = ruleForm.conditions.some(condition => 
-        condition.left_operand && condition.operator && condition.right_operand
-      );
-      
-      if (!hasValidCondition) {
+  }, [rules, onRulesChange]);
 
-        return;
-      }
-    }
-    
-    const newRule = {
-      ...ruleForm,
-      id: Date.now(),
-      section: activeSection,
-      order: rules.length + 1
-    };
-    
+  const renderCondition = (condition, ruleType, ruleId, conditionIndex) => {
+    const options = condition.type === 'price' ? priceOptions : indicatorOptions;
+    const OperatorIcon = operatorOptions.find(op => op.value === condition.operator)?.icon || FaEquals;
 
-    onAddRule(newRule);
-    setShowRuleForm(false);
-    setRuleForm({
-      name: '',
-      rule_type: 'condition',
-      condition_type: 'indicator',
-      action_type: 'buy',
-      conditions: [
-        {
-          left_operand: '',
-          operator: 'gt',
-          right_operand: '',
-          logical_operator: 'and'
-        }
-      ],
-      priority: 1,
-      parameters: {}
-    });
-  }, [ruleForm, onAddRule, rules.length, activeSection]);
-
-  const handleCancel = useCallback(() => {
-    setShowRuleForm(false);
-    setRuleForm({
-      name: '',
-      rule_type: 'condition',
-      condition_type: 'indicator',
-      action_type: 'buy',
-      conditions: [
-        {
-          left_operand: '',
-          operator: 'gt',
-          right_operand: '',
-          logical_operator: 'and'
-        }
-      ],
-      priority: 1,
-      parameters: {}
-    });
-  }, []);
-
-  const validateCondition = useCallback((condition) => {
-    if (!condition.left_operand || !condition.operator || !condition.right_operand) {
-      return false;
-    }
-    return true;
-  }, []);
-
-  const getValidationStatus = useCallback((condition) => {
-    if (!condition.left_operand || !condition.operator || !condition.right_operand) {
-      return 'error';
-    }
-    return 'valid';
-  }, []);
-
-  const canSubmitRule = useCallback(() => {
-    if (!ruleForm.name.trim()) return false;
-    
-    if (ruleForm.rule_type === 'condition') {
-      return ruleForm.conditions.some(condition => 
-        condition.left_operand && condition.operator && condition.right_operand
-      );
-    }
-    
-    return true;
-  }, [ruleForm]);
-
-  const renderConditionRuleForm = () => (
-    <div className="condition-rule-form">
-      <div className="conditions-container">
-        <div className="conditions-header">
-          <h4>Rule Conditions</h4>
-          <button onClick={addCondition} className="btn btn-primary btn-sm">
-            <FaPlus /> Add Condition
-          </button>
-        </div>
-        
-        {ruleForm.conditions.map((condition, index) => (
-          <div key={index} className="condition-group">
-            <div className="condition-header">
-              <span className="condition-number">Condition {index + 1}</span>
-              {index > 0 && (
-                <select
-                  value={condition.logical_operator}
-                  onChange={(e) => updateCondition(index, 'logical_operator', e.target.value)}
-                  className="logical-operator"
-                >
-                  <option value="and">AND</option>
-                  <option value="or">OR</option>
-                </select>
-              )}
-              {ruleForm.conditions.length > 1 && (
-                <button 
-                  onClick={() => removeCondition(index)}
-                  className="btn btn-danger btn-sm"
-                >
-                  <FaTrash />
-                </button>
-              )}
+    return (
+      <div key={condition.id} className="condition">
+        <div className="condition-header">
+          <span className="condition-number">Condition {conditionIndex + 1}</span>
+          {conditionIndex > 0 && (
+            <div className="logical-operator">
+              <select
+                value={rules[ruleType].find(r => r.id === ruleId)?.logicalOperators[conditionIndex - 1] || 'AND'}
+                onChange={(e) => updateLogicalOperator(ruleType, ruleId, conditionIndex - 1, e.target.value)}
+                className="logical-select"
+              >
+                {logicalOperators.map(op => (
+                  <option key={op.value} value={op.value}>{op.value}</option>
+                ))}
+              </select>
             </div>
-            
-            <div className="condition-fields">
-              <div className="form-group">
-                <label>Left Indicator/Value</label>
-                <select
-                  value={condition.left_operand}
-                  onChange={(e) => updateCondition(index, 'left_operand', e.target.value)}
-                >
-                  <option value="">Select indicator</option>
-                  {Object.entries(indicators).map(([category, categoryIndicators]) => (
-                    <optgroup key={category} label={category.replace('_', ' ').toUpperCase()}>
-                      {categoryIndicators.map(indicator => (
-                        <option key={indicator.name} value={indicator.name}>
-                          {indicator.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label>Operator</label>
+          )}
+        </div>
+
+        <div className="condition-content">
+          <div className="condition-row">
+            <div className="condition-field">
+              <label>Type</label>
+              <select
+                value={condition.type}
+                onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'type', e.target.value)}
+                className="condition-select"
+              >
+                <option value="price">Price</option>
+                <option value="indicator">Indicator</option>
+              </select>
+            </div>
+
+            <div className="condition-field">
+              <label>Field</label>
+              <select
+                value={condition.field}
+                onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'field', e.target.value)}
+                className="condition-select"
+              >
+                {options.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="condition-field">
+              <label>Operator</label>
+              <div className="operator-select">
+                <OperatorIcon className="operator-icon" />
                 <select
                   value={condition.operator}
-                  onChange={(e) => updateCondition(index, 'operator', e.target.value)}
+                  onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'operator', e.target.value)}
+                  className="condition-select"
                 >
-                  {operators.map(op => (
-                    <option key={op.value} value={op.value}>
-                      {op.label} - {op.description}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label>Right Indicator/Value</label>
-                <select
-                  value={condition.right_operand}
-                  onChange={(e) => updateCondition(index, 'right_operand', e.target.value)}
-                >
-                  <option value="">Select indicator</option>
-                  {Object.entries(indicators).map(([category, categoryIndicators]) => (
-                    <optgroup key={category} label={category.replace('_', ' ').toUpperCase()}>
-                      {categoryIndicators.map(indicator => (
-                        <option key={indicator.name} value={indicator.name}>
-                          {indicator.label}
-                        </option>
-                      ))}
-                    </optgroup>
+                  {operatorOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
               </div>
             </div>
-            
-            <div className={`validation-status ${getValidationStatus(condition)}`}>
-              {getValidationStatus(condition) === 'error' ? '⚠️ Incomplete condition' : '✅ Valid condition'}
+
+            <div className="condition-field">
+              <label>Value</label>
+              <input
+                type="number"
+                value={condition.value}
+                onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'value', e.target.value)}
+                placeholder="Enter value"
+                className="condition-input"
+              />
             </div>
+
+            {condition.type === 'indicator' && (
+              <div className="condition-field">
+                <label>Period</label>
+                <input
+                  type="number"
+                  value={condition.period}
+                  onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'period', e.target.value)}
+                  placeholder="20"
+                  className="condition-input"
+                />
+              </div>
+            )}
+
+            <div className="condition-field">
+              <label>Timeframe</label>
+              <select
+                value={condition.timeframe}
+                onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'timeframe', e.target.value)}
+                className="condition-select"
+              >
+                {timeframes.map(tf => (
+                  <option key={tf.value} value={tf.value}>{tf.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => removeCondition(ruleType, ruleId, condition.id)}
+              className="remove-condition-btn"
+              title="Remove condition"
+            >
+              <FaTimes />
+            </button>
           </div>
-        ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
-  const renderActionRuleForm = () => (
-    <div className="action-rule-form">
-      <div className="form-group">
-        <label>Action Type</label>
-        <select
-          name="action_type"
-          value={ruleForm.action_type}
-          onChange={handleInputChange}
+  const renderRule = (rule, ruleType, ruleIndex) => (
+    <div key={rule.id} className="rule">
+      <div className="rule-header">
+        <h4>
+          <FaCog />
+          {ruleType === 'entryRules' ? 'Entry' : 'Exit'} Rule {ruleIndex + 1}
+        </h4>
+        <button
+          type="button"
+          onClick={() => removeRule(ruleType, rule.id)}
+          className="remove-rule-btn"
+          title="Remove rule"
         >
-          {actions.map(action => (
-            <option key={action.value} value={action.value}>
-              {action.label} - {action.description}
-            </option>
-          ))}
-        </select>
+          <FaTrash />
+        </button>
+      </div>
+
+      <div className="rule-content">
+        {rule.conditions.map((condition, conditionIndex) => 
+          renderCondition(condition, ruleType, rule.id, conditionIndex)
+        )}
+
+        <button
+          type="button"
+          onClick={() => addCondition(ruleType, rule.id)}
+          className="add-condition-btn"
+        >
+          <FaPlus />
+          Add Condition
+        </button>
       </div>
     </div>
   );
-
-  const getSectionRules = useCallback((section) => {
-    return rules.filter(rule => rule.section === section);
-  }, [rules]);
-
-  const currentRules = getSectionRules(activeSection);
-  const sectionIcon = activeSection === 'entry' ? <FaShoppingCart /> : <FaMoneyBillWave />;
-  const sectionTitle = activeSection === 'entry' ? 'Entry Rules' : 'Exit Rules';
-  const sectionDescription = activeSection === 'entry' ? 'When to buy - define your entry conditions' : 'When to sell - define your exit conditions';
 
   return (
     <div className="rule-builder">
       <div className="rule-builder-header">
-        <h4>{sectionIcon} {sectionTitle}</h4>
-        <p>{sectionDescription}</p>
-        {!readOnly && (
-          <button
-            onClick={() => setShowRuleForm(!showRuleForm)}
-            className="btn btn-primary btn-sm"
-          >
-            {showRuleForm ? <FaTimes /> : <FaPlus />} {showRuleForm ? 'Cancel' : `Add ${activeSection === 'entry' ? 'Entry' : 'Exit'} Rule`}
-          </button>
-        )}
+        <h3>
+          <FaChartLine />
+          Rule Builder
+        </h3>
+        <p>Create complex trading rules using technical indicators and price conditions</p>
       </div>
 
-      {showRuleForm && (
-        <div className="rule-form-inline">
-          <div className="rule-form-header">
-            <h5>Add New {activeSection === 'entry' ? 'Entry' : 'Exit'} Rule</h5>
+      <div className="rules-container">
+        <div className="rule-section">
+          <div className="rule-section-header">
+            <h4>Entry Rules</h4>
+            <button
+              type="button"
+              onClick={() => addRule('entryRules')}
+              className="add-rule-btn"
+            >
+              <FaPlus />
+              Add Entry Rule
+            </button>
           </div>
 
-          <div className="rule-form-body">
-            <div className="form-group">
-              <label>Rule Name *</label>
-              <input
-                type="text"
-                name="name"
-                value={ruleForm.name}
-                onChange={handleInputChange}
-                placeholder={`e.g., ${activeSection === 'entry' ? 'RSI Oversold Entry' : 'RSI Overbought Exit'}`}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Rule Type *</label>
-              <select
-                name="rule_type"
-                value={ruleForm.rule_type}
-                onChange={handleInputChange}
-              >
-                <option value="condition">Condition</option>
-                <option value="action">Action</option>
-                <option value="filter">Filter</option>
-              </select>
-            </div>
-
-            {ruleForm.rule_type === 'condition' && renderConditionRuleForm()}
-            {ruleForm.rule_type === 'action' && renderActionRuleForm()}
-
-            <div className="rule-form-actions">
-              <button onClick={handleCancel} className="btn btn-secondary">
-                Cancel
-              </button>
-              <button 
-                onClick={handleSubmit} 
-                className="btn btn-primary"
-                disabled={!canSubmitRule()}
-              >
-                Add Rule
-              </button>
-            </div>
+          <div className="rules-list">
+            {rules.entryRules.map((rule, index) => 
+              renderRule(rule, 'entryRules', index)
+            )}
           </div>
         </div>
-      )}
 
-      <div className="rules-section">
-        {currentRules.length === 0 ? (
-          <div className="empty-rules">
-            <p>No {activeSection} rules yet. Add your first {activeSection} condition!</p>
+        <div className="rule-section">
+          <div className="rule-section-header">
+            <h4>Exit Rules</h4>
+            <button
+              type="button"
+              onClick={() => addRule('exitRules')}
+              className="add-rule-btn"
+            >
+              <FaPlus />
+              Add Exit Rule
+            </button>
           </div>
-        ) : (
+
           <div className="rules-list">
-            {currentRules.map((rule, index) => (
-              <div key={rule.id} className={`rule-item ${activeSection}-rule`}>
-                <div className="rule-header">
-                  <span className="rule-order">{rule.order}</span>
-                  <span className="rule-name">{rule.name}</span>
-                  <span className={`rule-type ${rule.rule_type}`}>
-                    {rule.rule_type === 'condition' ? 'Condition' : 'Action'}
-                  </span>
-                </div>
-                <div className="rule-details">
-                  {rule.rule_type === 'condition' && rule.conditions && (
-                    <div className="rule-conditions-preview">
-                      {rule.conditions.map((condition, idx) => (
-                        <div key={idx} className="condition-preview">
-                          <span className="condition-text">
-                            {condition.left_operand} {condition.operator} {condition.right_operand}
-                          </span>
-                          {idx < rule.conditions.length - 1 && (
-                            <span className="logical-operator">
-                              {condition.logical_operator === 'and' ? 'AND' : 'OR'}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {rule.rule_type === 'action' && (
-                    <span>{rule.action_type}</span>
-                  )}
-                </div>
-                {!readOnly && (
-                  <div className="rule-actions">
-                    <button
-                      onClick={() => onMoveRule(rule.id, 'up')}
-                      disabled={index === 0}
-                      className="btn btn-sm btn-secondary"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      onClick={() => onMoveRule(rule.id, 'down')}
-                      disabled={index === currentRules.length - 1}
-                      className="btn btn-sm btn-secondary"
-                    >
-                      ↓
-                    </button>
-                    <button
-                      onClick={() => onRemoveRule(rule.id)}
-                      className="btn btn-sm btn-danger"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
+            {rules.exitRules.map((rule, index) => 
+              renderRule(rule, 'exitRules', index)
+            )}
           </div>
-        )}
+        </div>
+      </div>
+
+      <div className="rule-builder-summary">
+        <h4>Rule Summary</h4>
+        <div className="summary-content">
+          <div className="summary-item">
+            <strong>Entry Rules:</strong> {rules.entryRules.length}
+          </div>
+          <div className="summary-item">
+            <strong>Exit Rules:</strong> {rules.exitRules.length}
+          </div>
+          <div className="summary-item">
+            <strong>Total Conditions:</strong> {
+              rules.entryRules.reduce((acc, rule) => acc + rule.conditions.length, 0) +
+              rules.exitRules.reduce((acc, rule) => acc + rule.conditions.length, 0)
+            }
+          </div>
+        </div>
       </div>
     </div>
   );

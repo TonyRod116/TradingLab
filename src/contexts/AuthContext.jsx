@@ -170,7 +170,8 @@ export function AuthProvider({ children }) {
         payload.email = identifier;
       }
       
-      const response = await axios.post('/auth/login/', payload);
+      console.log('🔐 Attempting login to:', `${API_BASE_URL}/api/users/login/`);
+      const response = await axios.post('/api/users/login/', payload);
       
       const { access, refresh } = response.data;
       
@@ -181,8 +182,10 @@ export function AuthProvider({ children }) {
       setTokenState(access);
       setUser(userData);
       
+      console.log('✅ Login successful:', userData);
       return { success: true, redirectTo: '/strategies' };
     } catch (error) {
+      console.error('❌ Login error:', error);
       const errorMessage = extractErrorMessage(error);
       return { 
         success: false, 
@@ -193,7 +196,8 @@ export function AuthProvider({ children }) {
 
   const signup = useCallback(async (username, email, password, confirmPassword) => {
     try {
-      const response = await axios.post('/users/signup/', {
+      console.log('📝 Attempting signup to:', `${API_BASE_URL}/api/users/signup/`);
+      const response = await axios.post('/api/users/signup/', {
         username,
         email,
         password,
@@ -206,8 +210,10 @@ export function AuthProvider({ children }) {
       setTokenState(access);
       setUser(userData);
       
+      console.log('✅ Signup successful:', userData);
       return { success: true, redirectTo: '/strategies' };
     } catch (error) {
+      console.error('❌ Signup error:', error);
       const errorMessage = extractErrorMessage(error);
       return { 
         success: false, 

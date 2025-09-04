@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { 
-  FaChartLine, 
   FaPlus, 
   FaRocket, 
   FaCog, 
@@ -18,10 +17,9 @@ import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
 import Header from './Header';
 import StrategyList from './StrategyList';
 import FavoritesList from './FavoritesList';
-import StrategyCreator from './StrategyCreator';
+import QuantConnectStrategyCreator from './QuantConnectStrategyCreator';
 import StrategyTemplates from './StrategyTemplates';
 import RuleBuilder from './RuleBuilder';
-import QuantStrategies from './QuantStrategies';
 import './Strategies.css';
 
 const Strategies = () => {
@@ -39,25 +37,30 @@ const Strategies = () => {
     try {
       const response = await fetch(getApiUrl(API_ENDPOINTS.STRATEGIES), {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json'
         }
       });
       
       if (response.ok) {
         const data = await response.json();
         setStrategies(data.results || data);
+        console.log('📊 Loaded strategies from API:', data);
       } else {
-        toast.error('Failed to load strategies', {
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        toast.error(`Failed to load strategies: ${errorData.detail || 'Unknown error'}`, {
           position: "top-right",
           autoClose: 4000,
-          toastId: 'load-strategies-error' // Prevent duplicate toasts
+          toastId: 'load-strategies-error'
         });
       }
     } catch (err) {
+      console.error('Network error loading strategies:', err);
       toast.error('Network error loading strategies', {
         position: "top-right",
         autoClose: 4000,
-        toastId: 'load-strategies-network-error' // Prevent duplicate toasts
+        toastId: 'load-strategies-network-error'
       });
     } finally {
       setLoading(false);
@@ -71,7 +74,7 @@ const Strategies = () => {
   // Handle URL tab parameter
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['my-strategies', 'templates', 'create-strategy', 'quant-strategies'].includes(tabParam)) {
+    if (tabParam && ['my-strategies', 'templates', 'create-strategy', 'favorites'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -118,12 +121,6 @@ const Strategies = () => {
         >
           Create Strategy
         </button>
-        <button 
-          className={`tab-button ${activeTab === 'quant-strategies' ? 'active' : ''}`}
-          onClick={() => handleTabChange('quant-strategies')}
-        >
-          <FaChartLine /> Quant Strategies
-        </button>
       </div>
 
       <div className="strategies-content">
@@ -149,7 +146,7 @@ const Strategies = () => {
         )}
         
         {activeTab === 'create-strategy' && (
-          <StrategyCreator 
+          <QuantConnectStrategyCreator 
             onStrategyCreated={loadStrategies}
             onBack={() => {
               setSelectedTemplate(null);
@@ -157,10 +154,6 @@ const Strategies = () => {
             }}
             template={selectedTemplate}
           />
-        )}
-        
-        {activeTab === 'quant-strategies' && (
-          <QuantStrategies />
         )}
       </div>
     </div>

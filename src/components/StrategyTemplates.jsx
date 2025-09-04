@@ -1,11 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaCopy, FaEye, FaChartLine, FaShieldAlt, FaRocket, FaLightbulb } from 'react-icons/fa';
-import { strategyTemplates } from '../data/strategyTemplates';
+import { quantConnectTemplates } from '../data/quantConnectTemplates';
+import { quantConnectAPI } from '../config/api';
 import './StrategyTemplates.css';
 
 const StrategyTemplates = ({ onTemplateSelect, onCreateStrategy }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [templates, setTemplates] = useState(quantConnectTemplates);
+  const [loading, setLoading] = useState(false);
+
+  // Load templates from API
+  useEffect(() => {
+    const loadTemplates = async () => {
+      setLoading(true);
+      try {
+        const result = await quantConnectAPI.getTemplates();
+        if (result.success && result.data) {
+          setTemplates(result.data);
+        }
+      } catch (error) {
+        console.error('Error loading templates:', error);
+        // Fallback to local templates
+        setTemplates(quantConnectTemplates);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTemplates();
+  }, []);
 
   // Get template icons - using a simple rotation
   const getTemplateIcon = (index) => {
@@ -42,7 +66,7 @@ const StrategyTemplates = ({ onTemplateSelect, onCreateStrategy }) => {
       </div>
 
       <div className="templates-grid">
-        {strategyTemplates.map((template, index) => (
+        {templates.map((template, index) => (
           <div key={template.id} className="template-card">
             <div className="template-header">
               <div className="template-icon">
@@ -58,16 +82,21 @@ const StrategyTemplates = ({ onTemplateSelect, onCreateStrategy }) => {
             <div className="template-features">
               <h4>Key Features:</h4>
               <ul>
-                {template.features.map((feature, index) => (
+                {template.features && template.features.map((feature, index) => (
                   <li key={index}>{feature}</li>
                 ))}
               </ul>
             </div>
             
-            <div className="template-rules-summary">
-              <div className="rules-count">
-                <span className="entry-rules">{template.entryRules.length} Entry Rules</span>
-                <span className="exit-rules">{template.exitRules.length} Exit Rules</span>
+            <div className="template-details">
+              <div className="detail-item">
+                <strong>Indicators:</strong> {template.indicators ? template.indicators.join(', ') : 'N/A'}
+              </div>
+              <div className="detail-item">
+                <strong>Timeframe:</strong> {template.timeframe || 'N/A'}
+              </div>
+              <div className="detail-item">
+                <strong>Symbols:</strong> {template.symbols ? template.symbols.join(', ') : 'N/A'}
               </div>
             </div>
             
@@ -106,43 +135,28 @@ const StrategyTemplates = ({ onTemplateSelect, onCreateStrategy }) => {
                 </div>
               </div>
 
-              <div className="rules-details">
-                <div className="rules-section">
-                  <h4>Entry Rules ({selectedTemplate.entryRules.length})</h4>
-                  {selectedTemplate.entryRules.map((rule, index) => (
-                    <div key={index} className="rule-item">
-                      <strong>{rule.name}</strong>
-                      <div className="rule-conditions">
-                        {rule.conditions.map((condition, condIndex) => (
-                          <div key={condIndex} className="condition">
-                            {condition.left_operand} {condition.operator} {condition.right_operand}
-                            {condIndex < rule.conditions.length - 1 && (
-                              <span className="logical-op"> {condition.logical_operator}</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              <div className="template-technical">
+                <h4>Technical Details:</h4>
+                <div className="technical-grid">
+                  <div className="tech-item">
+                    <strong>Indicators:</strong>
+                    <span>{selectedTemplate.indicators ? selectedTemplate.indicators.join(', ') : 'N/A'}</span>
+                  </div>
+                  <div className="tech-item">
+                    <strong>Timeframe:</strong>
+                    <span>{selectedTemplate.timeframe || 'N/A'}</span>
+                  </div>
+                  <div className="tech-item">
+                    <strong>Symbols:</strong>
+                    <span>{selectedTemplate.symbols ? selectedTemplate.symbols.join(', ') : 'N/A'}</span>
+                  </div>
                 </div>
+              </div>
 
-                <div className="rules-section">
-                  <h4>Exit Rules ({selectedTemplate.exitRules.length})</h4>
-                  {selectedTemplate.exitRules.map((rule, index) => (
-                    <div key={index} className="rule-item">
-                      <strong>{rule.name}</strong>
-                      <div className="rule-conditions">
-                        {rule.conditions.map((condition, condIndex) => (
-                          <div key={condIndex} className="condition">
-                            {condition.left_operand} {condition.operator} {condition.right_operand}
-                            {condIndex < rule.conditions.length - 1 && (
-                              <span className="logical-op"> {condition.logical_operator}</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              <div className="template-natural-language">
+                <h4>Natural Language Description:</h4>
+                <div className="natural-language-box">
+                  <p>"{selectedTemplate.naturalLanguage || selectedTemplate.description}"</p>
                 </div>
               </div>
             </div>

@@ -1,0 +1,20 @@
+{
+  "name": "TradeLab - QuantConnect Strategy Platform",
+  "short_name": "TradeLab",
+  "description": "Create, test, and deploy trading strategies using QuantConnect's powerful cloud-based backtesting engine",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00ff88",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32 48x48",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["finance", "productivity", "business"],
+  "lang": "en",
+  "dir": "ltr"
+}

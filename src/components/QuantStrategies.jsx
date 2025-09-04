@@ -9,7 +9,7 @@ import {
   FaLightbulb
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import QuantConnectService from '../services/QuantConnectService';
+import { quantConnectAPI } from '../config/api';
 import './QuantStrategies.css';
 
 const QuantStrategies = () => {
@@ -99,19 +99,34 @@ const QuantStrategies = () => {
     setLoading(true);
     
     try {
-      const result = await QuantConnectService.runCompleteWorkflow(template, template.description);
+      // Parse the template strategy
+      const parseResult = await quantConnectAPI.parseStrategy(template.description);
       
-      if (result.success) {
-        toast.success('🚀 Backtest started successfully!', {
-          position: "top-right",
-          autoClose: 3000
+      if (parseResult.success) {
+        // Compile the project
+        const compileResult = await quantConnectAPI.compileProject({
+          projectId: parseResult.data?.projectId,
+          strategyCode: parseResult.data?.strategyCode,
+          description: template.description
         });
 
+        if (compileResult.success) {
+          // Read compilation result
+          const result = await quantConnectAPI.readCompilationResult(compileResult.data?.compileId);
+          
+          if (result.success) {
+            toast.success('🚀 Backtest started successfully!', {
+              position: "top-right",
+              autoClose: 3000
+            });
+          } else {
+            throw new Error(result.error || 'Compilation failed');
+          }
+        } else {
+          throw new Error(compileResult.error || 'Compilation failed');
+        }
       } else {
-        toast.error(`❌ Backtest failed: ${result.error}`, {
-          position: "top-right",
-          autoClose: 5000
-        });
+        throw new Error(parseResult.error || 'Parse failed');
       }
     } catch (error) {
       toast.error(`❌ Error: ${error.message}`, {
@@ -136,17 +151,7 @@ const QuantStrategies = () => {
     setParseResults(null);
     
     try {
-      const response = await fetch('http://localhost:8000/api/quantconnect/parse-natural-language/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description: naturalLanguageInput
-        })
-      });
-
-      const result = await response.json();
+      const result = await quantConnectAPI.parseStrategy(naturalLanguageInput);
       setParseResults(result);
       
       if (result.success) {
@@ -183,32 +188,41 @@ const QuantStrategies = () => {
     setCompilationStatus(null);
     
     try {
-      const response = await fetch('http://localhost:8000/api/quantconnect/create-and-compile-strategy/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description: naturalLanguageInput,
-          project_name: `Strategy_${Date.now()}`
-        })
-      });
-
-      const result = await response.json();
-      setCompilationStatus(result);
+      // Parse the strategy first
+      const parseResult = await quantConnectAPI.parseStrategy(naturalLanguageInput);
       
-      if (result.success) {
-        toast.success('🚀 Strategy created and compilation started!', {
-          position: "top-right",
-          autoClose: 3000
+      if (parseResult.success) {
+        // Compile the project
+        const compileResult = await quantConnectAPI.compileProject({
+          projectId: parseResult.data?.projectId,
+          strategyCode: parseResult.data?.strategyCode,
+          description: naturalLanguageInput
         });
-        
-        // Check compilation status after a delay
-        setTimeout(() => {
-          handleCheckCompilationStatus(result.project_id, result.compilation_id);
-        }, 2000);
+
+        if (compileResult.success) {
+          // Read compilation result
+          const result = await quantConnectAPI.readCompilationResult(compileResult.data?.compileId);
+          setCompilationStatus(result);
+          
+          if (result.success) {
+            toast.success('🚀 Strategy created and compilation completed!', {
+              position: "top-right",
+              autoClose: 3000
+            });
+          } else {
+            toast.error(`❌ Compilation failed: ${result.error}`, {
+              position: "top-right",
+              autoClose: 5000
+            });
+          }
+        } else {
+          toast.error(`❌ Compilation failed: ${compileResult.error}`, {
+            position: "top-right",
+            autoClose: 5000
+          });
+        }
       } else {
-        toast.error(`❌ Compilation failed: ${result.error}`, {
+        toast.error(`❌ Parse failed: ${parseResult.error}`, {
           position: "top-right",
           autoClose: 5000
         });
@@ -225,21 +239,10 @@ const QuantStrategies = () => {
 
   const handleCheckCompilationStatus = async (projectId, compilationId) => {
     try {
-      const response = await fetch('http://localhost:8000/api/quantconnect/read-compilation-result/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          project_id: projectId,
-          compilation_id: compilationId
-        })
-      });
-
-      const result = await response.json();
+      const result = await quantConnectAPI.readCompilationResult(compilationId);
       
       if (result.success) {
-        toast.success(`✅ Compilation ${result.status}!`, {
+        toast.success(`✅ Compilation ${result.data?.state}!`, {
           position: "top-right",
           autoClose: 3000
         });

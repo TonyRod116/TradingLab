@@ -1,0 +1,5 @@
+[33m8b42d98[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mquantconnect[m[33m, [m[1;31morigin/quantconnect[m[33m)[m quant component styling
+[33m83b41fb[m cleared debug logs
+[33m7f0f0c3[m netlify tweaks
+[33m80965b6[m Revert to previous state
+[33meaf97f1[m quant strategies component begun and connecting with backend
