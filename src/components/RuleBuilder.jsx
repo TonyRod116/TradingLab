@@ -736,18 +736,6 @@ const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules
         {rule.conditions.map((condition, conditionIndex) => (
           <div key={condition.id}>
             {renderCondition(condition, ruleType, rule.id, conditionIndex)}
-            {conditionIndex < rule.conditions.length - 1 && (
-              <div className="condition-connector">
-                <select
-                  value={rule.logicOperator || 'AND'}
-                  onChange={(e) => updateRuleLogic(ruleType, rule.id, e.target.value)}
-                  className="logic-operator-select"
-                >
-                  <option value="AND">AND</option>
-                  <option value="OR">OR</option>
-                </select>
-              </div>
-            )}
           </div>
         ))}
 
@@ -804,9 +792,23 @@ const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules
           </div>
 
           <div className="rules-list">
-            {rules.entryRules.map((rule, index) => 
-              renderRule(rule, 'entryRules', index)
-            )}
+            {rules.entryRules.map((rule, index) => (
+              <div key={rule.id}>
+                {renderRule(rule, 'entryRules', index)}
+                {index < rules.entryRules.length - 1 && (
+                  <div className="rule-connector">
+                    <select
+                      value={rule.logicOperator || 'AND'}
+                      onChange={(e) => updateRuleLogic('entryRules', rule.id, e.target.value)}
+                      className="rule-logic-select"
+                    >
+                      <option value="AND">AND</option>
+                      <option value="OR">OR</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -824,9 +826,23 @@ const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules
           </div>
 
           <div className="rules-list">
-            {rules.exitRules.map((rule, index) => 
-              renderRule(rule, 'exitRules', index)
-            )}
+            {rules.exitRules.map((rule, index) => (
+              <div key={rule.id}>
+                {renderRule(rule, 'exitRules', index)}
+                {index < rules.exitRules.length - 1 && (
+                  <div className="rule-connector">
+                    <select
+                      value={rule.logicOperator || 'AND'}
+                      onChange={(e) => updateRuleLogic('exitRules', rule.id, e.target.value)}
+                      className="rule-logic-select"
+                    >
+                      <option value="AND">AND</option>
+                      <option value="OR">OR</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>

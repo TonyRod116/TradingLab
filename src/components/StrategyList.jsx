@@ -161,7 +161,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
   };
 
   const handleStrategyClick = (strategyId) => {
-    navigate(`/backtest/${strategyId}`);
+    navigate(`/quantconnect-backtest?strategyId=${strategyId}`);
   };
 
   const getStatusBadge = (status) => {

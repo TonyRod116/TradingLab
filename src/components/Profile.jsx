@@ -149,7 +149,7 @@ const Profile = () => {
   }, []);
 
   const handleStrategyClick = useCallback((strategyId) => {
-    navigate(`/backtest/${strategyId}`);
+    navigate(`/quantconnect-backtest?strategyId=${strategyId}`);
   }, [navigate]);
 
   const confirmDeleteStrategy = useCallback(async () => {
@@ -251,7 +251,7 @@ const Profile = () => {
         }
       </p>
       {isOwnProfile && (
-        <button className="btn btn-primary">
+        <button className="btn btn-primary" onClick={handleCreateStrategy}>
           <FaPlus /> Create Your First Strategy
         </button>
       )}

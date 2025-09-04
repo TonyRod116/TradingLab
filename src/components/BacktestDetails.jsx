@@ -157,55 +157,89 @@ const BacktestDetails = () => {
         </div>
 
         {/* Performance Overview */}
-        <div className="performance-overview">
-          <h2>Performance Overview</h2>
-          <div className="metrics-grid">
-                              <div className="metric-card primary">
-                    <div className="metric-label">Total Return</div>
-                    <div className="metric-value">
-                      {formatCurrency(backtestData.total_return)}
-                      <span className="metric-percentage">
-                        ({formatMetric(backtestData.total_return_percent, true)})
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="metric-card">
-                    <div className="metric-label">Win Rate</div>
-                    <div className="metric-value">{formatMetric(backtestData.win_rate, true)}</div>
-                  </div>
-                  
-                  <div className="metric-card">
-                    <div className="metric-label">Total Trades</div>
-                    <div className="metric-value">{backtestData.total_trades || 'N/A'}</div>
-                  </div>
-                  
-                  <div className="metric-card">
-                    <div className="metric-label">Profit Factor</div>
-                    <div className="metric-value">{formatMetric(backtestData.profit_factor)}</div>
-                  </div>
-                  
-                  <div className="metric-card">
-                    <div className="metric-label">Sharpe Ratio</div>
-                    <div className="metric-value">{formatMetric(backtestData.sharpe_ratio)}</div>
-                  </div>
-                  
-                  <div className="metric-card">
-                    <div className="metric-label">Max Drawdown</div>
-                    <div className="metric-value">{formatMetric(backtestData.max_drawdown, true)}</div>
-                  </div>
+        {backtestData && backtestData.total_return !== undefined ? (
+          <div className="performance-overview">
+            <h2>Performance Overview</h2>
+            <div className="metrics-grid">
+              <div className="metric-card primary">
+                <div className="metric-label">Total Return</div>
+                <div className="metric-value">
+                  {formatCurrency(backtestData.total_return)}
+                  <span className="metric-percentage">
+                    ({formatMetric(backtestData.total_return_percent, true)})
+                  </span>
+                </div>
+              </div>
+              
+              <div className="metric-card">
+                <div className="metric-label">Win Rate</div>
+                <div className="metric-value">{formatMetric(backtestData.win_rate, true)}</div>
+              </div>
+              
+              <div className="metric-card">
+                <div className="metric-label">Total Trades</div>
+                <div className="metric-value">{backtestData.total_trades || 'N/A'}</div>
+              </div>
+              
+              <div className="metric-card">
+                <div className="metric-label">Profit Factor</div>
+                <div className="metric-value">{formatMetric(backtestData.profit_factor)}</div>
+              </div>
+              
+              <div className="metric-card">
+                <div className="metric-label">Sharpe Ratio</div>
+                <div className="metric-value">{formatMetric(backtestData.sharpe_ratio)}</div>
+              </div>
+              
+              <div className="metric-card">
+                <div className="metric-label">Max Drawdown</div>
+                <div className="metric-value">{formatMetric(backtestData.max_drawdown, true)}</div>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="strategy-info-section">
+            <h2>Strategy Information</h2>
+            <div className="strategy-details">
+              <div className="strategy-detail-item">
+                <strong>Description:</strong> {strategy.description || 'No description available'}
+              </div>
+              <div className="strategy-detail-item">
+                <strong>Symbol:</strong> {strategy.symbol || 'N/A'}
+              </div>
+              <div className="strategy-detail-item">
+                <strong>Timeframe:</strong> {strategy.timeframe || 'N/A'}
+              </div>
+              <div className="strategy-detail-item">
+                <strong>Created:</strong> {strategy.created_at ? new Date(strategy.created_at).toLocaleDateString() : 'N/A'}
+              </div>
+              <div className="strategy-detail-item">
+                <strong>Status:</strong> {strategy.is_active ? 'Active' : 'Inactive'}
+              </div>
+            </div>
+            <div className="no-backtest-message">
+              <p>This strategy hasn't been backtested yet. Use the QuantConnect Strategy Creator to run a backtest and see performance results.</p>
+              <button 
+                className="btn btn-primary"
+                onClick={() => navigate('/strategies?tab=create-strategy')}
+              >
+                Create New Strategy
+              </button>
+            </div>
+          </div>
+        )}
 
-        {/* Charts Section */}
-        <div className="charts-section">
-          <h2>Performance Charts</h2>
-                  <BacktestCharts 
-          backtestData={backtestData}
-          trades={trades}
-          equityCurve={equityCurve}
-        />
-        </div>
+        {/* Charts Section - Only show if backtest data exists */}
+        {backtestData && backtestData.total_return !== undefined && (
+          <div className="charts-section">
+            <h2>Performance Charts</h2>
+            <BacktestCharts 
+              backtestData={backtestData}
+              trades={trades}
+              equityCurve={equityCurve}
+            />
+          </div>
+        )}
 
         {/* Detailed Metrics */}
         <div className="detailed-metrics">

@@ -7,6 +7,7 @@ import { strategyAPI, backtestAPI } from '../config/api';
 import RuleBuilder from './RuleBuilder';
 import './StrategyCreator.css';
 import './RuleBuilder.css';
+import './QuantConnectBacktestProgress.css';
 
 const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) => {
   const { user } = useAuth();
@@ -27,8 +28,8 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
     symbol: 'SPY',
     timeframe: '1d',
     initial_capital: 100000,
-    start_date: '2021-01-01',
-    end_date: '2024-01-01',
+    start_date: '2025-05-01',
+    end_date: '2025-05-16',
     benchmark: 'SPY',
     
     // Método de estrategia
@@ -52,6 +53,12 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
     user_id: user?.id || null
   });
 
+  // Estado para el loading bar del backtest
+  const [isBacktestRunning, setIsBacktestRunning] = useState(false);
+  const [backtestProgress, setBacktestProgress] = useState(null);
+  const [backtestError, setBacktestError] = useState(null);
+  const [pollingInterval, setPollingInterval] = useState(null);
+
   // Estado de procesamiento
   const [isProcessing, setIsProcessing] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
@@ -65,7 +72,7 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
     { id: 2, name: 'Trading Parameters', icon: FaShieldAlt, description: 'Symbol, capital, and backtest period' },
     { id: 3, name: 'Strategy Method', icon: FaCogs, description: 'Choose between Rule Builder or Natural Language' },
     { id: 4, name: 'Strategy Definition', icon: FaLightbulb, description: 'Define your strategy using chosen method' },
-    { id: 5, name: 'Backtest Results', icon: FaMoneyBillWave, description: 'Review results and save strategy' }
+    { id: 5, name: 'Strategy Summary', icon: FaEye, description: 'Review strategy and run backtest' }
   ];
 
   // Inicializar con template si existe
@@ -458,14 +465,94 @@ public class GeneratedStrategy : QCAlgorithm
     };
   };
 
+  // Función para iniciar polling del progreso
+  const startProgressPolling = (projectId, backtestId) => {
+    console.log('🔄 Starting progress polling...');
+    const interval = setInterval(async () => {
+      try {
+        console.log('📊 Checking progress...');
+        const progressData = await backtestAPI.checkProgress(projectId, backtestId);
+        console.log('📊 Progress data received:', progressData);
+        
+        if (progressData.success) {
+          // Actualizar progreso con datos reales del backend
+          setBacktestProgress(prev => ({
+            ...prev,
+            ...progressData,
+            // Asegurar que el progreso no baje
+            progress: Math.max(prev?.progress || 0, progressData.progress || 0)
+          }));
+          
+          // Si está completado, parar polling
+          if (progressData.completed) {
+            console.log('✅ Backtest completed!');
+            clearInterval(interval);
+            setPollingInterval(null);
+            setIsBacktestRunning(false);
+            
+            // Navegar a la página de resultados
+            navigate('/quantconnect-backtest', {
+              state: {
+                backtestData: progressData.backtest_results || progressData,
+                strategy: quantConnectStrategy
+              }
+            });
+          }
+        } else {
+          console.log('❌ Progress check failed:', progressData.error);
+          setBacktestError('Error al consultar progreso: ' + progressData.error);
+          clearInterval(interval);
+          setPollingInterval(null);
+          setIsBacktestRunning(false);
+        }
+      } catch (err) {
+        console.error('Error checking progress:', err);
+        setBacktestError('Error al consultar progreso: ' + err.message);
+        clearInterval(interval);
+        setPollingInterval(null);
+        setIsBacktestRunning(false);
+      }
+    }, 2000); // Consultar cada 2 segundos
+
+    setPollingInterval(interval);
+    
+    // Limpiar interval después de 10 minutos (timeout)
+    setTimeout(() => {
+      clearInterval(interval);
+      if (isBacktestRunning) {
+        setBacktestError('Backtest timeout - tardó más de 10 minutos');
+        setIsBacktestRunning(false);
+        setPollingInterval(null);
+      }
+    }, 600000);
+  };
+
   const runBacktest = async () => {
-    setIsProcessing(true);
+    setIsBacktestRunning(true);
+    setBacktestError(null);
+    setBacktestProgress(null);
+    
+    // Mostrar loading bar inmediatamente con estado inicial
+    setBacktestProgress({
+      progress: 0,
+      state: 'In Queue...',
+      status_text: 'Starting backtest...',
+      completed: false,
+      estimated_seconds_remaining: 300 // 5 minutos estimados
+    });
+    
     try {
       // Primero crear la estrategia si no existe
       let currentStrategyId = strategyId;
       
       if (!currentStrategyId) {
-              const strategyResult = await saveStrategy();
+        setBacktestProgress(prev => ({
+          ...prev,
+          status_text: 'Saving strategy...',
+          progress: 10
+        }));
+        
+        const strategyResult = await saveStrategy();
         if (strategyResult && strategyResult.id) {
           currentStrategyId = strategyResult.id;
           setStrategyId(currentStrategyId);
@@ -490,20 +577,42 @@ public class GeneratedStrategy : QCAlgorithm
         initial_capital: quantConnectStrategy.initial_capital
       };
 
+      setBacktestProgress(prev => ({
+        ...prev,
+        status_text: 'Sending to QuantConnect...',
+        progress: 20
+      }));
+
       const result = await backtestAPI.runQuantConnectBacktest(strategyData, backtestParams);
 
+      console.log('🔍 Backtest API Response:', result);
+      console.log('🔍 Response keys:', Object.keys(result));
+      console.log('🔍 Results data:', result.results);
+      console.log('🔍 QuantConnect data:', result.quantconnect);
+      console.log('🔍 Success status:', result.success);
+
       if (result.success) {
-        setBacktestId(result.quantconnect?.backtest_id || result.backtest_id);
-        setBacktestResults(result.backtest_results);
-        toast.success('QuantConnect backtest completed successfully!');
+        // Iniciar polling de progreso
+        const projectId = result.quantconnect.project_id;
+        const backtestId = result.quantconnect.backtest_id;
+        console.log('🚀 Starting progress polling with projectId:', projectId, 'backtestId:', backtestId);
+        
+        setBacktestProgress(prev => ({
+          ...prev,
+          status_text: 'Backtest started, checking progress...',
+          progress: 30
+        }));
+        
+        startProgressPolling(projectId, backtestId);
       } else {
-        throw new Error(result.message || 'QuantConnect backtest failed');
+        console.log('❌ Backtest failed:', result.error);
+        setBacktestError('Error en el backtest: ' + (result.error || 'Error desconocido'));
+        setIsBacktestRunning(false);
       }
     } catch (error) {
       console.error('Error running backtest:', error);
-      toast.error(`Error running backtest: ${error.message}`);
-    } finally {
-      setIsProcessing(false);
+      setBacktestError('Error ejecutando backtest: ' + error.message);
+      setIsBacktestRunning(false);
     }
   };
 
@@ -542,7 +651,7 @@ public class GeneratedStrategy : QCAlgorithm
       case 4:
         return renderStrategyDefinition();
       case 5:
-        return renderBacktestResults();
+        return renderStrategySummary();
       default:
         return null;
     }
@@ -672,9 +781,9 @@ public class GeneratedStrategy : QCAlgorithm
     </div>
   );
 
-  const renderBacktestResults = () => (
+  const renderStrategySummary = () => (
     <div className="step-content">
-      <h3>Backtest Results</h3>
+      <h3>Strategy Summary</h3>
       <p>Review your strategy configuration and run backtest</p>
       
       <div className="strategy-summary">
@@ -693,12 +802,41 @@ public class GeneratedStrategy : QCAlgorithm
             <strong>Period:</strong> {quantConnectStrategy.start_date} to {quantConnectStrategy.end_date}
           </div>
         </div>
-        
-        <div className="strategy-description">
-          <h4>Strategy Description</h4>
-          <p>{quantConnectStrategy.strategy_description}</p>
-        </div>
       </div>
+
+      {/* Loading Bar para Backtest */}
+      {isBacktestRunning && backtestProgress && (
+        <div className="progress-container">
+          <div className="progress-info">
+            <span className="status-text">{backtestProgress.status_text}</span>
+            {backtestProgress.estimated_seconds_remaining > 0 && (
+              <span className="time-remaining">
+                ({Math.ceil(backtestProgress.estimated_seconds_remaining / 60)} min restantes)
+              </span>
+            )}
+          </div>
+          
+          <div className="progress-bar-container">
+            <div 
+              className="progress-bar"
+              style={{ width: `${backtestProgress.progress}%` }}
+            ></div>
+          </div>
+          
+          <div className="progress-details">
+            <span>Progreso: {backtestProgress.progress}%</span>
+            <span>Estado: {backtestProgress.state}</span>
+            <span>ID: {backtestProgress.backtest_id}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error del Backtest */}
+      {backtestError && (
+        <div className="error-message">
+          ❌ {backtestError}
+        </div>
+      )}
       
     </div>
   );

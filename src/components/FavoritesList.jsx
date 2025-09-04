@@ -117,7 +117,7 @@ const FavoritesList = ({ onRefresh }) => {
   }, []);
 
   const handleStrategyClick = useCallback((strategyId) => {
-    navigate(`/backtest/${strategyId}`);
+    navigate(`/quantconnect-backtest?strategyId=${strategyId}`);
   }, [navigate]);
 
   const cleanStrategyName = (name) => {

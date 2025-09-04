@@ -23,7 +23,8 @@ export const API_ENDPOINTS = {
   COMPILE_PROJECT: `${API_BASE_URL}/api/quantconnect/compile-project/`,
   READ_COMPILATION: `${API_BASE_URL}/api/quantconnect/read-compilation-result/`,
   RUN_BACKTEST: `${API_BASE_URL}/api/backtests/`,
-  QUANTCONNECT_BACKTEST: `${API_BASE_URL}/api/strategies/run-backtest/`,
+  QUANTCONNECT_BACKTEST: `${API_BASE_URL}/api/strategies/quantconnect-backtest/`,
+  QUANTCONNECT_PROGRESS: `${API_BASE_URL}/api/strategies/quantconnect-progress/`,
   BACKTEST_RESULTS: (id) => `${API_BASE_URL}/api/backtest/results/${id}/`,
   BACKTEST_HISTORY: `${API_BASE_URL}/api/backtest/history/`,
   
@@ -91,9 +92,10 @@ const isTokenValid = () => {
     }
     
     const tokenData = JSON.parse(atob(parts[1]));
-    const now = Date.now() / 1000;
+    const now = Math.floor(Date.now() / 1000); // Convertir a segundos
     const isValid = tokenData.exp > now;
     console.log('🔑 Token valid:', isValid, 'Expires:', new Date(tokenData.exp * 1000));
+    console.log('🔑 Current time:', new Date(now * 1000));
     console.log('🔑 Token data:', tokenData);
     return isValid;
   } catch (error) {
@@ -128,9 +130,10 @@ export const apiRequest = async (endpoint, options = {}) => {
   
   // Verificar token antes de hacer la petición
   const tokenValid = isTokenValid();
-  if (!tokenValid) {
-    console.error('🔑 Invalid or expired token - proceeding without auth');
-    // No lanzar error, continuar sin autenticación para debugging
+  const token = getAuthToken();
+  
+  if (!tokenValid && token) {
+    console.log('🔑 Token validation failed but token exists - proceeding with token anyway');
   }
   
   const config = {
@@ -172,8 +175,8 @@ export const quantConnectAPI = {
   parseStrategy: async (description, backtestParams = {}) => {
     const defaultParams = {
       initial_capital: 100000,
-      start_date: '2021-01-01',
-      end_date: '2024-01-01',
+      start_date: '2025-05-01',
+      end_date: '2025-05-16',
       benchmark: 'SPY'
     };
     
@@ -251,6 +254,13 @@ export const quantConnectAPI = {
            });
          },
 
+         // Obtener estrategia por ID
+         getStrategy: async (strategyId) => {
+           return apiRequest(API_ENDPOINTS.STRATEGY_DETAIL(strategyId), {
+             method: 'GET'
+           });
+         },
+
          // Convertir lenguaje natural a estrategia completa
          naturalLanguageToStrategy: async (description, language = 'es') => {
            return apiRequest(API_ENDPOINTS.NL_TO_STRATEGY, {
@@ -296,183 +306,28 @@ export const quantConnectAPI = {
 
         // Ejecutar backtest con QuantConnect
         runQuantConnectBacktest: async (strategyData, backtestParams) => {
-          // Convertir reglas del RuleBuilder al formato que espera el backend
-          const convertRulesToBackendFormat = (rules) => {
-            const convertCondition = (condition) => {
-              
-              // Mapear indicadores del RuleBuilder al formato del backend
-              const indicatorMap = {
-                'close': 'price',
-                'open': 'price', 
-                'high': 'price',
-                'low': 'price',
-                'sma_10': 'SMA',
-                'sma_20': 'SMA',
-                'sma_50': 'SMA',
-                'sma_200': 'SMA',
-                'ema_12': 'EMA',
-                'ema_26': 'EMA',
-                'rsi_14': 'RSI',
-                'rsi_20': 'RSI',
-                'rsi_30': 'RSI',
-                'rsi_50': 'RSI',
-                'rsi_70': 'RSI',
-                'rsi_80': 'RSI',
-                'bb_upper': 'BB',
-                'bb_middle': 'BB',
-                'bb_lower': 'BB',
-                'macd': 'MACD',
-                'macd_signal': 'MACD',
-                'macd_histogram': 'MACD',
-                'atr': 'ATR',
-                'stoch_k': 'STOCH',
-                'stoch_d': 'STOCH',
-                'williams_r': 'WILLR',
-                'cci': 'CCI',
-                'adx': 'ADX',
-                'obv': 'OBV',
-                'vwap': 'VWAP'
-              };
-
-              // Mapear operadores del RuleBuilder al formato del backend
-              const operatorMap = {
-                'greater_than': '>',
-                'less_than': '<',
-                'greater_equal': '>=',
-                'less_equal': '<=',
-                'equal': '==',
-                'not_equal': '!='
-              };
-
-              // Determinar el indicador principal
-              let indicator = 'price';
-              let value = 'price';
-              let period = null;
-
-              // Manejar reglas de salida especiales (stop loss, take profit, etc.)
-              if (condition.exitType) {
-                switch (condition.exitType) {
-                  case 'percentage':
-                    return {
-                      indicator: 'PROFIT_PERCENT',
-                      operator: operatorMap[condition.operator] || condition.operator,
-                      value: condition.value || 5
-                    };
-                  case 'atr_based':
-                    return {
-                      indicator: 'ATR',
-                      operator: operatorMap[condition.operator] || condition.operator,
-                      value: condition.value || 2,
-                      period: 14
-                    };
-                  case 'stop_loss':
-                    return {
-                      indicator: 'PROFIT_PERCENT',
-                      operator: '<',
-                      value: -3
-                    };
-                  case 'take_profit':
-                    return {
-                      indicator: 'PROFIT_PERCENT',
-                      operator: '>',
-                      value: 5
-                    };
-                  default:
-                    return {
-                      indicator: 'PROFIT_PERCENT',
-                      operator: operatorMap[condition.operator] || condition.operator,
-                      value: condition.value || 5
-                    };
-                }
-              }
-
-              // Si es una comparación de precio con indicador
-              if (condition.firstValue && ['close', 'open', 'high', 'low'].includes(condition.firstValue)) {
-                indicator = indicatorMap[condition.secondValue] || 'SMA';
-                value = 'price';
-                // Extraer período del indicador
-                const periodMatch = condition.secondValue?.match(/\d+/);
-                period = periodMatch ? parseInt(periodMatch[0]) : 20;
-              } else if (condition.secondValue && ['close', 'open', 'high', 'low'].includes(condition.secondValue)) {
-                indicator = indicatorMap[condition.firstValue] || 'SMA';
-                value = 'price';
-                // Extraer período del indicador
-                const periodMatch = condition.firstValue?.match(/\d+/);
-                period = periodMatch ? parseInt(periodMatch[0]) : 20;
-              } else {
-                // Comparación entre indicadores
-                indicator = indicatorMap[condition.firstValue] || indicatorMap[condition.secondValue] || 'SMA';
-                value = condition.value || 30;
-                // Extraer período
-                const periodMatch = (condition.firstValue || condition.secondValue || '').match(/\d+/);
-                period = periodMatch ? parseInt(periodMatch[0]) : 20;
-              }
-
-              const operator = operatorMap[condition.operator] || condition.operator;
-
-              const result = {
-                indicator: indicator,
-                operator: operator,
-                value: value,
-                ...(period && { period: period })
-              };
-
-              return result;
-            };
-
-            const entryConditions = [];
-            const exitConditions = [];
-
-            // Procesar reglas de entrada
-            if (rules.entry_rules && rules.entry_rules.length > 0) {
-              rules.entry_rules.forEach(rule => {
-                if (rule.conditions && rule.conditions.length > 0) {
-                  rule.conditions.forEach(condition => {
-                    entryConditions.push(convertCondition(condition));
-                  });
-                } else {
-                  // Si es una regla simple sin conditions array
-                  entryConditions.push(convertCondition(rule));
-                }
-              });
-            }
-
-            // Procesar reglas de salida
-            if (rules.exit_rules && rules.exit_rules.length > 0) {
-              rules.exit_rules.forEach(rule => {
-                if (rule.conditions && rule.conditions.length > 0) {
-                  rule.conditions.forEach(condition => {
-                    exitConditions.push(convertCondition(condition));
-                  });
-                } else {
-                  // Si es una regla simple sin conditions array
-                  exitConditions.push(convertCondition(rule));
-                }
-              });
-            }
-
-            const result = {
-              entry_conditions: entryConditions,
-              exit_conditions: exitConditions,
-              symbols: strategyData.symbols || [strategyData.symbol],
-              timeframe: strategyData.timeframe === '1d' ? 'daily' : strategyData.timeframe
-            };
-
-            return result;
-          };
-
+          // Importar el generador de código LEAN
+          const { generateLeanCode } = await import('../utils/leanCodeGenerator.js');
+          
+          // Generar código LEAN completo
+          const leanCode = generateLeanCode(strategyData, backtestParams);
+          
+          // Estructura que espera el backend
           const requestData = {
-            name: strategyData.name || 'QuantConnect Backtest',
-            user: '1', // User ID from token
-            strategy_id: strategyData.id,
-            start_date: backtestParams.startDate || backtestParams.start_date,
-            end_date: backtestParams.endDate || backtestParams.end_date,
-            initial_capital: backtestParams.initialCapital || backtestParams.initial_capital,
-            symbols: strategyData.symbols || [strategyData.symbol],
-            timeframe: strategyData.timeframe === '1d' ? 'daily' : strategyData.timeframe,
-            rules: convertRulesToBackendFormat(strategyData.rules),
-            lean_code: strategyData.lean_code
+            strategy: {
+              id: strategyData.id,
+              name: strategyData.name || 'QuantConnect Backtest',
+              lean_code: leanCode
+            },
+            backtest_params: {
+              start_date: backtestParams.startDate || backtestParams.start_date,
+              end_date: backtestParams.endDate || backtestParams.end_date,
+              initial_capital: backtestParams.initialCapital || backtestParams.initial_capital
+            }
           };
+          
+          console.log('🚀 Sending to QuantConnect Backend:', requestData);
+          console.log('🚀 Generated LEAN Code:', leanCode);
           
           return apiRequest(API_ENDPOINTS.QUANTCONNECT_BACKTEST, {
             method: 'POST',
@@ -488,7 +343,21 @@ export const quantConnectAPI = {
         // Obtener historial de backtests
         getBacktestHistory: async () => {
           return apiRequest(API_ENDPOINTS.BACKTEST_HISTORY);
-        }
+        },
+
+          // Eliminar todos los backtests
+  deleteAllBacktests: async () => {
+    return apiRequest(API_ENDPOINTS.DELETE_ALL_BACKTESTS, {
+      method: 'DELETE'
+    });
+  },
+  
+  // Consultar progreso del backtest
+  checkProgress: async (projectId, backtestId) => {
+    return apiRequest(`${API_ENDPOINTS.QUANTCONNECT_PROGRESS}?project_id=${projectId}&backtest_id=${backtestId}`, {
+      method: 'GET'
+    });
+  }
       };
 
        export { API_BASE_URL };
