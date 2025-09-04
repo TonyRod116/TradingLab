@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaSave, FaChevronRight, FaChevronLeft, FaCog, FaShieldAlt, FaShoppingCart, FaMoneyBillWave, FaSpinner, FaRocket, FaLightbulb, FaCheckCircle, FaExclamationTriangle, FaCode, FaLanguage, FaEye, FaPlay } from 'react-icons/fa';
+import { FaArrowLeft, FaSave, FaChevronRight, FaChevronLeft, FaCog, FaShieldAlt, FaShoppingCart, FaMoneyBillWave, FaSpinner, FaRocket, FaLightbulb, FaCheckCircle, FaExclamationTriangle, FaCode, FaLanguage, FaEye, FaPlay, FaCogs } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import { strategyAPI, backtestAPI } from '../config/api';
@@ -17,29 +17,39 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
   const [strategyMethod, setStrategyMethod] = useState(null); // 'rule-builder' o 'natural-language'
   const [strategyDefinition, setStrategyDefinition] = useState(null); // 'rule-builder' o 'natural-language'
   
-  // Estado de la estrategia
-  const [strategyData, setStrategyData] = useState({
+  // Estado de la estrategia en formato QuantConnect
+  const [quantConnectStrategy, setQuantConnectStrategy] = useState({
+    // Información básica
     name: '',
     description: '',
+    
+    // Parámetros de trading
     symbol: 'SPY',
     timeframe: '1d',
-    initialCapital: 100000,
-    startDate: '2021-01-01',
-    endDate: '2024-01-01',
-    benchmark: 'SPY'
-  });
-
-  // Estado para método de reglas
-  const [ruleData, setRuleData] = useState({
-    entryRules: [],
-    exitRules: [],
-    conditions: []
-  });
-
-  // Estado para lenguaje natural
-  const [naturalLanguageData, setNaturalLanguageData] = useState({
-    description: '',
-    language: 'es'
+    initial_capital: 100000,
+    start_date: '2021-01-01',
+    end_date: '2024-01-01',
+    benchmark: 'SPY',
+    
+    // Método de estrategia
+    strategy_method: null, // 'rule_builder' o 'natural_language'
+    
+    // Reglas del RuleBuilder
+    rules: {
+      direction: 'long', // 'long' o 'short'
+      entry_rules: [],
+      exit_rules: []
+    },
+    
+    // Descripción en lenguaje natural
+    strategy_description: '',
+    
+    // Código generado
+    lean_code: '',
+    
+    // Metadatos
+    created_at: new Date().toISOString(),
+    user_id: user?.id || null
   });
 
   // Estado de procesamiento
@@ -53,15 +63,15 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
   const steps = [
     { id: 1, name: 'Basic Information', icon: FaCog, description: 'Strategy name, description, and timeframe' },
     { id: 2, name: 'Trading Parameters', icon: FaShieldAlt, description: 'Symbol, capital, and backtest period' },
-    { id: 3, name: 'Strategy Description', icon: FaLightbulb, description: 'Describe your strategy in natural language' },
-    { id: 4, name: 'Parse & Compile', icon: FaRocket, description: 'Convert to QuantConnect code and compile' },
+    { id: 3, name: 'Strategy Method', icon: FaCogs, description: 'Choose between Rule Builder or Natural Language' },
+    { id: 4, name: 'Strategy Definition', icon: FaLightbulb, description: 'Define your strategy using chosen method' },
     { id: 5, name: 'Backtest Results', icon: FaMoneyBillWave, description: 'Review results and save strategy' }
   ];
 
   // Inicializar con template si existe
   useEffect(() => {
     if (template) {
-      setStrategyData(prev => ({
+      setQuantConnectStrategy(prev => ({
         ...prev,
         name: template.name || '',
         description: template.description || '',
@@ -71,7 +81,7 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
   }, [template]);
 
   const handleInputChange = (field, value) => {
-    setStrategyData(prev => ({
+    setQuantConnectStrategy(prev => ({
       ...prev,
       [field]: value
     }));
@@ -92,14 +102,14 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
   const canProceedToNext = () => {
     switch (currentStep) {
       case 1: // Basic Information
-        return strategyData.name.trim() && strategyData.description.trim();
+        return quantConnectStrategy.name.trim() && quantConnectStrategy.description.trim();
       case 2: // Trading Parameters
-        return strategyData.symbol && strategyData.initialCapital > 0;
+        return quantConnectStrategy.symbol && quantConnectStrategy.initial_capital > 0;
       case 3: // Strategy Method Selection
-        return strategyMethod !== null;
+        return quantConnectStrategy.strategy_method !== null;
       case 4: // Strategy Definition
         return strategyDefinition !== null;
-      case 5: // Summary & Review
+      case 5: // Backtest Results
         return true;
       default:
         return false;
@@ -107,24 +117,19 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
   };
 
   const handleRunBacktest = async () => {
-    if (!canProceedToNext()) return;
-    
-    setIsProcessing(true);
-    try {
-      // Aquí iría la lógica para ejecutar el backtest
-      console.log('Running backtest with:', strategyData);
-      toast.success('Backtest iniciado correctamente');
-    } catch (error) {
-      console.error('Error running backtest:', error);
-      toast.error('Error al ejecutar el backtest');
-    } finally {
-      setIsProcessing(false);
-    }
+    // Usar la función runBacktest que sí envía datos al backend
+    await runBacktest();
   };
 
   const handleStrategyMethodSelect = (method) => {
     setStrategyMethod(method);
     setStrategyDefinition(method); // Por defecto, usar el mismo método para la definición
+    
+    // Guardar en formato QuantConnect
+    setQuantConnectStrategy(prev => ({
+      ...prev,
+      strategy_method: method === 'rule-builder' ? 'rule_builder' : 'natural_language'
+    }));
   };
 
   const handleStrategyDefinitionSelect = (method) => {
@@ -132,16 +137,283 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
   };
 
   const handleNaturalLanguageChange = (description) => {
-    setNaturalLanguageData(prev => ({
+    setQuantConnectStrategy(prev => ({
       ...prev,
-      description
+      strategy_description: description
     }));
   };
 
-  const handleRuleChange = (ruleType, rules) => {
-    setRuleData(prev => ({
+  // Función para convertir reglas del RuleBuilder al formato QuantConnect
+  const convertRulesToQuantConnect = (rules) => {
+    
+    const convertCondition = (condition) => {
+      // Mapear operadores a formato QuantConnect
+      const operatorMap = {
+        'greater_than': '>',
+        'less_than': '<',
+        'greater_equal': '>=',
+        'less_equal': '<=',
+        'equal': '==',
+        'not_equal': '!='
+      };
+
+      // Mapear valores a indicadores de QuantConnect
+      const valueMap = {
+        'close': 'Close',
+        'open': 'Open',
+        'high': 'High',
+        'low': 'Low',
+        'volume': 'Volume',
+        'sma_10': 'sma10',
+        'sma_20': 'sma20',
+        'sma_50': 'sma50',
+        'sma_200': 'sma200',
+        'ema_12': 'ema12',
+        'ema_26': 'ema26',
+        'rsi_14': 'rsi',
+        'rsi_20': 'rsi20',
+        'rsi_30': 'rsi30',
+        'rsi_50': 'rsi50',
+        'rsi_70': 'rsi70',
+        'rsi_80': 'rsi80',
+        'bb_upper': 'bb.UpperBand',
+        'bb_middle': 'bb.MiddleBand',
+        'bb_lower': 'bb.LowerBand',
+        'macd': 'macd',
+        'macd_signal': 'macd.Signal',
+        'macd_histogram': 'macd.Histogram',
+        'stoch_k': 'stoch.K',
+        'stoch_d': 'stoch.D',
+        'williams_r': 'willr',
+        'cci': 'cci',
+        'adx': 'adx',
+        'atr': 'atr',
+        'obv': 'obv',
+        'vwap': 'vwap'
+      };
+
+      return {
+        first_value: valueMap[condition.firstValue] || condition.firstValue,
+        operator: operatorMap[condition.operator] || condition.operator,
+        second_value: valueMap[condition.secondValue] || condition.secondValue,
+        value: condition.value || 0,
+        exit_type: condition.exitType || null
+      };
+    };
+
+    const convertRule = (rule) => {
+      // Si la regla ya tiene el formato correcto, devolverla tal como está
+      if (rule.conditions && Array.isArray(rule.conditions)) {
+        return {
+          id: rule.id || Date.now(),
+          conditions: rule.conditions.map(convertCondition),
+          logical_operators: rule.logicalOperators || [],
+          logic: rule.logicOperator || 'AND'
+        };
+      }
+      
+      // Si es una regla simple del RuleBuilder, convertirla
+      return {
+        id: rule.id || Date.now(),
+        conditions: [convertCondition(rule)],
+        logical_operators: [],
+        logic: 'AND'
+      };
+    };
+
+    const result = {
+      direction: rules.direction || 'long',
+      entry_rules: (rules.entryRules || []).map(convertRule),
+      exit_rules: (rules.exitRules || []).map(convertRule)
+    };
+    
+    return result;
+  };
+
+  // Función para generar código Lean a partir de las reglas
+  const generateLeanCode = (rules) => {
+    // Obtener indicadores únicos usados en las reglas
+    const getUsedIndicators = (rules) => {
+      const indicators = new Set();
+      
+      const checkCondition = (condition) => {
+        if (condition.first_value && condition.first_value.includes('sma')) {
+          indicators.add(`sma${condition.first_value.match(/\d+/)?.[0] || '20'}`);
+        }
+        if (condition.second_value && condition.second_value.includes('sma')) {
+          indicators.add(`sma${condition.second_value.match(/\d+/)?.[0] || '20'}`);
+        }
+        if (condition.first_value && condition.first_value.includes('rsi')) {
+          indicators.add('rsi');
+        }
+        if (condition.second_value && condition.second_value.includes('rsi')) {
+          indicators.add('rsi');
+        }
+        if (condition.first_value && condition.first_value.includes('bb')) {
+          indicators.add('bb');
+        }
+        if (condition.second_value && condition.second_value.includes('bb')) {
+          indicators.add('bb');
+        }
+        if (condition.first_value && condition.first_value.includes('atr')) {
+          indicators.add('atr');
+        }
+        if (condition.second_value && condition.second_value.includes('atr')) {
+          indicators.add('atr');
+        }
+      };
+      
+      [...(rules.entry_rules || []), ...(rules.exit_rules || [])].forEach(rule => {
+        if (rule.conditions) {
+          rule.conditions.forEach(checkCondition);
+        }
+      });
+      
+      return Array.from(indicators);
+    };
+    
+    const usedIndicators = getUsedIndicators(rules);
+    
+    let leanCode = `// Generated QuantConnect Strategy
+using QuantConnect.Indicators;
+using QuantConnect.Data.Market;
+
+public class GeneratedStrategy : QCAlgorithm
+{
+    ${usedIndicators.includes('sma10') ? 'private SimpleMovingAverage sma10;' : ''}
+    ${usedIndicators.includes('sma20') ? 'private SimpleMovingAverage sma20;' : ''}
+    ${usedIndicators.includes('sma50') ? 'private SimpleMovingAverage sma50;' : ''}
+    ${usedIndicators.includes('sma200') ? 'private SimpleMovingAverage sma200;' : ''}
+    ${usedIndicators.includes('rsi') ? 'private RelativeStrengthIndex rsi;' : ''}
+    ${usedIndicators.includes('bb') ? 'private BollingerBands bb;' : ''}
+    ${usedIndicators.includes('atr') ? 'private AverageTrueRange atr;' : ''}
+    
+    public override void Initialize()
+    {
+        SetStartDate(${quantConnectStrategy.start_date.replace(/-/g, ', ')});
+        SetEndDate(${quantConnectStrategy.end_date.replace(/-/g, ', ')});
+        SetCash(${quantConnectStrategy.initial_capital});
+        
+        var symbol = AddEquity("${quantConnectStrategy.symbol}").Symbol;
+        
+        // Initialize indicators
+        ${usedIndicators.includes('sma10') ? 'sma10 = SMA(symbol, 10);' : ''}
+        ${usedIndicators.includes('sma20') ? 'sma20 = SMA(symbol, 20);' : ''}
+        ${usedIndicators.includes('sma50') ? 'sma50 = SMA(symbol, 50);' : ''}
+        ${usedIndicators.includes('sma200') ? 'sma200 = SMA(symbol, 200);' : ''}
+        ${usedIndicators.includes('rsi') ? 'rsi = RSI(symbol, 14);' : ''}
+        ${usedIndicators.includes('bb') ? 'bb = BB(symbol, 20, 2);' : ''}
+        ${usedIndicators.includes('atr') ? 'atr = ATR(symbol, 14);' : ''}
+    }
+    
+    public override void OnData(Slice data)
+    {
+        if (!IsWarmingUp)
+        {
+            // Entry Rules
+            if (ShouldEnter())
+            {
+                SetHoldings("${quantConnectStrategy.symbol}", ${rules.direction === 'long' ? '1.0' : '-1.0'});
+            }
+            
+            // Exit Rules  
+            if (ShouldExit())
+            {
+                Liquidate("${quantConnectStrategy.symbol}");
+            }
+        }
+    }
+    
+    private bool ShouldEnter()
+    {
+        // Generated entry logic based on rules
+        ${generateEntryLogic(rules.entry_rules)}
+    }
+    
+    private bool ShouldExit()
+    {
+        // Generated exit logic based on rules
+        ${generateExitLogic(rules.exit_rules)}
+    }
+}`;
+
+    return leanCode;
+  };
+
+  const generateEntryLogic = (entryRules) => {
+    if (!entryRules || entryRules.length === 0) {
+      return 'return false;';
+    }
+
+    const allConditions = entryRules.map(rule => {
+      if (!rule.conditions || rule.conditions.length === 0) {
+        return 'false';
+      }
+      
+      const conditions = rule.conditions.map(condition => {
+        if (condition.first_value && condition.operator && condition.second_value) {
+          return `${condition.first_value} ${condition.operator} ${condition.second_value}`;
+        }
+        return 'false';
+      }).join(` ${rule.logic || 'AND'} `);
+      
+      return conditions;
+    });
+    
+    return `return ${allConditions.join(' || ')};`;
+  };
+
+  const generateExitLogic = (exitRules) => {
+    if (!exitRules || exitRules.length === 0) {
+      return 'return false;';
+    }
+
+    const allConditions = exitRules.map(rule => {
+      if (!rule.conditions || rule.conditions.length === 0) {
+        return 'false';
+      }
+      
+      const conditions = rule.conditions.map(condition => {
+        if (condition.exit_type) {
+          // Manejar tipos de salida específicos
+          switch (condition.exit_type) {
+            case 'percentage':
+              return `Portfolio["${quantConnectStrategy.symbol}"].UnrealizedProfitPercent ${condition.operator} ${condition.value || 5}`;
+            case 'atr_based':
+              return `ATR(14) ${condition.operator} ${condition.value || 2}`;
+            case 'stop_loss':
+              return `Portfolio["${quantConnectStrategy.symbol}"].UnrealizedProfitPercent < -3`;
+            case 'take_profit':
+              return `Portfolio["${quantConnectStrategy.symbol}"].UnrealizedProfitPercent > 5`;
+            default:
+              return `// Exit condition: ${condition.exit_type}`;
+          }
+        }
+        
+        if (condition.first_value && condition.operator && condition.second_value) {
+          return `${condition.first_value} ${condition.operator} ${condition.second_value}`;
+        }
+        
+        return 'false';
+      }).join(` ${rule.logic || 'AND'} `);
+      
+      return conditions;
+    });
+    
+    return `return ${allConditions.join(' || ')};`;
+  };
+
+  const handleRuleChange = (rules) => {
+    // Convertir formato del RuleBuilder al formato QuantConnect
+    const quantConnectRules = convertRulesToQuantConnect(rules);
+    
+    // Generar código Lean
+    const leanCode = generateLeanCode(quantConnectRules);
+    
+    setQuantConnectStrategy(prev => ({
       ...prev,
-      [ruleType]: rules
+      rules: quantConnectRules,
+      lean_code: leanCode
     }));
   };
 
@@ -187,36 +459,45 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
   };
 
   const runBacktest = async () => {
-    if (!strategyId) {
-      toast.error('No strategy ID available for backtest');
-      return;
-    }
-
     setIsProcessing(true);
     try {
-      const result = await backtestAPI.runBacktest(
-        strategyId,
-        strategyData.startDate,
-        strategyData.endDate,
-        strategyData.initialCapital
-      );
+      // Primero crear la estrategia si no existe
+      let currentStrategyId = strategyId;
+      
+      if (!currentStrategyId) {
+              const strategyResult = await saveStrategy();
+        if (strategyResult && strategyResult.id) {
+          currentStrategyId = strategyResult.id;
+          setStrategyId(currentStrategyId);
+        } else {
+          throw new Error('Failed to create strategy');
+        }
+      }
+
+      // Preparar datos para el nuevo endpoint de QuantConnect
+      const strategyData = {
+        id: currentStrategyId,
+        name: quantConnectStrategy.name,
+        rules: quantConnectStrategy.rules,
+        symbols: [quantConnectStrategy.symbol],
+        timeframe: quantConnectStrategy.timeframe,
+        lean_code: quantConnectStrategy.lean_code
+      };
+
+      const backtestParams = {
+        start_date: quantConnectStrategy.start_date,
+        end_date: quantConnectStrategy.end_date,
+        initial_capital: quantConnectStrategy.initial_capital
+      };
+
+      const result = await backtestAPI.runQuantConnectBacktest(strategyData, backtestParams);
 
       if (result.success) {
-        setBacktestId(result.backtest_id);
-        toast.success('Backtest started successfully!');
-        
-        // Simular obtención de resultados (en producción sería polling)
-        setTimeout(async () => {
-          try {
-            const results = await backtestAPI.getBacktestResults(result.backtest_id);
-            setBacktestResults(results);
-            toast.success('Backtest completed!');
-          } catch (error) {
-            console.error('Error getting backtest results:', error);
-          }
-        }, 3000);
+        setBacktestId(result.quantconnect?.backtest_id || result.backtest_id);
+        setBacktestResults(result.backtest_results);
+        toast.success('QuantConnect backtest completed successfully!');
       } else {
-        throw new Error(result.error || 'Failed to run backtest');
+        throw new Error(result.message || 'QuantConnect backtest failed');
       }
     } catch (error) {
       console.error('Error running backtest:', error);
@@ -228,14 +509,25 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
 
   const saveStrategy = async () => {
     try {
-      // Implementar guardado de estrategia
-      toast.success('Strategy saved successfully!');
-      if (onStrategyCreated) {
-        onStrategyCreated();
+      console.log('Saving strategy with QuantConnect format:', quantConnectStrategy);
+
+      // Enviar al backend (ya está en formato QuantConnect)
+      const response = await strategyAPI.createStrategy(quantConnectStrategy);
+      
+      if (response && response.id) {
+        setStrategyId(response.id);
+        toast.success('Strategy saved successfully!');
+        if (onStrategyCreated) {
+          onStrategyCreated();
+        }
+        return response;
+      } else {
+        throw new Error('No strategy ID returned from backend');
       }
     } catch (error) {
       console.error('Error saving strategy:', error);
       toast.error('Error saving strategy');
+      throw error;
     }
   };
 
@@ -250,7 +542,7 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
       case 4:
         return renderStrategyDefinition();
       case 5:
-        return renderSummaryReview();
+        return renderBacktestResults();
       default:
         return null;
     }
@@ -265,7 +557,7 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
         <label>Strategy Name</label>
         <input
           type="text"
-          value={strategyData.name}
+          value={quantConnectStrategy.name}
           onChange={(e) => handleInputChange('name', e.target.value)}
           placeholder="Enter strategy name"
           required
@@ -275,7 +567,7 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
       <div className="form-group">
         <label>Description</label>
         <textarea
-          value={strategyData.description}
+          value={quantConnectStrategy.description}
           onChange={(e) => handleInputChange('description', e.target.value)}
           placeholder="Describe your strategy"
           rows={4}
@@ -286,7 +578,7 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
       <div className="form-group">
         <label>Timeframe</label>
         <select
-          value={strategyData.timeframe}
+          value={quantConnectStrategy.timeframe}
           onChange={(e) => handleInputChange('timeframe', e.target.value)}
         >
           <option value="1m">1 Minute</option>
@@ -308,7 +600,7 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
         <label>Symbol</label>
         <input
           type="text"
-          value={strategyData.symbol}
+          value={quantConnectStrategy.symbol}
           onChange={(e) => handleInputChange('symbol', e.target.value)}
           placeholder="e.g., SPY, AAPL, BTCUSD"
           required
@@ -319,7 +611,7 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
         <label>Initial Capital</label>
         <input
           type="number"
-          value={strategyData.initialCapital}
+          value={quantConnectStrategy.initial_capital}
           onChange={(e) => handleInputChange('initialCapital', parseInt(e.target.value))}
           placeholder="100000"
           required
@@ -331,7 +623,7 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
           <label>Start Date</label>
           <input
             type="date"
-            value={strategyData.startDate}
+            value={quantConnectStrategy.start_date}
             onChange={(e) => handleInputChange('startDate', e.target.value)}
             required
           />
@@ -341,7 +633,7 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
           <label>End Date</label>
           <input
             type="date"
-            value={strategyData.endDate}
+            value={quantConnectStrategy.end_date}
             onChange={(e) => handleInputChange('endDate', e.target.value)}
             required
           />
@@ -352,12 +644,62 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
         <label>Benchmark</label>
         <input
           type="text"
-          value={strategyData.benchmark}
+          value={quantConnectStrategy.benchmark}
           onChange={(e) => handleInputChange('benchmark', e.target.value)}
           placeholder="e.g., SPY"
           required
         />
       </div>
+    </div>
+  );
+
+  const renderStrategyDescription = () => (
+    <div className="step-content">
+      <h3>Strategy Description</h3>
+      <p>Describe your trading strategy in natural language</p>
+      
+      <div className="form-group">
+        <label htmlFor="strategyDescription">Strategy Description</label>
+        <textarea
+          id="strategyDescription"
+          value={quantConnectStrategy.strategy_description}
+          onChange={(e) => handleInputChange('strategyDescription', e.target.value)}
+          placeholder="Describe your trading strategy in detail. For example: 'Buy when RSI is below 30 and price is above 20-day moving average. Sell when RSI is above 70 or price drops below 20-day moving average.'"
+          rows={6}
+          required
+        />
+      </div>
+    </div>
+  );
+
+  const renderBacktestResults = () => (
+    <div className="step-content">
+      <h3>Backtest Results</h3>
+      <p>Review your strategy configuration and run backtest</p>
+      
+      <div className="strategy-summary">
+        <h4>Strategy Summary</h4>
+        <div className="summary-grid">
+          <div className="summary-item">
+            <strong>Name:</strong> {quantConnectStrategy.name}
+          </div>
+          <div className="summary-item">
+            <strong>Symbol:</strong> {quantConnectStrategy.symbol}
+          </div>
+          <div className="summary-item">
+            <strong>Capital:</strong> ${quantConnectStrategy.initial_capital.toLocaleString()}
+          </div>
+          <div className="summary-item">
+            <strong>Period:</strong> {quantConnectStrategy.start_date} to {quantConnectStrategy.end_date}
+          </div>
+        </div>
+        
+        <div className="strategy-description">
+          <h4>Strategy Description</h4>
+          <p>{quantConnectStrategy.strategy_description}</p>
+        </div>
+      </div>
+      
     </div>
   );
 
@@ -453,28 +795,12 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
         <div className="rule-builder-section">
           <RuleBuilder 
             onRulesChange={handleRuleChange}
-            initialRules={ruleData}
+            initialRules={{
+              entryRules: quantConnectStrategy.rules.entry_rules || [],
+              exitRules: quantConnectStrategy.rules.exit_rules || []
+            }}
           />
           
-          <div className="rule-builder-actions">
-            <button 
-              className="btn btn-primary process-btn"
-              onClick={processStrategy}
-              disabled={isProcessing || (!ruleData.entryRules.length && !ruleData.exitRules.length)}
-            >
-              {isProcessing ? (
-                <>
-                  <FaSpinner className="spinner" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <FaRocket />
-                  Parse & Compile
-                </>
-              )}
-            </button>
-          </div>
         </div>
       )}
 
@@ -496,32 +822,32 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
         <div className="summary-section">
           <h4>Basic Information</h4>
           <div className="summary-item">
-            <strong>Name:</strong> {strategyData.name}
+            <strong>Name:</strong> {quantConnectStrategy.name}
           </div>
           <div className="summary-item">
-            <strong>Description:</strong> {strategyData.description}
+            <strong>Description:</strong> {quantConnectStrategy.description}
           </div>
           <div className="summary-item">
-            <strong>Symbol:</strong> {strategyData.symbol}
+            <strong>Symbol:</strong> {quantConnectStrategy.symbol}
           </div>
           <div className="summary-item">
-            <strong>Timeframe:</strong> {strategyData.timeframe}
+            <strong>Timeframe:</strong> {quantConnectStrategy.timeframe}
           </div>
         </div>
 
         <div className="summary-section">
           <h4>Trading Parameters</h4>
           <div className="summary-item">
-            <strong>Initial Capital:</strong> ${strategyData.initialCapital.toLocaleString()}
+            <strong>Initial Capital:</strong> ${quantConnectStrategy.initial_capital.toLocaleString()}
           </div>
           <div className="summary-item">
-            <strong>Start Date:</strong> {strategyData.startDate}
+            <strong>Start Date:</strong> {quantConnectStrategy.start_date}
           </div>
           <div className="summary-item">
-            <strong>End Date:</strong> {strategyData.endDate}
+            <strong>End Date:</strong> {quantConnectStrategy.end_date}
           </div>
           <div className="summary-item">
-            <strong>Benchmark:</strong> {strategyData.benchmark}
+            <strong>Benchmark:</strong> {quantConnectStrategy.benchmark}
           </div>
         </div>
 

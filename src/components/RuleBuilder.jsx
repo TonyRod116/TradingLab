@@ -3,6 +3,8 @@ import { FaPlus, FaTrash, FaCog, FaChartLine, FaTimes, FaEquals, FaGreaterThan, 
 
 const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules: [] } }) => {
   const [rules, setRules] = useState(initialRules);
+  const [direction, setDirection] = useState('long'); // 'long' or 'short'
+
 
   // Hierarchical options with subcategories
   const hierarchicalOptions = [
@@ -102,16 +104,17 @@ const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules
     logicalOperators: [] // AND/OR entre condiciones
   });
 
+  const handleDirectionChange = (newDirection) => {
+    setDirection(newDirection);
+  };
+
   const addRule = (ruleType) => {
-    console.log('Adding rule:', ruleType);
     const newRule = createRule();
-    console.log('New rule created:', newRule);
     setRules(prev => {
       const newRules = {
         ...prev,
         [ruleType]: [...prev[ruleType], newRule]
       };
-      console.log('Updated rules:', newRules);
       return newRules;
     });
   };
@@ -202,9 +205,9 @@ const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules
   // Notificar cambios al componente padre
   React.useEffect(() => {
     if (onRulesChange) {
-      onRulesChange(rules);
+      onRulesChange({ ...rules, direction });
     }
-  }, [rules, onRulesChange]);
+  }, [rules, direction]);
 
   // Hierarchical dropdown component
   const HierarchicalSelect = ({ value, onChange, placeholder = "Select..." }) => {
@@ -774,6 +777,22 @@ const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules
         <div className="rule-section">
           <div className="rule-section-header">
             <h4>Entry Rules</h4>
+            <div className="direction-selector">
+              <button
+                type="button"
+                className={`direction-btn ${direction === 'long' ? 'active' : ''}`}
+                onClick={() => handleDirectionChange('long')}
+              >
+                📈 Long (Buy)
+              </button>
+              <button
+                type="button"
+                className={`direction-btn ${direction === 'short' ? 'active' : ''}`}
+                onClick={() => handleDirectionChange('short')}
+              >
+                📉 Short (Sell)
+              </button>
+            </div>
             <button
               type="button"
               onClick={() => addRule('entryRules')}

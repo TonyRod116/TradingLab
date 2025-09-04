@@ -57,6 +57,41 @@
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.direction-selector {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.direction-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.direction-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.direction-btn.active {
+  background: linear-gradient(135deg, var(--color-green), #00ff88);
+  color: #000;
+  border-color: var(--color-green);
+  font-weight: 600;
 }
 
 .rule-section-header h4 {
@@ -394,6 +429,22 @@
     padding: 1.5rem;
   }
   
+  .rule-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .direction-selector {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .direction-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  
   .condition-row {
     grid-template-columns: 1fr;
     gap: 0.75rem;
@@ -406,12 +457,6 @@
   
   .summary-content {
     grid-template-columns: 1fr;
-  }
-  
-  .rule-section-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
   }
   
   .add-rule-btn {

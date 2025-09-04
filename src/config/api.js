@@ -22,7 +22,10 @@ export const API_ENDPOINTS = {
   // Backtest endpoints
   COMPILE_PROJECT: `${API_BASE_URL}/api/quantconnect/compile-project/`,
   READ_COMPILATION: `${API_BASE_URL}/api/quantconnect/read-compilation-result/`,
-  RUN_BACKTEST: `${API_BASE_URL}/api/quantconnect/run-backtest/`,
+  RUN_BACKTEST: `${API_BASE_URL}/api/backtests/`,
+  QUANTCONNECT_BACKTEST: `${API_BASE_URL}/api/strategies/run-backtest/`,
+  BACKTEST_RESULTS: (id) => `${API_BASE_URL}/api/backtest/results/${id}/`,
+  BACKTEST_HISTORY: `${API_BASE_URL}/api/backtest/history/`,
   
   // Legacy endpoints (para compatibilidad)
   STRATEGIES: `${API_BASE_URL}/api/strategies/`,
@@ -36,11 +39,6 @@ export const API_ENDPOINTS = {
   NL_TO_DSL: `${API_BASE_URL}/api/strategies/nl-to-dsl/`,
   DSL_TO_LEAN: `${API_BASE_URL}/api/strategies/dsl-to-lean/`,
   NL_TO_LEAN: `${API_BASE_URL}/api/strategies/nl-to-lean/`,
-  
-  // Backtesting endpoints
-  RUN_BACKTEST: `${API_BASE_URL}/api/backtest/run/`,
-  BACKTEST_RESULTS: (id) => `${API_BASE_URL}/api/backtest/results/${id}/`,
-  BACKTEST_HISTORY: `${API_BASE_URL}/api/backtest/history/`,
 };
 
 // Debug: Log the PARSE_STRATEGY endpoint
@@ -51,6 +49,69 @@ console.log('🔧 PROFILE endpoint:', API_ENDPOINTS.PROFILE);
 export const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
   'Accept': 'application/json',
+};
+
+// Función para obtener el token de autenticación
+const getAuthToken = () => {
+  // Verificar diferentes posibles nombres de token
+  const possibleTokens = ['access_token', 'token', 'auth_token', 'jwt_token'];
+  let token = null;
+  
+  for (const tokenName of possibleTokens) {
+    const foundToken = localStorage.getItem(tokenName);
+    if (foundToken) {
+      console.log(`🔑 Found token with key '${tokenName}':`, foundToken ? 'Yes' : 'No');
+      token = foundToken;
+      break;
+    }
+  }
+  
+  if (!token) {
+    console.log('🔑 No token found in localStorage with any of these keys:', possibleTokens);
+    console.log('🔑 Available localStorage keys:', Object.keys(localStorage));
+  }
+  
+  return token;
+};
+
+// Función para verificar si el token es válido
+const isTokenValid = () => {
+  const token = getAuthToken();
+  if (!token) {
+    console.log('🔑 No token found in localStorage');
+    return false;
+  }
+  
+  try {
+    // Verificar si es un JWT válido (debe tener 3 partes separadas por puntos)
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.log('🔑 Token is not a valid JWT format');
+      return false;
+    }
+    
+    const tokenData = JSON.parse(atob(parts[1]));
+    const now = Date.now() / 1000;
+    const isValid = tokenData.exp > now;
+    console.log('🔑 Token valid:', isValid, 'Expires:', new Date(tokenData.exp * 1000));
+    console.log('🔑 Token data:', tokenData);
+    return isValid;
+  } catch (error) {
+    console.error('🔑 Error parsing token:', error);
+    console.log('🔑 Token value:', token);
+    return false;
+  }
+};
+
+// Función para crear headers con autenticación
+export const getAuthHeaders = () => {
+  const token = getAuthToken();
+  const headers = {
+    ...DEFAULT_HEADERS,
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+  console.log('🔑 Headers with auth:', headers);
+  return headers;
 };
 
 // Función para obtener URL de la API (para compatibilidad)
@@ -65,22 +126,39 @@ export const getApiUrl = (endpoint) => {
 export const apiRequest = async (endpoint, options = {}) => {
   const url = typeof endpoint === 'string' ? endpoint : endpoint;
   
+  // Verificar token antes de hacer la petición
+  const tokenValid = isTokenValid();
+  if (!tokenValid) {
+    console.error('🔑 Invalid or expired token - proceeding without auth');
+    // No lanzar error, continuar sin autenticación para debugging
+  }
+  
   const config = {
     headers: {
-      ...DEFAULT_HEADERS,
+      ...getAuthHeaders(),
       ...options.headers,
     },
     ...options,
   };
 
+  console.log('🌐 Making API request to:', url);
+  console.log('🌐 Request config:', config);
+  console.log('🌐 Token valid:', tokenValid);
+
   try {
     const response = await fetch(url, config);
     
+    console.log('🌐 Response status:', response.status);
+    console.log('🌐 Response headers:', Object.fromEntries(response.headers.entries()));
+    
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('🌐 Error response body:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const data = await response.json();
+    console.log('🌐 Response data:', data);
     return data;
   } catch (error) {
     console.error('API request failed:', error);
@@ -165,6 +243,14 @@ export const quantConnectAPI = {
 
        // Funciones para AI y conversión de estrategias
        export const strategyAPI = {
+         // Crear nueva estrategia
+         createStrategy: async (strategyData) => {
+           return apiRequest(API_ENDPOINTS.STRATEGIES, {
+             method: 'POST',
+             body: JSON.stringify(strategyData)
+           });
+         },
+
          // Convertir lenguaje natural a estrategia completa
          naturalLanguageToStrategy: async (description, language = 'es') => {
            return apiRequest(API_ENDPOINTS.NL_TO_STRATEGY, {
@@ -198,31 +284,212 @@ export const quantConnectAPI = {
          }
        };
 
-       // Funciones para backtesting
-       export const backtestAPI = {
-         // Ejecutar backtest
-         runBacktest: async (strategyId, startDate, endDate, initialCapital) => {
-           return apiRequest(API_ENDPOINTS.RUN_BACKTEST, {
-             method: 'POST',
-             body: JSON.stringify({
-               strategy_id: strategyId,
-               start_date: startDate,
-               end_date: endDate,
-               initial_capital: initialCapital
-             })
-           });
-         },
+             // Funciones para backtesting
+      export const backtestAPI = {
+        // Ejecutar backtest
+        runBacktest: async (backtestData) => {
+          return apiRequest(API_ENDPOINTS.RUN_BACKTEST, {
+            method: 'POST',
+            body: JSON.stringify(backtestData)
+          });
+        },
 
-         // Obtener resultados de backtest
-         getBacktestResults: async (backtestId) => {
-           return apiRequest(API_ENDPOINTS.BACKTEST_RESULTS(backtestId));
-         },
+        // Ejecutar backtest con QuantConnect
+        runQuantConnectBacktest: async (strategyData, backtestParams) => {
+          // Convertir reglas del RuleBuilder al formato que espera el backend
+          const convertRulesToBackendFormat = (rules) => {
+            const convertCondition = (condition) => {
+              
+              // Mapear indicadores del RuleBuilder al formato del backend
+              const indicatorMap = {
+                'close': 'price',
+                'open': 'price', 
+                'high': 'price',
+                'low': 'price',
+                'sma_10': 'SMA',
+                'sma_20': 'SMA',
+                'sma_50': 'SMA',
+                'sma_200': 'SMA',
+                'ema_12': 'EMA',
+                'ema_26': 'EMA',
+                'rsi_14': 'RSI',
+                'rsi_20': 'RSI',
+                'rsi_30': 'RSI',
+                'rsi_50': 'RSI',
+                'rsi_70': 'RSI',
+                'rsi_80': 'RSI',
+                'bb_upper': 'BB',
+                'bb_middle': 'BB',
+                'bb_lower': 'BB',
+                'macd': 'MACD',
+                'macd_signal': 'MACD',
+                'macd_histogram': 'MACD',
+                'atr': 'ATR',
+                'stoch_k': 'STOCH',
+                'stoch_d': 'STOCH',
+                'williams_r': 'WILLR',
+                'cci': 'CCI',
+                'adx': 'ADX',
+                'obv': 'OBV',
+                'vwap': 'VWAP'
+              };
 
-         // Obtener historial de backtests
-         getBacktestHistory: async () => {
-           return apiRequest(API_ENDPOINTS.BACKTEST_HISTORY);
-         }
-       };
+              // Mapear operadores del RuleBuilder al formato del backend
+              const operatorMap = {
+                'greater_than': '>',
+                'less_than': '<',
+                'greater_equal': '>=',
+                'less_equal': '<=',
+                'equal': '==',
+                'not_equal': '!='
+              };
+
+              // Determinar el indicador principal
+              let indicator = 'price';
+              let value = 'price';
+              let period = null;
+
+              // Manejar reglas de salida especiales (stop loss, take profit, etc.)
+              if (condition.exitType) {
+                switch (condition.exitType) {
+                  case 'percentage':
+                    return {
+                      indicator: 'PROFIT_PERCENT',
+                      operator: operatorMap[condition.operator] || condition.operator,
+                      value: condition.value || 5
+                    };
+                  case 'atr_based':
+                    return {
+                      indicator: 'ATR',
+                      operator: operatorMap[condition.operator] || condition.operator,
+                      value: condition.value || 2,
+                      period: 14
+                    };
+                  case 'stop_loss':
+                    return {
+                      indicator: 'PROFIT_PERCENT',
+                      operator: '<',
+                      value: -3
+                    };
+                  case 'take_profit':
+                    return {
+                      indicator: 'PROFIT_PERCENT',
+                      operator: '>',
+                      value: 5
+                    };
+                  default:
+                    return {
+                      indicator: 'PROFIT_PERCENT',
+                      operator: operatorMap[condition.operator] || condition.operator,
+                      value: condition.value || 5
+                    };
+                }
+              }
+
+              // Si es una comparación de precio con indicador
+              if (condition.firstValue && ['close', 'open', 'high', 'low'].includes(condition.firstValue)) {
+                indicator = indicatorMap[condition.secondValue] || 'SMA';
+                value = 'price';
+                // Extraer período del indicador
+                const periodMatch = condition.secondValue?.match(/\d+/);
+                period = periodMatch ? parseInt(periodMatch[0]) : 20;
+              } else if (condition.secondValue && ['close', 'open', 'high', 'low'].includes(condition.secondValue)) {
+                indicator = indicatorMap[condition.firstValue] || 'SMA';
+                value = 'price';
+                // Extraer período del indicador
+                const periodMatch = condition.firstValue?.match(/\d+/);
+                period = periodMatch ? parseInt(periodMatch[0]) : 20;
+              } else {
+                // Comparación entre indicadores
+                indicator = indicatorMap[condition.firstValue] || indicatorMap[condition.secondValue] || 'SMA';
+                value = condition.value || 30;
+                // Extraer período
+                const periodMatch = (condition.firstValue || condition.secondValue || '').match(/\d+/);
+                period = periodMatch ? parseInt(periodMatch[0]) : 20;
+              }
+
+              const operator = operatorMap[condition.operator] || condition.operator;
+
+              const result = {
+                indicator: indicator,
+                operator: operator,
+                value: value,
+                ...(period && { period: period })
+              };
+
+              return result;
+            };
+
+            const entryConditions = [];
+            const exitConditions = [];
+
+            // Procesar reglas de entrada
+            if (rules.entry_rules && rules.entry_rules.length > 0) {
+              rules.entry_rules.forEach(rule => {
+                if (rule.conditions && rule.conditions.length > 0) {
+                  rule.conditions.forEach(condition => {
+                    entryConditions.push(convertCondition(condition));
+                  });
+                } else {
+                  // Si es una regla simple sin conditions array
+                  entryConditions.push(convertCondition(rule));
+                }
+              });
+            }
+
+            // Procesar reglas de salida
+            if (rules.exit_rules && rules.exit_rules.length > 0) {
+              rules.exit_rules.forEach(rule => {
+                if (rule.conditions && rule.conditions.length > 0) {
+                  rule.conditions.forEach(condition => {
+                    exitConditions.push(convertCondition(condition));
+                  });
+                } else {
+                  // Si es una regla simple sin conditions array
+                  exitConditions.push(convertCondition(rule));
+                }
+              });
+            }
+
+            const result = {
+              entry_conditions: entryConditions,
+              exit_conditions: exitConditions,
+              symbols: strategyData.symbols || [strategyData.symbol],
+              timeframe: strategyData.timeframe === '1d' ? 'daily' : strategyData.timeframe
+            };
+
+            return result;
+          };
+
+          const requestData = {
+            name: strategyData.name || 'QuantConnect Backtest',
+            user: '1', // User ID from token
+            strategy_id: strategyData.id,
+            start_date: backtestParams.startDate || backtestParams.start_date,
+            end_date: backtestParams.endDate || backtestParams.end_date,
+            initial_capital: backtestParams.initialCapital || backtestParams.initial_capital,
+            symbols: strategyData.symbols || [strategyData.symbol],
+            timeframe: strategyData.timeframe === '1d' ? 'daily' : strategyData.timeframe,
+            rules: convertRulesToBackendFormat(strategyData.rules),
+            lean_code: strategyData.lean_code
+          };
+          
+          return apiRequest(API_ENDPOINTS.QUANTCONNECT_BACKTEST, {
+            method: 'POST',
+            body: JSON.stringify(requestData)
+          });
+        },
+
+        // Obtener resultados de backtest
+        getBacktestResults: async (backtestId) => {
+          return apiRequest(API_ENDPOINTS.BACKTEST_RESULTS(backtestId));
+        },
+
+        // Obtener historial de backtests
+        getBacktestHistory: async () => {
+          return apiRequest(API_ENDPOINTS.BACKTEST_HISTORY);
+        }
+      };
 
        export { API_BASE_URL };
        export default API_BASE_URL;
