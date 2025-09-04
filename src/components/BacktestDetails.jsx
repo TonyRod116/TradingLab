@@ -82,7 +82,6 @@ const BacktestDetails = () => {
       }
     } catch (error) {
       console.error('Error loading backtest details:', error);
-      console.error('Error response:', error.response?.data);
       toast.error('Failed to load backtest details');
     } finally {
       setLoading(false);

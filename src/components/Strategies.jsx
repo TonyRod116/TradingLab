@@ -21,7 +21,6 @@ import FavoritesList from './FavoritesList';
 import StrategyCreator from './StrategyCreator';
 import StrategyTemplates from './StrategyTemplates';
 import RuleBuilder from './RuleBuilder';
-import QuantStrategies from './QuantStrategies';
 import './Strategies.css';
 
 const Strategies = () => {
@@ -71,7 +70,7 @@ const Strategies = () => {
   // Handle URL tab parameter
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['my-strategies', 'templates', 'create-strategy', 'quant-strategies'].includes(tabParam)) {
+    if (tabParam && ['my-strategies', 'templates', 'create-strategy'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -110,7 +109,7 @@ const Strategies = () => {
           className={`tab-button ${activeTab === 'templates' ? 'active' : ''}`}
           onClick={() => handleTabChange('templates')}
         >
-          <FaCopy /> Quant Templates
+          <FaCopy /> Strategy Templates
         </button>
         <button 
           className={`tab-button ${activeTab === 'create-strategy' ? 'active' : ''}`}
@@ -118,27 +117,18 @@ const Strategies = () => {
         >
           Create Strategy
         </button>
-        <button 
-          className={`tab-button ${activeTab === 'quant-strategies' ? 'active' : ''}`}
-          onClick={() => handleTabChange('quant-strategies')}
-        >
-          <FaChartLine /> Quant Strategies
-        </button>
       </div>
 
       <div className="strategies-content">
         {activeTab === 'my-strategies' && (
           <StrategyList 
             strategies={strategies} 
-            loading={loading} 
-            onRefresh={loadStrategies}
+            loading={loading}
           />
         )}
         
         {activeTab === 'favorites' && (
-          <FavoritesList 
-            onRefresh={loadStrategies}
-          />
+          <FavoritesList />
         )}
         
         {activeTab === 'templates' && (
@@ -150,17 +140,12 @@ const Strategies = () => {
         
         {activeTab === 'create-strategy' && (
           <StrategyCreator 
-            onStrategyCreated={loadStrategies}
             onBack={() => {
               setSelectedTemplate(null);
               handleTabChange('my-strategies');
             }}
             template={selectedTemplate}
           />
-        )}
-        
-        {activeTab === 'quant-strategies' && (
-          <QuantStrategies />
         )}
       </div>
     </div>
@@ -184,7 +169,7 @@ const Strategies = () => {
 
       <div className="features-preview">
         <div className="feature-card">
-          <h3>Quant Templates</h3>
+          <h3>Strategy Templates</h3>
           <p>Start with proven strategies like RSI Mean Reversion, Moving Average Crossover, and more</p>
         </div>
         <div className="feature-card">

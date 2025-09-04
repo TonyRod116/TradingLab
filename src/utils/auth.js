@@ -50,7 +50,6 @@ export const getUser = () => {
       email: email
     }
   } catch (error) {
-    console.error('Error parsing JWT token:', error)
     removeToken()
     return null
   }
@@ -66,7 +65,6 @@ export const isTokenExpired = () => {
     const today = Date.now() / 1000
     return today > exp
   } catch (error) {
-    console.error('Error checking token expiration:', error)
     return true
   }
 }

@@ -56,7 +56,6 @@ const StrategyDetails = () => {
         // No backtest results available
       }
     } catch (err) {
-      console.error('Error loading strategy details:', err);
       setError('Failed to load strategy details');
       toast.error('Failed to load strategy details');
     } finally {

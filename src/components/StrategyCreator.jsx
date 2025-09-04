@@ -378,7 +378,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       }
       
     } catch (error) {
-      console.error('Backtest error:', error);
+      // Backtest error
       
       // Clean up temporary strategy if it was created
       if (tempStrategyId) {
@@ -505,16 +505,13 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         if (userId) {
           navigate(`/users/profile/${userId}`);
         } else {
-          console.error('No user_id found in auth context');
+          // No user_id found in auth context
           navigate('/strategies');
         }
       }, 1500);
       
     } catch (error) {
-      console.error('Error saving strategy:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      console.error('Error headers:', error.response?.headers);
+      // Error saving strategy
       
       // More detailed error message
       let errorMessage = 'Error saving strategy';

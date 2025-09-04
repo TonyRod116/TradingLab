@@ -110,11 +110,9 @@ const Profile = () => {
           strategies_count: (data.results || data).length
         }));
       } else {
-        console.error('Failed to load strategies:', response.status, response.statusText);
         setStrategies([]);
       }
     } catch (error) {
-      console.error('Error loading strategies:', error);
       setStrategies([]);
     } finally {
       setLoading(false);
@@ -171,7 +169,6 @@ const Profile = () => {
         toast.error('Failed to delete strategy');
       }
     } catch (error) {
-      console.error('Error deleting strategy:', error);
       toast.error('Error deleting strategy');
     } finally {
       setConfirmDialog({

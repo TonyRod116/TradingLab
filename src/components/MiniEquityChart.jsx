@@ -4,7 +4,7 @@ import './MiniEquityChart.css';
 
 const MiniEquityChart = ({ strategy, height = 60 }) => {
   
-  // Si tenemos datos de equity curve del backend, usarlos
+  // If we have equity curve data from backend, use it
   if (strategy.equity_curve && strategy.equity_curve.length > 0) {
     const chartData = strategy.equity_curve.map(point => ({
       date: new Date(point.timestamp).getTime(),
@@ -41,7 +41,7 @@ const MiniEquityChart = ({ strategy, height = 60 }) => {
     );
   }
 
-  // Fallback: generar datos mock basados en métricas
+  // Fallback: generate mock data based on metrics
   const generateMockData = () => {
     const dataPoints = 20;
     const initialValue = parseFloat(strategy.initial_capital) || 100000;
@@ -53,14 +53,14 @@ const MiniEquityChart = ({ strategy, height = 60 }) => {
     const data = [];
     for (let i = 0; i < dataPoints; i++) {
       const progress = i / (dataPoints - 1);
-      const volatility = 0.05; // Volatilidad fija para el mini chart
+      const volatility = 0.05; // Fixed volatility for mini chart
       const randomFactor = (Math.random() - 0.5) * volatility;
       
-      // Interpolación lineal con algo de ruido
+      // Linear interpolation with some noise
       const value = initialValue + (finalValue - initialValue) * progress + randomFactor * initialValue;
       data.push({
         date: i,
-        value: Math.max(value, initialValue * 0.1) // Permitir valores bajos pero no negativos
+        value: Math.max(value, initialValue * 0.1) // Allow low values but not negative
       });
     }
     

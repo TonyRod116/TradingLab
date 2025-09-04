@@ -140,7 +140,7 @@ const EquityCurveChart = ({ trades, equityCurve, initialCapital, startDate, endD
 // Drawdown Chart
 const DrawdownChart = ({ trades, equityCurve, initialCapital }) => {
   const calculateDrawdown = () => {
-    // Si tenemos datos reales de equity curve del backend, usarlos
+    // If we have real equity curve data from backend, use it
     if (equityCurve && equityCurve.length > 0) {
       return equityCurve.map((point, index) => ({
         trade_id: index + 1,
@@ -150,7 +150,7 @@ const DrawdownChart = ({ trades, equityCurve, initialCapital }) => {
       }));
     }
     
-    // Fallback: calcular desde trades si no hay datos de equity curve
+    // Fallback: calculate from trades if no equity curve data
     const drawdownData = [];
     let currentCapital = parseFloat(initialCapital || 10000);
     let peakValue = currentCapital;

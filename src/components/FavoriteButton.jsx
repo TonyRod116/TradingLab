@@ -39,7 +39,6 @@ const FavoriteButton = ({ strategyId, initialFavorited = false, onToggle, size =
       );
       
     } catch (error) {
-      console.error('Error toggling favorite:', error);
       toast.error(
         `Failed to ${isFavorited ? 'remove from' : 'add to'} favorites: ${error.message}`,
         {

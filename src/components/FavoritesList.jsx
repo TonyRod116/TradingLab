@@ -9,7 +9,7 @@ import ConfirmDialog from './ConfirmDialog';
 import MiniEquityChart from './MiniEquityChart';
 import './FavoritesList.css';
 
-const FavoritesList = ({ onRefresh }) => {
+const FavoritesList = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [favorites, setFavorites] = useState([]);
@@ -52,7 +52,6 @@ const FavoritesList = ({ onRefresh }) => {
         throw new Error('Failed to load strategies');
       }
     } catch (err) {
-      console.error('Error loading favorites:', err);
       setError(err.message);
       toast.error('Failed to load favorites', {
         position: "top-right",
@@ -90,11 +89,8 @@ const FavoritesList = ({ onRefresh }) => {
       });
       
       // Notify parent component
-      if (onRefresh) {
-        onRefresh();
-      }
+      // Favorite removed
     } catch (err) {
-      console.error('Error removing favorite:', err);
       toast.error('Failed to remove from favorites', {
         position: "top-right",
         autoClose: 4000,
@@ -106,7 +102,7 @@ const FavoritesList = ({ onRefresh }) => {
         strategyName: ''
       });
     }
-  }, [confirmDialog.strategyId, onRefresh]);
+  }, [confirmDialog.strategyId]);
 
   const cancelRemoveFavorite = useCallback(() => {
     setConfirmDialog({
@@ -187,7 +183,6 @@ const FavoritesList = ({ onRefresh }) => {
           <FaBookmark className="header-icon" />
           My Favorites ({favorites.length})
         </h2>
-        <button onClick={loadFavorites} className="btn btn-secondary">Refresh</button>
       </div>
 
       <div className="favorites-grid">

@@ -147,7 +147,6 @@ class FavoritesService {
         return true;
       }
     } catch (error) {
-      console.error('Error toggling favorite:', error);
       throw error;
     }
   }

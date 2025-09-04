@@ -9,7 +9,7 @@ import favoritesService from '../services/FavoritesService';
 import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
 import './StrategyList.css';
 
-const StrategyList = ({ strategies, loading, error, onRefresh }) => {
+const StrategyList = ({ strategies, loading, error }) => {
   const navigate = useNavigate();
   const [selectedStrategy, setSelectedStrategy] = useState(null);
   const [favoriteStatus, setFavoriteStatus] = useState({});
@@ -25,6 +25,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
     
     try {
       const favorites = await favoritesService.getFavorites();
+      
       const statusMap = {};
       
       // Initialize all strategies as not favorited
@@ -42,7 +43,6 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
       
       setFavoriteStatus(statusMap);
     } catch (error) {
-
     }
   }, [strategies]);
 
@@ -50,6 +50,13 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
   useEffect(() => {
     loadFavoriteStatus();
   }, [loadFavoriteStatus]);
+
+  // Force reload favorite status when strategies prop changes
+  useEffect(() => {
+    if (strategies && strategies.length > 0) {
+      loadFavoriteStatus();
+    }
+  }, [strategies]);
 
   const handleFavoriteToggle = useCallback((strategyId, isFavorited) => {
     setFavoriteStatus(prev => ({
@@ -68,10 +75,9 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
       });
       
       if (response.ok) {
-        onRefresh();
+        // Strategy deleted
       }
     } catch (err) {
-      console.error('Error activating strategy:', err);
     }
   };
 
@@ -85,10 +91,9 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
       });
       
       if (response.ok) {
-        onRefresh();
+        // Strategy deleted
       }
     } catch (err) {
-      console.error('Error pausing strategy:', err);
     }
   };
 
@@ -112,10 +117,9 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
       });
       
       if (response.ok) {
-        onRefresh();
+        // Strategy deleted
       }
     } catch (err) {
-      console.error('Error deleting strategy:', err);
     } finally {
       setConfirmDialog({
         isOpen: false,
@@ -156,7 +160,6 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
         // Here you could show the backtest results in a modal or navigate to results page
       }
     } catch (err) {
-      console.error('Error running backtest:', err);
     }
   };
 
@@ -200,7 +203,7 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
     return (
       <div className="strategy-list-error">
         <p>Error: {error}</p>
-        <button onClick={onRefresh} className="btn btn-primary">Retry</button>
+        <button onClick={() => window.location.reload()} className="btn btn-primary">Retry</button>
       </div>
     );
   }
@@ -230,7 +233,6 @@ const StrategyList = ({ strategies, loading, error, onRefresh }) => {
     <div className="strategy-list">
       <div className="strategy-list-header">
         <h2>Total Strategies: {strategies.length}</h2>
-        <button onClick={onRefresh} className="btn btn-secondary">Refresh</button>
       </div>
 
       <div className="strategies-grid">

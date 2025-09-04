@@ -6,7 +6,7 @@
 
 class QuantConnectService {
   constructor() {
-    // Usar el backend Django en lugar de QuantConnect directamente
+    // Use Django backend instead of QuantConnect directly
     this.baseURL = this.getBaseURL() + '/api/quantconnect';
     this.userId = 414810;
     this.apiToken = '79b91dd67dbbbfa4129888180d2de06d773de7eb4c8df86761bb7926d0d6d8cf';
@@ -86,7 +86,6 @@ class QuantConnectService {
         'Content-Type': 'application/json'
       };
     } catch (error) {
-      console.error('Error generating auth headers:', error);
       throw new Error('Failed to generate authentication headers');
     }
   }
@@ -117,7 +116,6 @@ class QuantConnectService {
         error: response.ok ? null : result.error || 'Authentication failed'
       };
     } catch (error) {
-      console.error('QuantConnect authentication error:', error);
       return {
         success: false,
         error: error.message
@@ -156,7 +154,6 @@ class QuantConnectService {
         error: response.ok ? null : result.error || 'Project creation failed'
       };
     } catch (error) {
-      console.error('Project creation error:', error);
       return {
         success: false,
         error: error.message
@@ -190,7 +187,6 @@ class QuantConnectService {
         error: response.ok ? null : result.error || 'Project creation test failed'
       };
     } catch (error) {
-      console.error('Project creation test error:', error);
       return {
         success: false,
         error: error.message
@@ -229,7 +225,6 @@ class QuantConnectService {
         error: response.ok ? null : result.error || 'Backtest workflow failed'
       };
     } catch (error) {
-      console.error('Backtest workflow error:', error);
       return {
         success: false,
         error: error.message

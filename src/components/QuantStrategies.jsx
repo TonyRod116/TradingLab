@@ -23,7 +23,7 @@ const QuantStrategies = () => {
   const [parseResults, setParseResults] = useState(null);
   const [compilationStatus, setCompilationStatus] = useState(null);
 
-  // Templates de estrategias QuantConnect
+  // QuantConnect strategy templates
   const strategyTemplates = [
     {
       id: 'rsi-mean-reversion',

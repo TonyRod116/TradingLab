@@ -52,8 +52,6 @@ const EditProfile = () => {
       }
     } catch (err) {
       console.error('Error loading profile:', err);
-      console.error('Response data:', err.response?.data);
-      console.error('Status:', err.response?.status);
       toast.error('Failed to load profile data', {
         position: "top-right",
         autoClose: 4000,
@@ -155,7 +153,7 @@ const EditProfile = () => {
         backendData.append('profile_image', cloudinaryUrl);
       }
       
-      // Enviar al backend
+      // Send to backend
       const response = await axios.put(
         getApiUrl(API_ENDPOINTS.PROFILE),
         backendData,
