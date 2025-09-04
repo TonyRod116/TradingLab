@@ -89,6 +89,39 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
     }
   };
 
+  const canProceedToNext = () => {
+    switch (currentStep) {
+      case 1: // Basic Information
+        return strategyData.name.trim() && strategyData.description.trim();
+      case 2: // Trading Parameters
+        return strategyData.symbol && strategyData.initialCapital > 0;
+      case 3: // Strategy Method Selection
+        return strategyMethod !== null;
+      case 4: // Strategy Definition
+        return strategyDefinition !== null;
+      case 5: // Summary & Review
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  const handleRunBacktest = async () => {
+    if (!canProceedToNext()) return;
+    
+    setIsProcessing(true);
+    try {
+      // Aquí iría la lógica para ejecutar el backtest
+      console.log('Running backtest with:', strategyData);
+      toast.success('Backtest iniciado correctamente');
+    } catch (error) {
+      console.error('Error running backtest:', error);
+      toast.error('Error al ejecutar el backtest');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleStrategyMethodSelect = (method) => {
     setStrategyMethod(method);
     setStrategyDefinition(method); // Por defecto, usar el mismo método para la definición
@@ -558,62 +591,68 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
   return (
     <div className="strategy-creator">
       <div className="strategy-creator-header">
-        <button className="back-btn" onClick={onBack}>
-          <FaArrowLeft />
-          Back
-        </button>
-        <div className="header-content">
-          <h1>
-            <FaRocket />
-            Create QuantConnect Strategy
-          </h1>
-          <p>Build your algorithmic trading strategy using natural language and QuantConnect</p>
-        </div>
+        <h2>🚀 Create QuantConnect Strategy</h2>
+        <p>Build your algorithmic trading strategy using natural language and QuantConnect</p>
       </div>
 
-      <div className="progress-bar">
-        {steps.map((step, index) => (
-          <div key={step.id} className={`step ${currentStep === step.id ? 'active' : ''} ${currentStep > step.id ? 'completed' : ''}`}>
-            <div className="step-number">
-              {currentStep > step.id ? <FaCheckCircle /> : step.id}
+      <div className="step-indicator">
+        {steps.map((step, index) => {
+          const IconComponent = step.icon;
+          return (
+            <div key={step.id} className={`step ${currentStep >= step.id ? 'active' : ''} ${currentStep === step.id ? 'current' : ''}`}>
+              <div className="step-icon">
+                <IconComponent />
+              </div>
+              <div className="step-info">
+                <span className="step-number">{step.id}</span>
+                <span className="step-title">{step.name}</span>
+                <span className="step-description">{step.description}</span>
+              </div>
             </div>
-            <div className="step-info">
-              <div className="step-name">{step.name}</div>
-              <div className="step-description">{step.description}</div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      <div className="strategy-creator-content">
+      <div className="strategy-form">
         {renderStepContent()}
       </div>
 
-      <div className="strategy-creator-footer">
+      <div className="strategy-form-actions">
         <button 
           className="btn btn-secondary"
-          onClick={handlePrevious}
-          disabled={currentStep === 1}
+          onClick={onBack}
         >
-          <FaChevronLeft />
-          Previous
+          <FaArrowLeft /> Back to Strategies
         </button>
-
-        {currentStep < steps.length ? (
-          <button 
-            className="btn btn-primary"
-            onClick={handleNext}
-            disabled={
-              (currentStep === 1 && (!strategyData.name || !strategyData.description)) ||
-              (currentStep === 2 && (!strategyData.symbol || !strategyData.initialCapital)) ||
-              (currentStep === 3 && !strategyMethod) ||
-              (currentStep === 4 && !strategyDefinition)
-            }
-          >
-            Next
-            <FaChevronRight />
-          </button>
-        ) : null}
+        
+        <div className="step-navigation">
+          {currentStep > 1 && (
+            <button
+              onClick={handlePrevious}
+              className="btn btn-secondary"
+            >
+              <FaChevronLeft /> Previous
+            </button>
+          )}
+          
+          {currentStep < 5 ? (
+            <button
+              onClick={handleNext}
+              className="btn btn-primary"
+              disabled={!canProceedToNext()}
+            >
+              Next <FaChevronRight />
+            </button>
+          ) : (
+            <button
+              onClick={handleRunBacktest}
+              className="btn btn-primary"
+              disabled={!canProceedToNext()}
+            >
+              <FaRocket /> Run Backtest
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

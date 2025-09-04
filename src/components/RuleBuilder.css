@@ -6,6 +6,9 @@
   padding: 2rem;
   margin: 2rem 0;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .rule-builder-header {
@@ -33,10 +36,11 @@
 }
 
 .rules-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 2rem;
   margin-bottom: 2rem;
+  width: 100%;
 }
 
 .rule-section {
@@ -195,15 +199,20 @@
 
 .condition-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr auto auto;
-  gap: 1rem;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr auto;
+  gap: 0.75rem;
   align-items: end;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .condition-field {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
 }
 
 .condition-field label {
@@ -219,10 +228,13 @@
   background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
   border: 1px solid rgba(0, 255, 136, 0.2);
   color: var(--color-white);
-  padding: 0.75rem;
+  padding: 0.6rem;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: all 0.3s ease;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .condition-select:focus,
@@ -254,7 +266,7 @@
   background: rgba(255, 59, 48, 0.1);
   color: #ff3b30;
   border: 1px solid rgba(255, 59, 48, 0.3);
-  padding: 0.75rem;
+  padding: 0.6rem;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -262,6 +274,8 @@
   align-items: center;
   justify-content: center;
   height: fit-content;
+  min-width: 40px;
+  flex-shrink: 0;
 }
 
 .remove-condition-btn:hover {
@@ -340,13 +354,12 @@
 /* Responsive Design */
 @media (max-width: 1200px) {
   .rules-container {
-    grid-template-columns: 1fr;
     gap: 1.5rem;
   }
   
   .condition-row {
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
   
   .condition-field:nth-child(4),
@@ -363,7 +376,7 @@
   
   .condition-row {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.75rem;
   }
   
   .condition-field:nth-child(4),

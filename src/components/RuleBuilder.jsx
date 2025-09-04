@@ -39,22 +39,15 @@ const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules
     { value: 'OR', label: 'OR' }
   ];
 
-  const timeframes = [
-    { value: '1m', label: '1 Minute' },
-    { value: '5m', label: '5 Minutes' },
-    { value: '15m', label: '15 Minutes' },
-    { value: '1h', label: '1 Hour' },
-    { value: '1d', label: '1 Day' }
-  ];
 
   // Estructura de una condición
   const createCondition = () => ({
     id: Date.now() + Math.random(),
-    type: 'price', // 'price' o 'indicator'
+    type: 'price', // 'price' o 'indicator' - primer valor
     field: 'close',
     operator: '>',
+    secondType: 'number', // 'price', 'indicator' o 'number' - segundo valor
     value: '',
-    timeframe: '1d',
     period: 20 // Para indicadores
   });
 
@@ -153,7 +146,6 @@ const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules
   }, [rules, onRulesChange]);
 
   const renderCondition = (condition, ruleType, ruleId, conditionIndex) => {
-    const options = condition.type === 'price' ? priceOptions : indicatorOptions;
     const OperatorIcon = operatorOptions.find(op => op.value === condition.operator)?.icon || FaEquals;
 
     return (
@@ -178,7 +170,7 @@ const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules
         <div className="condition-content">
           <div className="condition-row">
             <div className="condition-field">
-              <label>Type</label>
+              <label>First Value</label>
               <select
                 value={condition.type}
                 onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'type', e.target.value)}
@@ -196,9 +188,15 @@ const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules
                 onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'field', e.target.value)}
                 className="condition-select"
               >
-                {options.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
+                {condition.type === 'price' ? (
+                  priceOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))
+                ) : (
+                  indicatorOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -219,17 +217,48 @@ const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules
             </div>
 
             <div className="condition-field">
-              <label>Value</label>
-              <input
-                type="number"
-                value={condition.value}
-                onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'value', e.target.value)}
-                placeholder="Enter value"
-                className="condition-input"
-              />
+              <label>Second Value</label>
+              <select
+                value={condition.secondType || 'price'}
+                onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'secondType', e.target.value)}
+                className="condition-select"
+              >
+                <option value="price">Price</option>
+                <option value="indicator">Indicator</option>
+                <option value="number">Number</option>
+              </select>
             </div>
 
-            {condition.type === 'indicator' && (
+            <div className="condition-field">
+              <label>Value</label>
+              {condition.secondType === 'number' ? (
+                <input
+                  type="number"
+                  value={condition.value}
+                  onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'value', e.target.value)}
+                  placeholder="Enter value"
+                  className="condition-input"
+                />
+              ) : (
+                <select
+                  value={condition.value}
+                  onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'value', e.target.value)}
+                  className="condition-select"
+                >
+                  {condition.secondType === 'price' ? (
+                    priceOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))
+                  ) : (
+                    indicatorOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))
+                  )}
+                </select>
+              )}
+            </div>
+
+            {condition.secondType === 'indicator' && (
               <div className="condition-field">
                 <label>Period</label>
                 <input
@@ -241,19 +270,6 @@ const RuleBuilder = ({ onRulesChange, initialRules = { entryRules: [], exitRules
                 />
               </div>
             )}
-
-            <div className="condition-field">
-              <label>Timeframe</label>
-              <select
-                value={condition.timeframe}
-                onChange={(e) => updateCondition(ruleType, ruleId, condition.id, 'timeframe', e.target.value)}
-                className="condition-select"
-              >
-                {timeframes.map(tf => (
-                  <option key={tf.value} value={tf.value}>{tf.label}</option>
-                ))}
-              </select>
-            </div>
 
             <button
               type="button"
