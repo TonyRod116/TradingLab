@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { getToken } from '../utils/auth';
 import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
 import Header from './Header';
 import './EditProfile.css';
@@ -30,12 +31,12 @@ const EditProfile = () => {
   const loadProfile = useCallback(async () => {
     try {
       // Check if token is available
-      const token = localStorage.getItem('access_token');
+      const token = getToken();
 
       
       const response = await axios.get(getApiUrl(API_ENDPOINTS.PROFILE), {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       const data = response.data;
@@ -159,7 +160,7 @@ const EditProfile = () => {
         backendData,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${getToken()}`,
             'Content-Type': 'multipart/form-data'
           }
         }
@@ -170,7 +171,11 @@ const EditProfile = () => {
         autoClose: 3000,
       });
       setTimeout(() => {
-        navigate(`/users/profile/${currentUser.id}`);
+        if (currentUser?.id) {
+          navigate(`/users/profile/${currentUser.id}`);
+        } else {
+          navigate('/strategies');
+        }
       }, 1500);
       
     } catch (err) {
@@ -182,11 +187,15 @@ const EditProfile = () => {
     } finally {
       setLoading(false);
     }
-  }, [formData.bio, formData.profile_image, navigate, currentUser.id]);
+  }, [formData.bio, formData.profile_image, navigate, currentUser?.id]);
   
   const handleCancel = useCallback(() => {
-    navigate(`/users/profile/${currentUser.id}`);
-  }, [navigate, currentUser.id]);
+    if (currentUser?.id) {
+      navigate(`/users/profile/${currentUser.id}`);
+    } else {
+      navigate('/strategies');
+    }
+  }, [navigate, currentUser?.id]);
   
   const renderImageUpload = () => (
     <div className="form-group">
@@ -266,13 +275,6 @@ const EditProfile = () => {
           <p>Update your profile information</p>
         </div>
         
-        {error && (
-          <div className="edit-profile-error">{error}</div>
-        )}
-        
-        {success && (
-          <div className="edit-profile-success">{success}</div>
-        )}
         
         <form className="edit-profile-form" onSubmit={handleSubmit}>
           {renderImageUpload()}
