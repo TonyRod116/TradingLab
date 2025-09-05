@@ -49,7 +49,7 @@ const BacktestCharts = ({ backtestData: propBacktestData, trades: propTrades, eq
   return (
     <div className="backtest-charts">
       <div className="charts-header">
-        <h3>📊 Backtest Analysis Charts</h3>
+        <h3>Backtest Analysis Charts</h3>
         <p>Comprehensive visual analysis of your strategy performance</p>
       </div>
       
@@ -96,7 +96,7 @@ const EquityCurveChart = ({ trades, equityCurve, initialCapital, startDate, endD
 
   return (
     <div className="chart-item equity-chart">
-      <h4>📈 Equity Curve</h4>
+      <h4>Equity Curve</h4>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={equityData}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -233,7 +233,7 @@ const TradesChart = ({ trades }) => {
 
   return (
     <div className="chart-item trades-chart">
-      <h4>💰 P&L per Trade</h4>
+      <h4>P&L per Trade</h4>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={tradesData}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -452,7 +452,7 @@ const WinLossChart = ({ trades }) => {
 
   return (
     <div className="chart-item winloss-chart">
-      <h4>🎯 Win/Loss Distribution</h4>
+      <h4>Win/Loss Distribution</h4>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={winLossData}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
