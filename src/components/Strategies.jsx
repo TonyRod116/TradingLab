@@ -17,7 +17,7 @@ import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
 import Header from './Header';
 import StrategyList from './StrategyList';
 import FavoritesList from './FavoritesList';
-import QuantConnectStrategyCreator from './QuantConnectStrategyCreator';
+import NaturalLanguageStrategy from './NaturalLanguageStrategy';
 import StrategyTemplates from './StrategyTemplates';
 import RuleBuilder from './RuleBuilder';
 import './Strategies.css';
@@ -146,7 +146,7 @@ const Strategies = () => {
         )}
         
         {activeTab === 'create-strategy' && (
-          <QuantConnectStrategyCreator 
+          <NaturalLanguageStrategy 
             onStrategyCreated={loadStrategies}
             onBack={() => {
               setSelectedTemplate(null);
