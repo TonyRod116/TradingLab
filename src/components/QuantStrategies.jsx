@@ -261,15 +261,30 @@ const QuantStrategies = () => {
   };
 
   const renderNaturalLanguage = () => (
-    <div className="natural-language">
+    <div className="natural-language" style={{
+      backgroundColor: '#1a1a1a',
+      color: '#ffffff',
+      padding: '20px',
+      minHeight: '400px'
+    }}>
       <div className="natural-language-header">
         <h3><FaLightbulb /> Natural Language Strategy Creator</h3>
         <p>Describe your trading strategy in plain English and we'll convert it to QuantConnect code</p>
       </div>
       
-      <div className="natural-language-content">
+      <div className="natural-language-content" style={{
+        backgroundColor: '#2a2a2a',
+        padding: '20px',
+        borderRadius: '8px',
+        margin: '20px 0'
+      }}>
       
-      <div className="strategy-input-section">
+      <div className="strategy-input-section" style={{
+        backgroundColor: '#333333',
+        padding: '20px',
+        borderRadius: '8px',
+        margin: '10px 0'
+      }}>
         <div className="input-group">
           <label htmlFor="strategy-description">Strategy Description</label>
           <textarea
@@ -279,6 +294,15 @@ const QuantStrategies = () => {
             placeholder="Example: Buy SPY when price above 20-day SMA, sell when RSI overbought above 70"
             rows={4}
             className="strategy-textarea"
+            style={{
+              width: '100%',
+              backgroundColor: '#444444',
+              color: '#ffffff',
+              border: '1px solid #666666',
+              borderRadius: '4px',
+              padding: '10px',
+              fontSize: '14px'
+            }}
           />
         </div>
         
@@ -288,35 +312,82 @@ const QuantStrategies = () => {
             <button 
               className="example-btn"
               onClick={() => setNaturalLanguageInput("Buy SPY when price above 20-day SMA, sell when RSI overbought above 70")}
+              style={{
+                backgroundColor: '#4a4a4a',
+                color: '#ffffff',
+                border: '1px solid #666666',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                margin: '4px',
+                cursor: 'pointer'
+              }}
             >
               RSI + SMA Strategy
             </button>
             <button 
               className="example-btn"
               onClick={() => setNaturalLanguageInput("Trade EUR/USD using VWAP and ATR for the last year on 4-hour timeframe")}
+              style={{
+                backgroundColor: '#4a4a4a',
+                color: '#ffffff',
+                border: '1px solid #666666',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                margin: '4px',
+                cursor: 'pointer'
+              }}
             >
               Forex VWAP Strategy
             </button>
             <button 
               className="example-btn"
               onClick={() => setNaturalLanguageInput("Trade Gold futures using Bollinger Bands during the COVID period")}
+              style={{
+                backgroundColor: '#4a4a4a',
+                color: '#ffffff',
+                border: '1px solid #666666',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                margin: '4px',
+                cursor: 'pointer'
+              }}
             >
               Gold Bollinger Bands
             </button>
             <button 
               className="example-btn"
               onClick={() => setNaturalLanguageInput("Buy Bitcoin when MACD crosses above signal line and volume is above average, sell when price drops 5%")}
+              style={{
+                backgroundColor: '#4a4a4a',
+                color: '#ffffff',
+                border: '1px solid #666666',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                margin: '4px',
+                cursor: 'pointer'
+              }}
             >
               Crypto MACD Strategy
             </button>
           </div>
         </div>
         
-        <div className="action-buttons">
+        <div className="action-buttons" style={{ marginTop: '20px' }}>
           <button 
             className="btn btn-primary"
             onClick={handleParseNaturalLanguage}
             disabled={loading || !naturalLanguageInput.trim()}
+            style={{
+              backgroundColor: '#10b981',
+              color: '#ffffff',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              margin: '8px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '600'
+            }}
           >
             {loading ? <FaSpinner className="spinning" /> : <FaLightbulb />} Parse Strategy
           </button>
@@ -324,6 +395,17 @@ const QuantStrategies = () => {
             className="btn btn-secondary"
             onClick={handleCreateAndCompile}
             disabled={loading || !naturalLanguageInput.trim()}
+            style={{
+              backgroundColor: '#3b82f6',
+              color: '#ffffff',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              margin: '8px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '600'
+            }}
           >
             {loading ? <FaSpinner className="spinning" /> : <FaRocket />} Create & Compile
           </button>

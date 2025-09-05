@@ -7,9 +7,150 @@
 class QuantConnectService {
   constructor() {
     // Usar el backend Django en lugar de QuantConnect directamente
-    this.baseURL = 'http://localhost:8000/api/quantconnect';
-    this.userId = 414810;
-    this.apiToken = '79b91dd67dbbbfa4129888180d2de06d773de7eb4c8df86761bb7926d0d6d8cf';
+    this.baseURL = 'http://localhost:8000/api';
+    this.token = localStorage.getItem('authToken');
+  }
+
+  /**
+   * Método principal para ejecutar backtest completo
+   * @param {Object} strategyData - Datos de la estrategia
+   * @returns {Promise<Object>} Resultado del backtest
+   */
+  async runCompleteBacktest(strategyData) {
+    try {
+      // Validar que tengamos los datos requeridos
+      if (!strategyData.name) {
+        throw new Error('Strategy name is required');
+      }
+      if (!strategyData.code) {
+        throw new Error('Strategy code is required');
+      }
+
+      // Preparar el request exactamente como lo espera el backend
+      const requestBody = {
+        strategy: {
+          name: strategyData.name,
+          lean_code: strategyData.code
+        }
+      };
+
+      console.log('🚀 Sending QuantConnect backtest request:');
+      console.log('📡 URL:', `${this.baseURL}/strategies/quantconnect-backtest/`);
+      console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
+      console.log('📝 Strategy name:', strategyData.name);
+      console.log('🐍 Code length:', strategyData.code?.length || 0);
+
+      const response = await fetch(`${this.baseURL}/strategies/quantconnect-backtest/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Backend error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('Backend response:', result);
+      
+      // Adaptar la respuesta al formato esperado por el frontend
+      return {
+        success: result.success,
+        results: {
+          project_id: result.project_id,
+          compile_id: null, // No disponible en la nueva API
+          backtest_id: result.backtest_id,
+          final_results: {
+            statistics: result.results?.statistics || {}
+          }
+        },
+        error: result.error || null
+      };
+    } catch (error) {
+      console.error('Error running backtest:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Método para operaciones individuales
+   * @param {string} action - Acción a ejecutar
+   * @param {Object} data - Datos para la acción
+   * @returns {Promise<Object>} Resultado de la operación
+   */
+  async executeAction(action, data) {
+    try {
+      const response = await fetch(`${this.baseURL}/quantconnect/direct/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: action,
+          ...data
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Error executing ${action}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Método para monitoreo en tiempo real
+   * @param {string} type - Tipo de monitoreo (compilation o backtest)
+   * @param {string} projectId - ID del proyecto
+   * @param {string} id - ID de compilación o backtest
+   * @returns {Promise<Object>} Estado del monitoreo
+   */
+  async monitor(type, projectId, id) {
+    try {
+      const params = new URLSearchParams({
+        type: type,
+        project_id: projectId,
+        [type === 'compilation' ? 'compile_id' : 'backtest_id']: id
+      });
+
+      const response = await fetch(`${this.baseURL}/quantconnect/monitor/?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${this.token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error monitoring:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verificar salud del servicio
+   * @returns {Promise<Object>} Estado del servicio
+   */
+  async checkHealth() {
+    try {
+      const response = await fetch(`${this.baseURL}/quantconnect/health/`);
+      return await response.json();
+    } catch (error) {
+      console.error('Health check failed:', error);
+      return { success: false, error: error.message };
+    }
   }
 
   /**

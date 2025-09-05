@@ -19,6 +19,11 @@ export const API_ENDPOINTS = {
   FAVORITES: `${API_BASE_URL}/api/quantconnect/favorites/`,
   HEALTH: `${API_BASE_URL}/api/quantconnect/health/`,
   
+  // Nuevos endpoints de QuantConnect según la guía
+  QUANTCONNECT_COMPLETE_FLOW: `${API_BASE_URL}/api/quantconnect/complete-flow/`,
+  QUANTCONNECT_DIRECT: `${API_BASE_URL}/api/quantconnect/direct/`,
+  QUANTCONNECT_MONITOR: `${API_BASE_URL}/api/quantconnect/monitor/`,
+  
   // Backtest endpoints
   COMPILE_PROJECT: `${API_BASE_URL}/api/quantconnect/compile-project/`,
   READ_COMPILATION: `${API_BASE_URL}/api/quantconnect/read-compilation-result/`,
@@ -235,13 +240,28 @@ export const quantConnectAPI = {
     });
   },
 
-           // Ejecutar backtest
-         runBacktest: async (projectId) => {
-           return apiRequest(API_ENDPOINTS.RUN_BACKTEST, {
-             method: 'POST',
-             body: JSON.stringify({ projectId })
-           });
-         }
+  // Ejecutar backtest
+  runBacktest: async (projectId) => {
+    return apiRequest(API_ENDPOINTS.RUN_BACKTEST, {
+      method: 'POST',
+      body: JSON.stringify({ projectId })
+    });
+  },
+
+  // Ejecutar flujo completo de QuantConnect
+  runCompleteFlow: async (data) => {
+    return apiRequest(API_ENDPOINTS.QUANTCONNECT_COMPLETE_FLOW, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  // Verificar progreso del backtest
+  checkProgress: async (projectId, backtestId) => {
+    return apiRequest(`${API_ENDPOINTS.QUANTCONNECT_MONITOR}?type=backtest&project_id=${projectId}&backtest_id=${backtestId}`, {
+      method: 'GET'
+    });
+  }
        };
 
        // Funciones para AI y conversión de estrategias
@@ -261,13 +281,13 @@ export const quantConnectAPI = {
            });
          },
 
-         // Convertir lenguaje natural a estrategia completa
-         naturalLanguageToStrategy: async (description, language = 'es') => {
-           return apiRequest(API_ENDPOINTS.NL_TO_STRATEGY, {
-             method: 'POST',
-             body: JSON.stringify({ description, language })
-           });
-         },
+                 // Convertir lenguaje natural a estrategia completa (detección automática de idioma)
+        naturalLanguageToStrategy: async (description) => {
+          return apiRequest(API_ENDPOINTS.NL_TO_STRATEGY, {
+            method: 'POST',
+            body: JSON.stringify({ text: description })
+          });
+        },
 
          // Convertir lenguaje natural a DSL
          naturalLanguageToDSL: async (description, language = 'es') => {
@@ -290,6 +310,13 @@ export const quantConnectAPI = {
            return apiRequest(API_ENDPOINTS.NL_TO_LEAN, {
              method: 'POST',
              body: JSON.stringify({ description, language })
+           });
+         },
+
+         // Obtener estado de QuantConnect para una estrategia
+         getQuantConnectStatus: async (strategyId) => {
+           return apiRequest(`${API_ENDPOINTS.STRATEGY_DETAIL(strategyId)}qc-status/`, {
+             method: 'GET'
            });
          }
        };

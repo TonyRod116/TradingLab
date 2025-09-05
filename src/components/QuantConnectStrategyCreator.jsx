@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaSave, FaChevronRight, FaChevronLeft, FaCog, FaShieldAlt, FaShoppingCart, FaMoneyBillWave, FaSpinner, FaRocket, FaLightbulb, FaCheckCircle, FaExclamationTriangle, FaCode, FaLanguage, FaEye, FaPlay, FaCogs } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
-import { strategyAPI, backtestAPI } from '../config/api';
+import { strategyAPI, backtestAPI, quantConnectAPI } from '../config/api';
 import RuleBuilder from './RuleBuilder';
 import './StrategyCreator.css';
 import './RuleBuilder.css';
@@ -66,6 +66,11 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
   const [backtestId, setBacktestId] = useState(null);
   const [backtestResults, setBacktestResults] = useState(null);
 
+  // Estado para natural language
+  const [naturalLanguageData, setNaturalLanguageData] = useState({
+    description: ''
+  });
+
   // Configuración de pasos
   const steps = [
     { id: 1, name: 'Basic Information', icon: FaCog, description: 'Strategy name, description, and timeframe' },
@@ -94,6 +99,12 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
     }));
   };
 
+  const handleNaturalLanguageChange = (description) => {
+    setNaturalLanguageData({
+      description: description
+    });
+  };
+
   const handleNext = () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
@@ -115,7 +126,11 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
       case 3: // Strategy Method Selection
         return quantConnectStrategy.strategy_method !== null;
       case 4: // Strategy Definition
-        return strategyDefinition !== null;
+        if (strategyDefinition === 'natural-language') {
+          return naturalLanguageData.description.trim() && generatedCode;
+        } else {
+          return strategyDefinition !== null && quantConnectStrategy.lean_code;
+        }
       case 5: // Backtest Results
         return true;
       default:
@@ -141,13 +156,6 @@ const QuantConnectStrategyCreator = ({ onStrategyCreated, onBack, template }) =>
 
   const handleStrategyDefinitionSelect = (method) => {
     setStrategyDefinition(method);
-  };
-
-  const handleNaturalLanguageChange = (description) => {
-    setQuantConnectStrategy(prev => ({
-      ...prev,
-      strategy_description: description
-    }));
   };
 
   // Función para convertir reglas del RuleBuilder al formato QuantConnect
@@ -430,23 +438,44 @@ public class GeneratedStrategy : QCAlgorithm
       let result;
       
       if (strategyDefinition === 'natural-language') {
-        // Usar GPT para convertir lenguaje natural a estrategia
-        result = await strategyAPI.naturalLanguageToStrategy(
+        console.log('🤖 Processing Natural Language Strategy:');
+        console.log('📝 Text:', naturalLanguageData.description);
+        
+        // Usar el endpoint de QuantConnect para parsear lenguaje natural
+        const backtestParams = {
+          symbol: quantConnectStrategy.symbol,
+          initial_capital: quantConnectStrategy.initial_capital,
+          start_date: quantConnectStrategy.start_date,
+          end_date: quantConnectStrategy.end_date,
+          benchmark: quantConnectStrategy.benchmark
+        };
+        
+        result = await quantConnectAPI.parseStrategy(
           naturalLanguageData.description,
-          naturalLanguageData.language
+          backtestParams
         );
+        
+        console.log('📊 API Response:', result);
+        
+        if (result.success) {
+          // Actualizar la estrategia con el código generado
+          setQuantConnectStrategy(prev => ({
+            ...prev,
+            lean_code: result.python_code,
+            strategy_description: naturalLanguageData.description
+          }));
+          
+          setGeneratedCode(result.python_code);
+          setStrategyId(result.project_id);
+          toast.success('Strategy processed successfully with AI!');
+        } else {
+          throw new Error(result.error || 'Failed to process strategy');
+        }
       } else {
         // Usar Rule Builder (implementar lógica de conversión)
         result = await convertRuleBuilderToStrategy();
       }
 
-      if (result.success) {
-        setGeneratedCode(result.lean_code || result.python_code);
-        setStrategyId(result.strategy_id);
-        toast.success('Strategy processed successfully!');
-      } else {
-        throw new Error(result.error || 'Failed to process strategy');
-      }
     } catch (error) {
       console.error('Error processing strategy:', error);
       toast.error(`Error processing strategy: ${error.message}`);
@@ -465,42 +494,74 @@ public class GeneratedStrategy : QCAlgorithm
     };
   };
 
-  // Función para iniciar polling del progreso
+  // Función para iniciar polling del progreso (basada en test_qc_debug.py)
   const startProgressPolling = (projectId, backtestId) => {
     console.log('🔄 Starting progress polling...');
+    console.log('📊 Using strategyId:', strategyId, 'projectId:', projectId, 'backtestId:', backtestId);
+    
     const interval = setInterval(async () => {
       try {
         console.log('📊 Checking progress...');
-        const progressData = await backtestAPI.checkProgress(projectId, backtestId);
+        
+        // Usar siempre el endpoint directo de QuantConnect con projectId y backtestId
+        let progressData;
+        progressData = await quantConnectAPI.checkProgress(projectId, backtestId);
+        
         console.log('📊 Progress data received:', progressData);
         
-        if (progressData.success) {
+        if (progressData) {
+          // Extraer datos del response de QuantConnect
+          const backtestData = progressData.backtest || progressData;
+          const status = backtestData.status || progressData.status || 'Unknown';
+          const progress = backtestData.progress || progressData.progress || 0;
+          const completed = backtestData.completed || progressData.completed || false;
+          
+          console.log('📊 Extracted data - Status:', status, 'Progress:', progress, 'Completed:', completed);
+          
           // Actualizar progreso con datos reales del backend
           setBacktestProgress(prev => ({
             ...prev,
-            ...progressData,
-            // Asegurar que el progreso no baje
-            progress: Math.max(prev?.progress || 0, progressData.progress || 0)
+            status: status,
+            progress: Math.max(prev?.progress || 0, progress),
+            state: status,
+            status_text: status === 'Completed' ? 'Backtest completed successfully!' : 
+                        status === 'In Queue...' ? 'En cola... Esperando procesamiento' :
+                        status === 'Running' ? `Ejecutando backtest... ${progress}% completado` :
+                        `Estado: ${status} - ${progress}% completado`
           }));
           
           // Si está completado, parar polling
-          if (progressData.completed) {
+          if (status === 'Completed' || status === 'Completed.' || completed === true) {
             console.log('✅ Backtest completed!');
             clearInterval(interval);
             setPollingInterval(null);
             setIsBacktestRunning(false);
             
-            // Navegar a la página de resultados
-            navigate('/quantconnect-backtest', {
-              state: {
-                backtestData: progressData.backtest_results || progressData,
-                strategy: quantConnectStrategy
-              }
-            });
+            // Actualizar el progreso final
+            setBacktestProgress(prev => ({
+              ...prev,
+              status: 'Completed',
+              progress: 100,
+              status_text: 'Backtest completed successfully!',
+              completed: true
+            }));
+            
+            // Mostrar resultados en la misma página
+            setBacktestResults(backtestData);
+            
+            // Navegar a la página de resultados después de un breve delay
+            setTimeout(() => {
+              navigate('/quantconnect-backtest', {
+                state: {
+                  backtestData: backtestData,
+                  strategy: quantConnectStrategy
+                }
+              });
+            }, 2000);
           }
         } else {
-          console.log('❌ Progress check failed:', progressData.error);
-          setBacktestError('Error al consultar progreso: ' + progressData.error);
+          console.log('❌ Progress check failed: No data received');
+          setBacktestError('Error al consultar progreso: No data received');
           clearInterval(interval);
           setPollingInterval(null);
           setIsBacktestRunning(false);
@@ -542,40 +603,13 @@ public class GeneratedStrategy : QCAlgorithm
     });
     
     try {
-      // Primero crear la estrategia si no existe
-      let currentStrategyId = strategyId;
-      
-      if (!currentStrategyId) {
-        setBacktestProgress(prev => ({
-          ...prev,
-          status_text: 'Saving strategy...',
-          progress: 10
-        }));
-        
-        const strategyResult = await saveStrategy();
-        if (strategyResult && strategyResult.id) {
-          currentStrategyId = strategyResult.id;
-          setStrategyId(currentStrategyId);
-        } else {
-          throw new Error('Failed to create strategy');
-        }
+      // Verificar que tenemos código generado
+      if (!quantConnectStrategy.lean_code && !generatedCode) {
+        throw new Error('No strategy code generated. Please process the strategy first by clicking "Process with AI" in step 4.');
       }
 
-      // Preparar datos para el nuevo endpoint de QuantConnect
-      const strategyData = {
-        id: currentStrategyId,
-        name: quantConnectStrategy.name,
-        rules: quantConnectStrategy.rules,
-        symbols: [quantConnectStrategy.symbol],
-        timeframe: quantConnectStrategy.timeframe,
-        lean_code: quantConnectStrategy.lean_code
-      };
-
-      const backtestParams = {
-        start_date: quantConnectStrategy.start_date,
-        end_date: quantConnectStrategy.end_date,
-        initial_capital: quantConnectStrategy.initial_capital
-      };
+      // Usar el código generado si no está en quantConnectStrategy
+      const codeToUse = quantConnectStrategy.lean_code || generatedCode;
 
       setBacktestProgress(prev => ({
         ...prev,
@@ -583,19 +617,36 @@ public class GeneratedStrategy : QCAlgorithm
         progress: 20
       }));
 
-      const result = await backtestAPI.runQuantConnectBacktest(strategyData, backtestParams);
+      // Usar el endpoint que ya funciona (basado en test_qc_debug.py)
+      const strategyData = {
+        strategy: {
+          id: strategyId || 1,
+          name: quantConnectStrategy.name,
+          lean_code: codeToUse
+        },
+        backtest_params: {
+          start_date: quantConnectStrategy.start_date,
+          end_date: quantConnectStrategy.end_date,
+          initial_capital: quantConnectStrategy.initial_capital
+        }
+      };
 
-      console.log('🔍 Backtest API Response:', result);
-      console.log('🔍 Response keys:', Object.keys(result));
-      console.log('🔍 Results data:', result.results);
-      console.log('🔍 QuantConnect data:', result.quantconnect);
-      console.log('🔍 Success status:', result.success);
+      const result = await backtestAPI.runQuantConnectBacktest(strategyData, {
+        start_date: quantConnectStrategy.start_date,
+        end_date: quantConnectStrategy.end_date,
+        initial_capital: quantConnectStrategy.initial_capital
+      });
+
+      console.log('🔍 Complete Flow API Response:', result);
 
       if (result.success) {
-        // Iniciar polling de progreso
-        const projectId = result.quantconnect.project_id;
-        const backtestId = result.quantconnect.backtest_id;
+        // Extraer IDs del response (basado en test_qc_debug.py)
+        const qcData = result.quantconnect || {};
+        const projectId = qcData.project_id;
+        const backtestId = qcData.backtest_id;
+        
         console.log('🚀 Starting progress polling with projectId:', projectId, 'backtestId:', backtestId);
+        console.log('📊 QuantConnect data:', qcData);
         
         setBacktestProgress(prev => ({
           ...prev,
@@ -814,6 +865,32 @@ public class GeneratedStrategy : QCAlgorithm
                 ({Math.ceil(backtestProgress.estimated_seconds_remaining / 60)} min restantes)
               </span>
             )}
+            <button 
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered');
+                // Forzar una verificación inmediata
+                if (strategyId) {
+                  strategyAPI.getQuantConnectStatus(strategyId).then(data => {
+                    console.log('🔄 Manual refresh data:', data);
+                    if (data && (data.status === 'Completed' || data.status === 'Completed.')) {
+                      setBacktestResults(data);
+                      setIsBacktestRunning(false);
+                    }
+                  });
+                }
+              }}
+              style={{
+                marginLeft: '10px',
+                padding: '5px 10px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              🔄 Refresh
+            </button>
           </div>
           
           <div className="progress-bar-container">
@@ -888,33 +965,58 @@ public class GeneratedStrategy : QCAlgorithm
       <p>Define your strategy using the selected method</p>
       
       {strategyDefinition === 'natural-language' ? (
-        <div className="natural-language-section">
-          <div className="form-group">
-            <label>Strategy Description</label>
+        <div className="natural-language-section" style={{
+          backgroundColor: '#2a2a2a',
+          padding: '20px',
+          borderRadius: '8px',
+          margin: '20px 0'
+        }}>
+          <div className="form-group" style={{ marginBottom: '20px' }}>
+            <label style={{ 
+              color: '#ffffff', 
+              display: 'block', 
+              marginBottom: '8px',
+              fontWeight: '600'
+            }}>
+              Strategy Description
+            </label>
             <textarea
               value={naturalLanguageData.description}
               onChange={(e) => handleNaturalLanguageChange(e.target.value)}
-              placeholder="Describe your strategy in natural language. For example: 'Buy SPY when RSI is below 30 and price is above 20-day SMA, sell when RSI is above 70'"
+              placeholder="Describe your strategy in natural language (language will be detected automatically). For example: 'Buy SPY when RSI is below 30 and price is above 20-day SMA, sell when RSI is above 70'"
               rows={6}
               required
+              style={{
+                width: '100%',
+                backgroundColor: '#444444',
+                color: '#ffffff',
+                border: '1px solid #666666',
+                borderRadius: '4px',
+                padding: '10px',
+                fontSize: '14px',
+                resize: 'vertical'
+              }}
             />
           </div>
 
-          <div className="form-group">
-            <label>Language</label>
-            <select
-              value={naturalLanguageData.language}
-              onChange={(e) => setNaturalLanguageData(prev => ({ ...prev, language: e.target.value }))}
-            >
-              <option value="es">Spanish</option>
-              <option value="en">English</option>
-            </select>
-          </div>
 
           <button 
             className="btn btn-primary process-btn"
             onClick={processStrategy}
             disabled={!naturalLanguageData.description || isProcessing}
+            style={{
+              backgroundColor: '#10b981',
+              color: '#ffffff',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
           >
             {isProcessing ? (
               <>
@@ -944,10 +1046,14 @@ public class GeneratedStrategy : QCAlgorithm
 
       {generatedCode && (
         <div className="generated-code">
-          <h4>Generated Code</h4>
+          <h4>✅ Generated Code</h4>
+          <p style={{ color: '#28a745', marginBottom: '10px' }}>
+            Strategy processed successfully! You can now proceed to run the backtest.
+          </p>
           <pre>{generatedCode}</pre>
         </div>
       )}
+
     </div>
   );
 
@@ -999,6 +1105,14 @@ public class GeneratedStrategy : QCAlgorithm
               <strong>Description:</strong> {naturalLanguageData.description}
             </div>
           )}
+          <div className="summary-item">
+            <strong>Status:</strong> 
+            {generatedCode || quantConnectStrategy.lean_code ? (
+              <span style={{ color: '#28a745' }}> ✅ Processed and ready for backtest</span>
+            ) : (
+              <span style={{ color: '#dc3545' }}> ❌ Not processed - Please go back to step 4</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1006,7 +1120,7 @@ public class GeneratedStrategy : QCAlgorithm
         <button 
           className="btn btn-primary run-backtest-btn"
           onClick={runBacktest}
-          disabled={!strategyId || isProcessing}
+          disabled={!generatedCode && !quantConnectStrategy.lean_code || isProcessing}
         >
           {isProcessing ? (
             <>
@@ -1031,20 +1145,66 @@ public class GeneratedStrategy : QCAlgorithm
       </div>
 
       {backtestResults && (
-        <div className="backtest-results">
-          <h4>Backtest Results</h4>
-          <div className="results-grid">
-            <div className="result-item">
-              <strong>Total Return:</strong> {backtestResults.total_return || 'N/A'}%
+        <div className="backtest-results" style={{
+          backgroundColor: '#f8f9fa',
+          border: '1px solid #dee2e6',
+          borderRadius: '8px',
+          padding: '20px',
+          margin: '20px 0'
+        }}>
+          <h4 style={{ color: '#28a745', marginBottom: '15px' }}>✅ Backtest Results</h4>
+          <div className="results-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '15px'
+          }}>
+            <div className="result-item" style={{
+              backgroundColor: '#ffffff',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #e9ecef'
+            }}>
+              <strong>Total Return:</strong> {backtestResults.statistics?.['Net Profit'] || backtestResults.total_return || '0%'}
             </div>
-            <div className="result-item">
-              <strong>Sharpe Ratio:</strong> {backtestResults.sharpe_ratio || 'N/A'}
+            <div className="result-item" style={{
+              backgroundColor: '#ffffff',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #e9ecef'
+            }}>
+              <strong>Sharpe Ratio:</strong> {backtestResults.statistics?.['Sharpe Ratio'] || backtestResults.sharpe_ratio || '0'}
             </div>
-            <div className="result-item">
-              <strong>Max Drawdown:</strong> {backtestResults.max_drawdown || 'N/A'}%
+            <div className="result-item" style={{
+              backgroundColor: '#ffffff',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #e9ecef'
+            }}>
+              <strong>Max Drawdown:</strong> {backtestResults.statistics?.['Drawdown'] || backtestResults.max_drawdown || '0%'}
             </div>
-            <div className="result-item">
-              <strong>Win Rate:</strong> {backtestResults.win_rate || 'N/A'}%
+            <div className="result-item" style={{
+              backgroundColor: '#ffffff',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #e9ecef'
+            }}>
+              <strong>Win Rate:</strong> {backtestResults.statistics?.['Win Rate'] || backtestResults.win_rate || '0%'}
+            </div>
+            <div className="result-item" style={{
+              backgroundColor: '#ffffff',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #e9ecef'
+            }}>
+              <strong>Total Orders:</strong> {backtestResults.statistics?.['Total Orders'] || '0'}
+            </div>
+            <div className="result-item" style={{
+              backgroundColor: '#ffffff',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #e9ecef'
+            }}>
+              <strong>Final Equity:</strong> {backtestResults.runtimeStatistics?.Equity || '$100,000.00'}
             </div>
           </div>
         </div>
