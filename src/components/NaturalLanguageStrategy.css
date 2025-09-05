@@ -1,0 +1,392 @@
+.natural-language-strategy {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.strategy-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.strategy-header h1 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 2.5rem;
+}
+
+.strategy-header p {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.step-indicator::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: #e0e0e0;
+  z-index: 1;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  background: #fff;
+  padding: 0 20px;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  color: #7f8c8d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+  background: #3498db;
+  color: white;
+}
+
+.step-label {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  text-align: center;
+  font-weight: 500;
+}
+
+.step.active .step-label {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.strategy-content {
+  min-height: 400px;
+}
+
+.step-content {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.step-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.step-header h2 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 2rem;
+}
+
+.step-header p {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.strategy-input {
+  margin-bottom: 30px;
+}
+
+.strategy-input label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.strategy-input textarea {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.strategy-input textarea:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.backtest-params {
+  background: #f8f9fa;
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.backtest-params h3 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+}
+
+.params-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.param-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.param-group label {
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.param-group input {
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.param-group input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.processing-indicator {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.processing-indicator .spinning {
+  font-size: 3rem;
+  color: #3498db;
+  margin-bottom: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.processing-indicator p {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+.backtest-progress {
+  text-align: center;
+  margin: 30px 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 20px;
+  background: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.results-section {
+  margin: 30px 0;
+}
+
+.results-summary {
+  margin-bottom: 30px;
+}
+
+.results-summary h3 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.metric-card {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  border: 2px solid #e0e0e0;
+  transition: transform 0.3s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  border-color: #3498db;
+}
+
+.metric-card h4 {
+  color: #7f8c8d;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.metric-value {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.detailed-results h3 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+}
+
+.stats-table {
+  background: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+.stat-value {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2980b9;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #95a5a6;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #7f8c8d;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .natural-language-strategy {
+    padding: 15px;
+  }
+  
+  .strategy-header h1 {
+    font-size: 2rem;
+  }
+  
+  .step-indicator {
+    flex-wrap: wrap;
+  }
+  
+  .step {
+    margin-bottom: 20px;
+  }
+  
+  .params-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  
+  .step-actions {
+    flex-direction: column;
+  }
+}

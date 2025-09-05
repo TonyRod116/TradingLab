@@ -28,7 +28,7 @@ const Header = () => {
       position: "top-right",
       autoClose: 2000,
     });
-    navigate('/strategies');
+    navigate('/', { replace: true });
   };
 
   const handleLogoClick = () => {
