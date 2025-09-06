@@ -10,6 +10,13 @@ import BacktestResults from './BacktestResults';
 import strategyService from '../services/StrategyService';
 import './StrategyCreator.css';
 
+// Helper function to truncate error messages for better UX
+const truncateError = (message, maxLength = 100) => {
+  if (!message) return 'Unknown error';
+  if (message.length <= maxLength) return message;
+  return message.substring(0, maxLength) + '...';
+};
+
 const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -392,7 +399,10 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       if (error.name === 'AbortError' || error.message.includes('timeout')) {
         toast.warning('Backtest is taking longer than expected. It may still be running in the background. Please check your strategies list in a few minutes.');
       } else {
-        toast.error(`Error running backtest: ${error.message || 'Unknown error'}`);
+        toast.error(`Error running backtest: ${truncateError(error.message)}`, {
+          position: "top-right",
+          autoClose: 4000,
+        });
       }
     } finally {
       setLoading(false);
@@ -523,7 +533,10 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         errorMessage += `: ${error.message}`;
       }
       
-      toast.error(`Failed to save strategy: ${errorMessage}`);
+      toast.error(`Failed to save strategy: ${truncateError(errorMessage)}`, {
+        position: "top-right",
+        autoClose: 4000,
+      });
     }
   }, [backtestResults, strategyData, rules, formatEntryRules, formatExitRules, navigate]);
 
