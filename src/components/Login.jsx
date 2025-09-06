@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
+import { isTokenExpired } from '../utils/auth.js';
 import Header from './Header';
 import './Auth.css';
 
@@ -37,15 +38,17 @@ const Login = () => {
 
     const result = await login(formData.identifier, formData.password);
     
-    if (result.success) {
-      toast.success(`Welcome back, ${user?.username || 'Trader'}!`, {
-        position: "top-right",
-        autoClose: 2000,
-      });
-      setTimeout(() => {
-        navigate(result.redirectTo || '/strategies');
-      }, 1500);
-    } else {
+      if (result.success) {
+        toast.success(`Welcome back, ${user?.username || 'Trader'}!`, {
+          position: "top-right",
+          autoClose: 2000,
+        });
+        
+        // Use window.location.href for guaranteed redirect
+        setTimeout(() => {
+          window.location.href = result.redirectTo || '/strategies';
+        }, 200);
+      } else {
       toast.error(result.error, {
         position: "top-right",
         autoClose: 4000,

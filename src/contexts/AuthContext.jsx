@@ -21,9 +21,8 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  console.log('🔍 AuthProvider component initialized');
   const [user, setUser] = useState(null);
-  const [token, setTokenState] = useState(getToken());
+  const [token, setTokenState] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const logout = useCallback(() => {
@@ -31,6 +30,8 @@ export function AuthProvider({ children }) {
     setTokenState(null);
     setUser(null);
     localStorage.removeItem('user');
+    // Redirect to home page after logout
+    window.location.href = '/';
   }, []);
 
   const updateUser = useCallback((newUserData) => {
@@ -70,67 +71,42 @@ export function AuthProvider({ children }) {
 
   // Check authentication on mount
   useEffect(() => {
-    console.log('🔍 AuthContext useEffect triggered');
-    const checkAuth = async () => {
-      console.log('🔍 checkAuth function called');
-      const currentToken = getToken();
-      console.log('🔍 Token:', currentToken ? 'Present' : 'Missing');
-      
-      if (currentToken && !isTokenExpired()) {
-        console.log('🔍 Token valid, getting user data');
-        const userData = extractUserFromToken(currentToken);
-        console.log('🔍 User data from token:', userData);
-        
-        if (userData) {
-          // If we only have ID, try to get full user data from backend
-          if (userData.id && !userData.username) {
-            console.log('🔍 Only ID available, fetching full user data from backend');
-            try {
-              const response = await axios.get('/api/users/profile/', {
-                headers: {
-                  'Authorization': `Bearer ${currentToken}`
-                }
-              });
-              const fullUserData = response.data;
-              console.log('🔍 Full user data from backend:', fullUserData);
-              setUser({
-                id: userData.id,
-                username: fullUserData.username || 'User',
-                email: fullUserData.email || 'user@example.com'
-              });
-            } catch (error) {
-              console.log('🔍 Error fetching user data, using token data only:', error);
-              setUser(userData);
-            }
-          } else {
-            setUser(userData);
-          }
-          setTokenState(currentToken);
-        } else {
-          logout();
-        }
-      } else {
-        console.log('🔍 No valid token');
-      }
-      setLoading(false);
-    };
-
-    checkAuth();
-  }, [logout]);
-
-  // Sync token state with localStorage
-  useEffect(() => {
     const currentToken = getToken();
-    if (currentToken !== token) {
-      setTokenState(currentToken);
+    
+    if (currentToken && !isTokenExpired()) {
+      const userData = extractUserFromToken(currentToken);
+      
+      if (userData) {
+        setUser(userData);
+        setTokenState(currentToken);
+      } else {
+        setUser(null);
+        setTokenState(null);
+      }
+    } else {
+      setTokenState(null);
+      setUser(null);
     }
-  }, [token]);
+    
+    setLoading(false);
+  }, []); // Only run once on mount
+
+  // Sync token state with localStorage - DISABLED TO PREVENT LOOPS
+  // useEffect(() => {
+  //   console.log('🔍 [TOKEN SYNC] Syncing token state...');
+  //   const currentToken = getToken();
+  //   console.log('🔍 [TOKEN SYNC] Current token from storage:', currentToken ? 'Present' : 'Missing');
+  //   console.log('🔍 [TOKEN SYNC] Current token state:', token ? 'Present' : 'Missing');
+  //   if (currentToken !== token) {
+  //     console.log('🔍 [TOKEN SYNC] Token mismatch, updating state...');
+  //     setTokenState(currentToken);
+  //   }
+  // }, [token]);
 
   const extractUserFromToken = useCallback((token) => {
     try {
       const payloadString = token.split('.')[1];
       const payload = JSON.parse(atob(payloadString));
-      console.log('🔍 Token payload:', payload);
       
       return {
         id: payload.user_id || payload.id,
@@ -138,7 +114,6 @@ export function AuthProvider({ children }) {
         email: payload.email
       };
     } catch (error) {
-      console.log('🔍 Error extracting user from token:', error);
       return null;
     }
   }, []);
@@ -203,7 +178,6 @@ export function AuthProvider({ children }) {
       }
       
       const response = await axios.post('/auth/login/', payload);
-      
       const { access, refresh } = response.data;
       
       const userData = extractUserFromToken(access);
@@ -212,6 +186,9 @@ export function AuthProvider({ children }) {
       setRefreshToken(refresh);
       setTokenState(access);
       setUser(userData);
+      
+      // Force a small delay to ensure state is updated
+      await new Promise(resolve => setTimeout(resolve, 50));
       
       return { success: true, redirectTo: '/strategies' };
     } catch (error) {
@@ -249,7 +226,6 @@ export function AuthProvider({ children }) {
   }, [extractErrorMessage]);
 
   const isAuthenticated = !!token && !isTokenExpired();
-  console.log('🔍 AuthContext - isAuthenticated:', isAuthenticated, 'token:', !!token, 'expired:', isTokenExpired());
 
   const value = {
     user,

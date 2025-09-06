@@ -33,13 +33,15 @@ const Hero = () => {
   );
 };
 
-const App = () => (
-  <div className="App">
-    <Header />
-    <main className="main-content">
-      <Hero />
-    </main>
-  </div>
-);
+const App = () => {
+  return (
+    <div className="App">
+      <Header />
+      <main className="main-content">
+        <Hero />
+      </main>
+    </div>
+  );
+};
 
 export default App;

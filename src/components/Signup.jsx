@@ -59,9 +59,8 @@ const Signup = () => {
         position: "top-right",
         autoClose: 3000,
       });
-      setTimeout(() => {
-        navigate(result.redirectTo || '/strategies');
-      }, 1500);
+      // Use window.location.href for guaranteed redirect - more reliable than navigate()
+      window.location.href = result.redirectTo || '/strategies';
     } else {
       toast.error(result.error, {
         position: "top-right",

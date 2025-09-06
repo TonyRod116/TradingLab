@@ -28,32 +28,28 @@ const Strategies = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('my-strategies');
   const [strategies, setStrategies] = useState([]);
+  
   const [loading, setLoading] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   const loadStrategies = useCallback(async () => {
-    if (!isAuthenticated) return;
-    
     setLoading(true);
     try {
-      const response = await fetch(getApiUrl(API_ENDPOINTS.STRATEGIES), {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
+      // Use community endpoint that doesn't require authentication
+      const response = await fetch(`${getApiUrl(API_ENDPOINTS.STRATEGIES)}community/`);
       
       if (response.ok) {
         const data = await response.json();
         setStrategies(data.results || data);
       } else {
-        toast.error('Failed to load strategies', {
+        toast.error('Failed to load community strategies', {
           position: "top-right",
           autoClose: 4000,
           toastId: 'load-strategies-error' // Prevent duplicate toasts
         });
       }
     } catch (err) {
-      toast.error('Network error loading strategies', {
+      toast.error('Network error loading community strategies', {
         position: "top-right",
         autoClose: 4000,
         toastId: 'load-strategies-network-error' // Prevent duplicate toasts
@@ -61,7 +57,7 @@ const Strategies = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, []);
 
   useEffect(() => {
     loadStrategies();
@@ -165,6 +161,17 @@ const Strategies = () => {
           <a href="/users/signup/" className="btn btn-primary">Sign Up</a>
           <a href="/users/login/" className="btn btn-secondary">Sign In</a>
         </div>
+      </div>
+
+      {/* Show community strategies for unauthenticated users */}
+      <div className="community-section">
+        <h2>Community Strategies</h2>
+        <p>Explore strategies created by our community</p>
+        <StrategyList 
+          strategies={strategies} 
+          loading={loading}
+          showUserInfo={true}
+        />
       </div>
 
       <div className="features-preview">

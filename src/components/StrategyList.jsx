@@ -9,7 +9,7 @@ import favoritesService from '../services/FavoritesService';
 import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
 import './StrategyList.css';
 
-const StrategyList = ({ strategies, loading, error }) => {
+const StrategyList = ({ strategies, loading, error, showUserInfo = false }) => {
   const navigate = useNavigate();
   const [selectedStrategy, setSelectedStrategy] = useState(null);
   const [favoriteStatus, setFavoriteStatus] = useState({});
