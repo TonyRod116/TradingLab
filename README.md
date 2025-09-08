@@ -6,6 +6,25 @@ TradeLab is a comprehensive strategy backtesting platform built during the final
 
 Built in just 8 days while managing the challenges of being a parent to a 1-year-old (who somehow managed to send a "3" to the GA Slack group and open a Windows command prompt I didn't know existed), TradeLab demonstrates the power of focused development and creative problem-solving under pressure.
 
+## Screenshots
+
+### Main Application Interface
+![TradeLab Main Dashboard](src/assets/01.png)
+*Professional trading platform interface with strategy creation wizard and performance analytics*
+
+### Application Features Overview
+<div align="center">
+  <img src="src/assets/02.png" alt="Features Overview" width="30%" style="margin: 0 1%;">
+  <img src="src/assets/03.png" alt="Strategy Builder" width="30%" style="margin: 0 1%;">
+  <img src="src/assets/05.png" alt="Backtest Results" width="30%" style="margin: 0 1%;">
+</div>
+
+### Additional Screenshots
+<div align="center">
+  <img src="src/assets/04.png" alt="Mobile Responsive Design" width="45%" style="margin: 0 2%;">
+  <img src="src/assets/08.png" alt="Performance Charts" width="45%" style="margin: 0 2%;">
+</div>
+
 ## Deployment Link
 
 **Live Application:** [https://tradelab.netlify.app](https://tradelab.netlify.app)
