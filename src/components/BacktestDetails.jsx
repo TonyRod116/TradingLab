@@ -55,8 +55,17 @@ const BacktestDetails = () => {
       // Use latest_backtest data for metrics since that's where the actual backtest results are
       if (strategyResponse.data.latest_backtest) {
         setBacktestData(strategyResponse.data.latest_backtest);
+        
+        // ONLY use real equity curve data from backtests - NO mock data
+        if (strategyResponse.data.latest_backtest.equity_curve && strategyResponse.data.latest_backtest.equity_curve.length > 0) {
+          setEquityCurve(strategyResponse.data.latest_backtest.equity_curve);
+        } else {
+          // If no real equity curve data exists, show empty - NO mock data
+          setEquityCurve([]);
+        }
       } else {
         setBacktestData(strategyResponse.data);
+        setEquityCurve([]);
       }
 
       // Try to load additional data if available
@@ -70,15 +79,11 @@ const BacktestDetails = () => {
           });
           setTrades(tradesResponse.data);
         } catch (tradesError) {
-
+          console.error('Error loading trades:', tradesError);
           setTrades([]);
         }
-
-        // Note: Equity curve endpoint doesn't exist yet, skipping for now
-        setEquityCurve([]);
       } else {
         setTrades([]);
-        setEquityCurve([]);
       }
     } catch (error) {
       console.error('Error loading backtest details:', error);

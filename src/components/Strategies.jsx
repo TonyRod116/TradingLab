@@ -35,21 +35,34 @@ const Strategies = () => {
   const loadStrategies = useCallback(async () => {
     setLoading(true);
     try {
-      // Use community endpoint that doesn't require authentication
-      const response = await fetch(`${getApiUrl(API_ENDPOINTS.STRATEGIES)}community/`);
+      let response;
+      
+      if (isAuthenticated) {
+        // Use main endpoint for authenticated users to get full strategy details
+        const token = localStorage.getItem('access_token');
+        response = await fetch(`${getApiUrl(API_ENDPOINTS.STRATEGIES)}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      } else {
+        // Use community endpoint for unauthenticated users
+        response = await fetch(`${getApiUrl(API_ENDPOINTS.STRATEGIES)}community/`);
+      }
       
       if (response.ok) {
         const data = await response.json();
         setStrategies(data.results || data);
       } else {
-        toast.error('Failed to load community strategies', {
+        toast.error('Failed to load strategies', {
           position: "top-right",
           autoClose: 4000,
           toastId: 'load-strategies-error' // Prevent duplicate toasts
         });
       }
     } catch (err) {
-      toast.error('Network error loading community strategies', {
+      toast.error('Network error loading strategies', {
         position: "top-right",
         autoClose: 4000,
         toastId: 'load-strategies-network-error' // Prevent duplicate toasts
@@ -57,7 +70,7 @@ const Strategies = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     loadStrategies();
