@@ -7,10 +7,12 @@
 const getBaseURL = () => {
   // Check if we're in development (localhost)
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log('🔍 [API Config] Using localhost URL');
     return 'http://localhost:8000';
   }
   
   // Production URL (Heroku)
+  console.log('🔍 [API Config] Using production URL:', 'https://tradelab-39583a78c028.herokuapp.com');
   return 'https://tradelab-39583a78c028.herokuapp.com';
 };
 

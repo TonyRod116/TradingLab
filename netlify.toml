@@ -2,27 +2,6 @@
   publish = "build"
   command = "npm run build"
 
-[[redirects]]
-  from = "/api/*"
-  to = "https://tradelab-39583a78c028.herokuapp.com/api/:splat"
-  status = 200
-  force = true
-  headers = {X-From = "Netlify"}
-
-[[redirects]]
-  from = "/auth/*"
-  to = "https://tradelab-39583a78c028.herokuapp.com/auth/:splat"
-  status = 200
-  force = true
-  headers = {X-From = "Netlify"}
-
-[[redirects]]
-  from = "/strategies/*"
-  to = "https://tradelab-39583a78c028.herokuapp.com/strategies/:splat"
-  status = 200
-  force = true
-  headers = {X-From = "Netlify"}
-
 # SPA fallback - redirect all other routes to index.html
 [[redirects]]
   from = "/*"
