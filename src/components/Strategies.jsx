@@ -37,8 +37,11 @@ const Strategies = () => {
     try {
       let response;
       
-      if (isAuthenticated) {
-        // Use main endpoint for authenticated users to get full strategy details
+      if (activeTab === 'my-strategies') {
+        // For Community Backtests tab, always use community endpoint
+        response = await fetch(`${getApiUrl(API_ENDPOINTS.STRATEGIES)}community/`);
+      } else if (isAuthenticated) {
+        // For other tabs, use main endpoint for authenticated users
         const token = localStorage.getItem('access_token');
         response = await fetch(`${getApiUrl(API_ENDPOINTS.STRATEGIES)}`, {
           headers: {
@@ -70,7 +73,7 @@ const Strategies = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, activeTab]);
 
   useEffect(() => {
     loadStrategies();

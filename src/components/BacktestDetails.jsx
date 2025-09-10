@@ -56,14 +56,22 @@ const BacktestDetails = () => {
       if (strategyResponse.data.latest_backtest) {
         setBacktestData(strategyResponse.data.latest_backtest);
         
+        // Debug: Log equity curve data
+        console.log('🔍 [DEBUG] Latest backtest data:', strategyResponse.data.latest_backtest);
+        console.log('🔍 [DEBUG] Equity curve data:', strategyResponse.data.latest_backtest.equity_curve);
+        console.log('🔍 [DEBUG] Equity curve length:', strategyResponse.data.latest_backtest.equity_curve?.length);
+        
         // ONLY use real equity curve data from backtests - NO mock data
         if (strategyResponse.data.latest_backtest.equity_curve && strategyResponse.data.latest_backtest.equity_curve.length > 0) {
+          console.log('✅ [DEBUG] Setting equity curve data');
           setEquityCurve(strategyResponse.data.latest_backtest.equity_curve);
         } else {
+          console.log('❌ [DEBUG] No equity curve data, setting empty array');
           // If no real equity curve data exists, show empty - NO mock data
           setEquityCurve([]);
         }
       } else {
+        console.log('❌ [DEBUG] No latest backtest found');
         setBacktestData(strategyResponse.data);
         setEquityCurve([]);
       }
