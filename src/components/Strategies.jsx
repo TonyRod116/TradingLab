@@ -20,6 +20,7 @@ import StrategyList from './StrategyList';
 import FavoritesList from './FavoritesList';
 import StrategyCreator from './StrategyCreator';
 import StrategyTemplates from './StrategyTemplates';
+import NaturalLanguageStrategy from './NaturalLanguageStrategy';
 import RuleBuilder from './RuleBuilder';
 import './Strategies.css';
 
@@ -127,7 +128,13 @@ const Strategies = () => {
           className={`tab-button ${activeTab === 'create-strategy' ? 'active' : ''}`}
           onClick={() => handleTabChange('create-strategy')}
         >
-          Create Strategy
+          <FaCog /> Create Strategy
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'natural-language' ? 'active' : ''}`}
+          onClick={() => handleTabChange('natural-language')}
+        >
+          <FaLightbulb /> Natural Language
         </button>
       </div>
 
@@ -157,6 +164,17 @@ const Strategies = () => {
               handleTabChange('my-strategies');
             }}
             template={selectedTemplate}
+          />
+        )}
+        
+        {activeTab === 'natural-language' && (
+          <NaturalLanguageStrategy 
+            onBack={() => handleTabChange('my-strategies')}
+            onStrategyCreated={(strategyData, rules) => {
+              // Handle strategy creation from natural language
+              handleTabChange('my-strategies');
+              loadStrategies();
+            }}
           />
         )}
       </div>

@@ -80,7 +80,6 @@ const RuleBuilder = ({ onAddRule, onRemoveRule, onMoveRule, rules, activeSection
       { name: 'stochastic_d', label: 'Stochastic %D', type: 'indicator', description: '14-period stochastic %D' }
     ],
     volatility: [
-      { name: 'atr', label: 'ATR (Average True Range)', type: 'indicator', description: '14-period average true range' },
       { name: 'bb_upper', label: 'Bollinger Bands Upper', type: 'indicator', description: 'Upper Bollinger Band (20,2)' },
       { name: 'bb_middle', label: 'Bollinger Bands Middle', type: 'indicator', description: 'Middle Bollinger Band (20,2)' },
       { name: 'bb_lower', label: 'Bollinger Bands Lower', type: 'indicator', description: 'Lower Bollinger Band (20,2)' }

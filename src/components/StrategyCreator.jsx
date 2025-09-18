@@ -29,12 +29,13 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     initial_capital: 100000,
     position_size: 1,
     max_positions: 1,
-    stop_loss_type: 'atr',
+    stop_loss_type: 'points',
     stop_loss_value: 2.0,
-    take_profit_type: 'atr',
+    take_profit_type: 'points',
     take_profit_value: 4.0,
     round_turn_commissions: 4.00,
-    slippage: 0.5
+    slippage: 0.5,
+    status: 'DRAFT'  // Default status
   });
   const [rules, setRules] = useState([]);
   
@@ -100,7 +101,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     { id: 1, title: 'Basic Information', icon: <FaCog />, description: 'Strategy name, description, and timeframe' },
     { id: 2, title: 'Risk Management', icon: <FaShieldAlt />, description: 'Position size, stop loss, and take profit' },
     { id: 3, title: 'Entry Rules', icon: <FaShoppingCart />, description: 'When to buy - define your entry conditions' },
-    { id: 4, title: 'Exit Rules', icon: <FaMoneyBillWave />, description: 'When to sell - define your exit conditions' },
+    { id: 4, title: 'Exit Rules (Optional)', icon: <FaMoneyBillWave />, description: 'When to sell - define your exit conditions (optional, can use only stop loss and take profit)' },
     { id: 5, title: 'Backtest', icon: <FaRocket />, description: 'Review strategy and run backtest' }
   ];
 
@@ -129,7 +130,6 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       case 'percentage': return '0.5';
       case 'points': return '2.0';
       case 'ticks': return '8';
-      case 'atr': return '2.0';
       default: return '';
     }
   };
@@ -172,8 +172,8 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
                strategyData.slippage >= 0;
       case 3: // Entry Rules
         return rules.filter(rule => rule.section === 'entry').length > 0;
-      case 4: // Exit Rules
-        return rules.filter(rule => rule.section === 'exit').length > 0;
+      case 4: // Exit Rules (optional - can use only stop loss and take profit)
+        return true; // Always allow to proceed - exit rules are optional
       case 5: // Final step - can save if all previous validations pass
         return strategyData.name.trim() && 
                strategyData.description.trim() && 
@@ -183,8 +183,8 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
                strategyData.take_profit_value > 0 &&
                strategyData.round_turn_commissions >= 0 &&
                strategyData.slippage >= 0 &&
-               rules.filter(rule => rule.section === 'entry').length > 0 &&
-               rules.filter(rule => rule.section === 'exit').length > 0;
+               rules.filter(rule => rule.section === 'entry').length > 0;
+               // Exit rules are optional - can use only stop loss and take profit
       default:
         return false;
     }
@@ -234,13 +234,14 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       return false;
     }
     
-    if (exitRules.length === 0) {
-      toast.error('At least one exit rule is required', {
-        position: "top-right",
-        autoClose: 4000,
-      });
-      return false;
-    }
+    // Exit rules are optional - can use only stop loss and take profit
+    // if (exitRules.length === 0) {
+    //   toast.error('At least one exit rule is required', {
+    //     position: "top-right",
+    //     autoClose: 4000,
+    //   });
+    //   return false;
+    // }
     
     return true;
   }, [strategyData, rules]);
@@ -334,7 +335,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
       const tempName = `temp_backtest_${Date.now()}_${timestamp}`;
       
-      // Backend supports: percentage, points, ticks, atr
+      // Backend supports: percentage, points, ticks
       const strategyPayload = {
         name: tempName,
         description: strategyData.description,
@@ -346,10 +347,25 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         stop_loss_type: strategyData.stop_loss_type,
         stop_loss_value: strategyData.stop_loss_value,
         take_profit_type: strategyData.take_profit_type,
-        take_profit_value: strategyData.take_profit_value
+        take_profit_value: strategyData.take_profit_value,
+        status: 'READY'  // Set to READY for backtesting
       };
+      
+      // Ensure status is explicitly set
+      strategyPayload.status = 'READY';
 
-      const strategy = await strategyService.createStrategy(strategyPayload);
+      console.log('🔍 StrategyCreator - Sending payload:', strategyPayload);
+      console.log('🔍 StrategyCreator - Payload status:', strategyPayload.status);
+      console.log('🔍 StrategyCreator - Payload keys:', Object.keys(strategyPayload));
+      console.log('🔍 StrategyCreator - Rules array:', rules);
+      console.log('🔍 StrategyCreator - Entry rules:', rules.filter(rule => rule.section === 'entry'));
+      console.log('🔍 StrategyCreator - Exit rules:', rules.filter(rule => rule.section === 'exit'));
+      console.log('🔍 StrategyCreator - Exit rules length:', rules.filter(rule => rule.section === 'exit').length);
+      
+      const strategy = await strategyService.createStrategy(strategyPayload, rules);
+      console.log('🔍 StrategyCreator - Strategy created:', strategy);
+      console.log('🔍 StrategyCreator - Strategy ID:', strategy?.id);
+      console.log('🔍 StrategyCreator - Strategy status:', strategy?.status);
       tempStrategyId = strategy.id;
       
       // Show success toast when strategy is created and backtest starts
@@ -445,7 +461,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         exitRules.time_based = true;
       }
       
-      // Backend supports: percentage, points, pips, atr
+      // Backend supports: percentage, points, pips
       // No conversion needed - send the original types
       
       // Extract all detailed backtest data
@@ -691,7 +707,6 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
                 <option value="percentage">Percentage (%)</option>
                 <option value="points">Points</option>
                 <option value="ticks">Ticks (0.25 pts each)</option>
-                <option value="atr">ATR Multiplier</option>
               </select>
               <input
                 type="number"
@@ -723,7 +738,6 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
                 <option value="percentage">Percentage (%)</option>
                 <option value="points">Points</option>
                 <option value="ticks">Ticks (0.25 pts each)</option>
-                <option value="atr">ATR Multiplier</option>
               </select>
               <input
                 type="number"
@@ -802,8 +816,8 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
   const renderExitRules = () => (
     <div className="step-content">
       <div className="step-header">
-        <h3>Exit Rules</h3>
-        <p>Define when to sell - create conditions that trigger exit signals</p>
+        <h3>Exit Rules (Optional)</h3>
+        <p>Define when to sell - create conditions that trigger exit signals. You can skip this step and use only stop loss and take profit from Risk Management.</p>
       </div>
       
       <div className="rules-content">
@@ -912,23 +926,31 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         </div>
 
         <div className="summary-section">
-          <h4>Exit Rules</h4>
+          <h4>Exit Rules (Optional)</h4>
           <div className="rules-summary">
-            {rules.filter(rule => rule.section === 'exit').map((rule, index) => (
-              <div key={rule.id} className="rule-details">
+            {rules.filter(rule => rule.section === 'exit').length > 0 ? (
+              rules.filter(rule => rule.section === 'exit').map((rule, index) => (
+                <div key={rule.id} className="rule-details">
+                  <div className="rule-item">
+                    <span className="rule-number">{index + 1}.</span>
+                    <span className="rule-text">
+                      {rule.conditions.map((condition, condIndex) => (
+                        <span key={condIndex} className="rule-condition">
+                          {condition.left_operand || 'Unknown'} {formatOperator(condition.operator) || ''} {condition.right_operand || 'N/A'}
+                          {condIndex < rule.conditions.length - 1 && ` ${formatOperator(condition.logical_operator) || 'AND'} `}
+                        </span>
+                      ))}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rule-details">
                 <div className="rule-item">
-                  <span className="rule-number">{index + 1}.</span>
-                  <span className="rule-text">
-                    {rule.conditions.map((condition, condIndex) => (
-                      <span key={condIndex} className="rule-condition">
-                        {condition.left_operand || 'Unknown'} {formatOperator(condition.operator) || ''} {condition.right_operand || 'N/A'}
-                        {condIndex < rule.conditions.length - 1 && ` ${formatOperator(condition.logical_operator) || 'AND'} `}
-                      </span>
-                    ))}
-                  </span>
+                  <span className="rule-text">No exit rules defined - using only stop loss and take profit from Risk Management</span>
                 </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

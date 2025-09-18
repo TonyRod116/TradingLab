@@ -4,6 +4,7 @@
  */
 
 import { API_BASE_URL } from '../config/api.js';
+import { normalizeStrategyData, validateStrategyData, denormalizeStrategy } from '../utils/strategyNormalizer.js';
 
 const BASE_URL = API_BASE_URL;
 
@@ -23,57 +24,83 @@ class StrategyService {
   /**
    * Create a new strategy
    * @param {Object} strategyData - Strategy data
+   * @param {Array} rules - Rules array (optional, for backward compatibility)
    * @returns {Promise<Object>} Created strategy
    */
-  async createStrategy(strategyData) {
+  async createStrategy(strategyData, rules = null) {
     const token = this.getToken();
+    
+    // Normalize strategy data if rules are provided
+    let normalizedData;
+    if (rules) {
+      // Validate data first
+      const validation = validateStrategyData(strategyData, rules);
+      if (!validation.isValid) {
+        throw new Error(`Validation failed: ${Object.values(validation.errors).join(', ')}`);
+      }
+      normalizedData = normalizeStrategyData(strategyData, rules);
+    } else {
+      // Assume data is already normalized
+      normalizedData = strategyData;
+    }
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
     
     try {
+      console.log('🔍 StrategyService - Sending to backend:', normalizedData);
+      console.log('🔍 StrategyService - Normalized data status:', normalizedData.status);
+      console.log('🔍 StrategyService - Normalized data keys:', Object.keys(normalizedData));
+      console.log('🔍 StrategyService - Entry rules:', normalizedData.entry_rules);
+      console.log('🔍 StrategyService - Exit rules:', normalizedData.exit_rules);
+      console.log('🔍 StrategyService - Exit rules length:', normalizedData.exit_rules?.length);
+      
       const response = await fetch(`${this.baseURL}/api/strategies/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(strategyData),
+        body: JSON.stringify(normalizedData),
         signal: controller.signal
       });
       
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-      let errorMessage = `Error creating strategy: ${response.statusText}`;
-      try {
-        const responseText = await response.text();
-        
-        // Check if it's an HTML error page (500 error)
-        if (responseText.includes('<!DOCTYPE') && responseText.includes('IntegrityError')) {
-          if (responseText.includes('duplicate key value violates unique constraint')) {
-            errorMessage = 'A strategy with this name already exists. Please choose a different name.';
+        let errorMessage = `Error creating strategy: ${response.statusText}`;
+        try {
+          const responseText = await response.text();
+          
+          // Check if it's an HTML error page (500 error)
+          if (responseText.includes('<!DOCTYPE') && responseText.includes('IntegrityError')) {
+            if (responseText.includes('duplicate key value violates unique constraint')) {
+              errorMessage = 'A strategy with this name already exists. Please choose a different name.';
+            } else {
+              errorMessage = 'Database error occurred. Please try again.';
+            }
+          } else if (responseText.includes('no data found') || responseText.includes('No data found')) {
+            errorMessage = 'No market data available for ES in this timeframe. The backend may not have data loaded for this symbol.';
+          } else if (responseText.includes('FileNotFoundError') || responseText.includes('file not found')) {
+            errorMessage = 'Market data files not found. Please check if data is properly loaded in the backend.';
           } else {
-            errorMessage = 'Database error occurred. Please try again.';
+            // Try to parse as JSON
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.error || errorData.detail || errorMessage;
           }
-        } else if (responseText.includes('no data found') || responseText.includes('No data found')) {
-          errorMessage = 'No market data available for ES in this timeframe. The backend may not have data loaded for this symbol.';
-        } else if (responseText.includes('FileNotFoundError') || responseText.includes('file not found')) {
-          errorMessage = 'Market data files not found. Please check if data is properly loaded in the backend.';
-        } else {
-          // Try to parse as JSON
-          const errorData = JSON.parse(responseText);
-          errorMessage = errorData.error || errorData.detail || errorMessage;
+        } catch (e) {
+          // If response is not JSON (e.g., HTML error page), use status text
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
         }
-      } catch (e) {
-        // If response is not JSON (e.g., HTML error page), use status text
-        errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        throw new Error(errorMessage);
       }
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-    
+      
+      const result = await response.json();
+      console.log('🔍 StrategyService - Raw response:', result);
+      const denormalized = denormalizeStrategy(result);
+      console.log('🔍 StrategyService - Denormalized strategy:', denormalized);
+      return denormalized;
+      
     } catch (error) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
@@ -169,11 +196,68 @@ class StrategyService {
    * @returns {Promise<Object>} Backtest results
    */
   async runBacktest(strategyId, backtestParams) {
+    console.log('🔍 StrategyService - runBacktest called with strategyId:', strategyId);
+    console.log('🔍 StrategyService - runBacktest params:', backtestParams);
+    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout for backtest
     
     try {
-      const response = await fetch(`${this.baseURL}/api/strategies/${strategyId}/backtest/`, {
+      const url = `${this.baseURL}/api/strategies/${strategyId}/backtest/`;
+      console.log('🔍 StrategyService - runBacktest URL:', url);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.getToken()}`
+        },
+        body: JSON.stringify(backtestParams),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      console.log('🔍 StrategyService - runBacktest response status:', response.status);
+      console.log('🔍 StrategyService - runBacktest response ok:', response.ok);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('🔍 StrategyService - runBacktest error response:', errorText);
+      let errorMessage = `Backtest failed: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.detail || errorMessage;
+      } catch (e) {
+        // If response is not JSON (e.g., HTML error page), use status text
+        errorMessage = `Server error: ${response.status} ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+    
+    return await response.json();
+    
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout: Backtest took too long (60 seconds)');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Run backtest for a strategy (simplified endpoint)
+   * @param {number} strategyId - Strategy ID
+   * @param {Object} backtestParams - Backtest parameters (optional)
+   * @returns {Promise<Object>} Backtest results
+   */
+  async runBacktestSimple(strategyId, backtestParams = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout for backtest
+    
+    try {
+      const response = await fetch(`${this.baseURL}/api/strategies/${strategyId}/run_backtest/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
