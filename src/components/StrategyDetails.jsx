@@ -70,7 +70,7 @@ const StrategyDetails = () => {
         end_date: '2023-12-31',
         initial_capital: strategy.initial_capital || 10000,
         commission: 4.00,
-        slippage: 0.5
+        slippage: 0.25 * 0.25  // Convert ticks to points (1 tick = 0.25 points)
       };
       
       const results = await strategyService.runBacktest(id, backtestParams);

@@ -34,7 +34,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     take_profit_type: 'points',
     take_profit_value: 4.0,
     round_turn_commissions: 4.00,
-    slippage: 0.5,
+    slippage: 0.25,  // This will be converted to points when sent to backend
     status: 'DRAFT'  // Default status
   });
   const [rules, setRules] = useState([]);
@@ -354,18 +354,8 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       // Ensure status is explicitly set
       strategyPayload.status = 'READY';
 
-      console.log('🔍 StrategyCreator - Sending payload:', strategyPayload);
-      console.log('🔍 StrategyCreator - Payload status:', strategyPayload.status);
-      console.log('🔍 StrategyCreator - Payload keys:', Object.keys(strategyPayload));
-      console.log('🔍 StrategyCreator - Rules array:', rules);
-      console.log('🔍 StrategyCreator - Entry rules:', rules.filter(rule => rule.section === 'entry'));
-      console.log('🔍 StrategyCreator - Exit rules:', rules.filter(rule => rule.section === 'exit'));
-      console.log('🔍 StrategyCreator - Exit rules length:', rules.filter(rule => rule.section === 'exit').length);
       
       const strategy = await strategyService.createStrategy(strategyPayload, rules);
-      console.log('🔍 StrategyCreator - Strategy created:', strategy);
-      console.log('🔍 StrategyCreator - Strategy ID:', strategy?.id);
-      console.log('🔍 StrategyCreator - Strategy status:', strategy?.status);
       tempStrategyId = strategy.id;
       
       // Show success toast when strategy is created and backtest starts
@@ -380,7 +370,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         end_date: '2024-12-31T23:59:59Z',
         initial_capital: 100000,
         commission: strategyData.round_turn_commissions,
-        slippage: strategyData.slippage
+        slippage: strategyData.slippage * 0.25  // Convert ticks to points (1 tick = 0.25 points)
       };
 
       const backtestResults = await strategyService.runBacktest(strategy.id, backtestParams);
@@ -391,6 +381,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         strategy_id: strategy.id,
         is_temporary: true
       };
+      
       
       setBacktestResults(resultsWithStrategyId);
       
@@ -431,8 +422,9 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     if (backtestResults && backtestResults.strategy_id && backtestResults.is_temporary) {
       try {
         await strategyService.deleteStrategy(backtestResults.strategy_id);
+        toast.success('Temporary backtest results discarded');
       } catch (deleteError) {
-
+        toast.warning('Could not clean up temporary strategy, but results are closed');
       }
     }
     setBacktestResults(null);
@@ -515,7 +507,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         backtest_start_date: backtestResults.start_date,
         backtest_end_date: backtestResults.end_date,
         backtest_commission: backtestResults.commission || strategyData.round_turn_commissions,
-        backtest_slippage: backtestResults.slippage || strategyData.slippage
+        backtest_slippage: backtestResults.slippage || (strategyData.slippage * 0.25)  // Convert ticks to points
       };
       
 

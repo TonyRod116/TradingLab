@@ -48,12 +48,6 @@ class StrategyService {
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
     
     try {
-      console.log('🔍 StrategyService - Sending to backend:', normalizedData);
-      console.log('🔍 StrategyService - Normalized data status:', normalizedData.status);
-      console.log('🔍 StrategyService - Normalized data keys:', Object.keys(normalizedData));
-      console.log('🔍 StrategyService - Entry rules:', normalizedData.entry_rules);
-      console.log('🔍 StrategyService - Exit rules:', normalizedData.exit_rules);
-      console.log('🔍 StrategyService - Exit rules length:', normalizedData.exit_rules?.length);
       
       const response = await fetch(`${this.baseURL}/api/strategies/`, {
         method: 'POST',
@@ -96,9 +90,7 @@ class StrategyService {
       }
       
       const result = await response.json();
-      console.log('🔍 StrategyService - Raw response:', result);
       const denormalized = denormalizeStrategy(result);
-      console.log('🔍 StrategyService - Denormalized strategy:', denormalized);
       return denormalized;
       
     } catch (error) {
@@ -196,15 +188,12 @@ class StrategyService {
    * @returns {Promise<Object>} Backtest results
    */
   async runBacktest(strategyId, backtestParams) {
-    console.log('🔍 StrategyService - runBacktest called with strategyId:', strategyId);
-    console.log('🔍 StrategyService - runBacktest params:', backtestParams);
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout for backtest
     
     try {
       const url = `${this.baseURL}/api/strategies/${strategyId}/backtest/`;
-      console.log('🔍 StrategyService - runBacktest URL:', url);
       
       const response = await fetch(url, {
         method: 'POST',
@@ -218,12 +207,8 @@ class StrategyService {
       
       clearTimeout(timeoutId);
       
-      console.log('🔍 StrategyService - runBacktest response status:', response.status);
-      console.log('🔍 StrategyService - runBacktest response ok:', response.ok);
-      
       if (!response.ok) {
         const errorText = await response.text();
-        console.log('🔍 StrategyService - runBacktest error response:', errorText);
       let errorMessage = `Backtest failed: ${response.statusText}`;
       try {
         const errorData = await response.json();

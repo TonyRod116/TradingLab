@@ -34,7 +34,7 @@ const StrategyCreator2 = ({ onStrategyCreated, onBack, template }) => {
     take_profit_type: 'atr',
     take_profit_value: 4.0,
     round_turn_commissions: 4.00,
-    slippage: 0.5
+    slippage: 0.25
   });
   const [rules, setRules] = useState([]);
   
@@ -213,12 +213,9 @@ const StrategyCreator2 = ({ onStrategyCreated, onBack, template }) => {
     const entryRules = rules.filter(rule => rule.section === 'entry');
     const formatted = {};
     
-    console.log('🔍 [DEBUG] Formatting entry rules:', entryRules);
-    
     entryRules.forEach(rule => {
       if (rule.conditions && rule.conditions.length > 0) {
         rule.conditions.forEach(condition => {
-          console.log('🔍 [DEBUG] Processing condition:', condition);
           
           // RSI oversold condition
           if (condition.left_operand === 'rsi' && condition.operator === 'lt' && condition.right_operand === 'rsi_30') {
@@ -250,11 +247,8 @@ const StrategyCreator2 = ({ onStrategyCreated, onBack, template }) => {
     
     // If no specific rules were found, add a default rule to ensure trades are generated
     if (Object.keys(formatted).length === 0) {
-      console.log('🔍 [DEBUG] No specific rules found, adding default rule');
       formatted.rsi_oversold = 30; // Default RSI oversold rule
     }
-    
-    console.log('🔍 [DEBUG] Formatted entry rules:', formatted);
     return formatted;
   }, []);
 
@@ -269,9 +263,6 @@ const StrategyCreator2 = ({ onStrategyCreated, onBack, template }) => {
     
     try {
       // Check authentication status
-      console.log('🔍 [StrategyCreator2] User:', user);
-      console.log('🔍 [StrategyCreator2] Is authenticated:', !!user);
-      console.log('🔍 [StrategyCreator2] Token in localStorage:', localStorage.getItem('access_token'));
       
       // Create temporary strategy for backtest only
       const entryRules = formatEntryRules(rules);
@@ -302,7 +293,6 @@ const StrategyCreator2 = ({ onStrategyCreated, onBack, template }) => {
         take_profit_value: strategyData.take_profit_value
       };
 
-      console.log('🔍 [StrategyCreator2] About to create strategy with payload:', strategyPayload);
       const strategy = await strategyService.createStrategy(strategyPayload);
       tempStrategyId = strategy.id;
       
@@ -318,7 +308,7 @@ const StrategyCreator2 = ({ onStrategyCreated, onBack, template }) => {
         end_date: '2024-12-31T23:59:59Z',
         initial_capital: strategyData.initial_capital,
         commission: strategyData.round_turn_commissions,
-        slippage: strategyData.slippage
+        slippage: strategyData.slippage * 0.25  // Convert ticks to points (1 tick = 0.25 points)
       };
 
       const backtestResults = await strategyService.runBacktest(strategy.id, backtestParams);
@@ -329,6 +319,7 @@ const StrategyCreator2 = ({ onStrategyCreated, onBack, template }) => {
         strategy_id: strategy.id,
         is_temporary: true
       };
+      
       
       setBacktestResults(resultsWithStrategyId);
       
@@ -369,8 +360,9 @@ const StrategyCreator2 = ({ onStrategyCreated, onBack, template }) => {
     if (backtestResults && backtestResults.strategy_id && backtestResults.is_temporary) {
       try {
         await strategyService.deleteStrategy(backtestResults.strategy_id);
+        toast.success('Temporary backtest results discarded');
       } catch (deleteError) {
-        // Ignore delete errors
+        toast.warning('Could not clean up temporary strategy, but results are closed');
       }
     }
     setBacktestResults(null);
@@ -447,7 +439,7 @@ const StrategyCreator2 = ({ onStrategyCreated, onBack, template }) => {
         backtest_start_date: backtestResults.start_date,
         backtest_end_date: backtestResults.end_date,
         backtest_commission: backtestResults.commission || strategyData.round_turn_commissions,
-        backtest_slippage: backtestResults.slippage || strategyData.slippage
+        backtest_slippage: backtestResults.slippage || (strategyData.slippage * 0.25)  // Convert ticks to points
       };
       
       // Update the temporary strategy to make it permanent
