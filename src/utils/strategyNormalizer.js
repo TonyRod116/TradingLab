@@ -67,7 +67,7 @@ export const normalizeStrategyData = (strategyData, rules) => {
     name: strategyData.name || '',
     description: strategyData.description || '',
     symbol: strategyData.symbol || 'ES',
-    timeframe: strategyData.timeframe || '1m',
+    timeframe: strategyData.timeframe || '5m',
     entry_rules: entryRules,
     exit_rules: exitRules,
     stop_loss_type: strategyData.stop_loss_type || 'percentage',
@@ -198,7 +198,7 @@ export const getSupportedEnums = async () => {
     // Return fallback enums
     return {
       symbols: ['ES', 'NQ', 'YM', 'RTY', 'GC', 'SI', 'CL', 'NG'],
-      timeframes: ['1m', '5m', '15m', '30m', '1h', '4h', '1d'],
+      timeframes: ['5m', '15m', '30m', '1h', '4h', '1d'],
       indicators: ['sma_20', 'sma_50', 'ema_20', 'ema_50', 'rsi', 'macd', 'atr'],
       operators: ['gt', 'lt', 'gte', 'lte', 'eq', 'ne', 'cross_up', 'cross_down'],
       stop_loss_types: ['percentage', 'points', 'ticks', 'atr'],

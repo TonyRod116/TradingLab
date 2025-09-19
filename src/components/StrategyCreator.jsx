@@ -25,7 +25,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     name: '',
     description: '',
     symbol: 'ES',
-    timeframe: '1m',
+    timeframe: '5m',
     initial_capital: 100000,
     position_size: 1,
     max_positions: 1,
@@ -595,7 +595,6 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
               value={strategyData.timeframe}
               onChange={handleInputChange}
             >
-              <option value="1m">1 Minute</option>
               <option value="5m">5 Minutes</option>
               <option value="15m">15 Minutes</option>
               <option value="30m">30 Minutes</option>
