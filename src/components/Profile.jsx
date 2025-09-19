@@ -44,45 +44,43 @@ const Profile = () => {
       return;
     }
 
-    if (currentUser) {
-      // Set basic context data first
-      const userProfile = {
-        username: currentUser.username || 'Trader',
-        email: currentUser.email || 'user@example.com',
-        bio: currentUser.bio || 'No bio yet. Click edit to add one!',
-        profile_image: currentUser.profile_image || null,
-        date_joined: currentUser.date_joined || '2024-01-01',
-        strategies_count: currentUser.strategies_count || 0
-      };
-      setProfile(userProfile);
-      
-      // Try to load additional data from backend (optional)
-      const loadProfileData = async () => {
-        try {
-          const token = getToken();
-          if (!token) return;
-          
-          const response = await axios.get(getApiUrl(API_ENDPOINTS.PROFILE), {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          
-          if (response.data) {
-            setProfile(prev => ({
-              ...prev,
-              username: response.data.username || prev.username,
-              bio: response.data.bio || prev.bio,
-              profile_image: response.data.profile_image || prev.profile_image
-            }));
+    // Load real profile data from backend instead of using context data
+    const loadProfileData = async () => {
+      try {
+        const token = getToken();
+        if (!token) return;
+        
+        const response = await axios.get(getApiUrl(API_ENDPOINTS.PROFILE), {
+          headers: {
+            'Authorization': `Bearer ${token}`
           }
-        } catch (error) {
-          // Continue with context data only
+        });
+        
+        if (response.data) {
+          setProfile({
+            username: response.data.username || 'Trader',
+            email: response.data.email || 'user@example.com',
+            bio: response.data.bio || 'No bio yet. Click edit to add one!',
+            profile_image: response.data.profile_image || null,
+            date_joined: response.data.date_joined || '2024-01-01',
+            strategies_count: response.data.strategies_count || 0
+          });
         }
-      };
-      
-      loadProfileData();
-    }
+      } catch (error) {
+        console.error('Error loading profile data:', error);
+        // Fallback to basic data if backend fails
+        setProfile({
+          username: currentUser?.username || 'Trader',
+          email: currentUser?.email || 'user@example.com',
+          bio: 'No bio yet. Click edit to add one!',
+          profile_image: null,
+          date_joined: '2024-01-01',
+          strategies_count: 0
+        });
+      }
+    };
+    
+    loadProfileData();
   }, [currentUser, isAuthenticated, navigate]);
 
   const loadUserStrategies = useCallback(async () => {
@@ -233,7 +231,7 @@ const Profile = () => {
 
       <div className="profile-bio">
         <h3>About</h3>
-        <p>{profile.bio}</p>
+        <p>{profile.bio || 'No bio yet. Click edit to add one!'}</p>
       </div>
     </div>
   );

@@ -38,16 +38,41 @@ class FavoritesService {
    * @returns {Promise<Object>} Response data
    */
   async addToFavorites(strategyId) {
-    // For now, use localStorage until backend endpoints are implemented
     try {
+      const response = await fetch(`${this.baseURL}/api/strategies/${strategyId}/add-favorite/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.getToken()}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Also update localStorage for offline support
       const favorites = this.getLocalFavorites();
       if (!favorites.includes(strategyId)) {
         favorites.push(strategyId);
         localStorage.setItem('user_favorites', JSON.stringify(favorites));
       }
-      return { success: true, strategy_id: strategyId };
+      
+      return data;
     } catch (error) {
-      throw new Error('Failed to add to favorites: ' + error.message);
+      // Fallback to localStorage if backend fails
+      try {
+        const favorites = this.getLocalFavorites();
+        if (!favorites.includes(strategyId)) {
+          favorites.push(strategyId);
+          localStorage.setItem('user_favorites', JSON.stringify(favorites));
+        }
+        return { success: true, strategy_id: strategyId };
+      } catch (fallbackError) {
+        throw new Error('Failed to add to favorites: ' + error.message);
+      }
     }
   }
 
@@ -57,14 +82,37 @@ class FavoritesService {
    * @returns {Promise<Object>} Response data
    */
   async removeFromFavorites(strategyId) {
-    // For now, use localStorage until backend endpoints are implemented
     try {
+      const response = await fetch(`${this.baseURL}/api/strategies/${strategyId}/remove-favorite/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${this.getToken()}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Also update localStorage for offline support
       const favorites = this.getLocalFavorites();
       const updatedFavorites = favorites.filter(id => id !== strategyId);
       localStorage.setItem('user_favorites', JSON.stringify(updatedFavorites));
-      return { success: true };
+      
+      return data;
     } catch (error) {
-      throw new Error('Failed to remove from favorites: ' + error.message);
+      // Fallback to localStorage if backend fails
+      try {
+        const favorites = this.getLocalFavorites();
+        const updatedFavorites = favorites.filter(id => id !== strategyId);
+        localStorage.setItem('user_favorites', JSON.stringify(updatedFavorites));
+        return { success: true };
+      } catch (fallbackError) {
+        throw new Error('Failed to remove from favorites: ' + error.message);
+      }
     }
   }
 
@@ -73,46 +121,65 @@ class FavoritesService {
    * @returns {Promise<Array>} Array of favorite strategies
    */
   async getFavorites() {
-    // For now, use localStorage until backend endpoints are implemented
     try {
-      const favoriteIds = this.getLocalFavorites();
-      
-      if (favoriteIds.length === 0) {
-        return [];
-      }
-      
-      // Get strategy details for each favorite ID
-      const strategies = [];
-      for (const strategyId of favoriteIds) {
-        try {
-          const response = await fetch(`${this.baseURL}/api/strategies/${strategyId}/`, {
-            headers: {
-              'Authorization': `Bearer ${this.getToken()}`
-            }
-          });
-          
-          if (response.ok) {
-            const strategy = await response.json();
-            strategies.push({
-              id: strategyId,
-              strategy_id: strategyId,
-              strategy: strategy,
-              created_at: new Date().toISOString(),
-              favorited_at: new Date().toISOString()
-            });
-          } else if (response.status === 404) {
-            // Strategy no longer exists, remove from favorites
-
-            await this.removeFromFavorites(strategyId);
-          }
-        } catch (error) {
-
+      const response = await fetch(`${this.baseURL}/api/strategies/favorites/`, {
+        headers: {
+          'Authorization': `Bearer ${this.getToken()}`
         }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
       
-      return strategies;
+      if (data.success) {
+        return data.results || [];
+      } else {
+        throw new Error(data.error || 'Failed to load favorites');
+      }
     } catch (error) {
-      throw new Error('Failed to load favorites: ' + error.message);
+      // Fallback to localStorage if backend fails
+      try {
+        const favoriteIds = this.getLocalFavorites();
+        
+        if (favoriteIds.length === 0) {
+          return [];
+        }
+        
+        // Get strategy details for each favorite ID
+        const strategies = [];
+        for (const strategyId of favoriteIds) {
+          try {
+            const response = await fetch(`${this.baseURL}/api/strategies/${strategyId}/`, {
+              headers: {
+                'Authorization': `Bearer ${this.getToken()}`
+              }
+            });
+            
+            if (response.ok) {
+              const strategy = await response.json();
+              strategies.push({
+                id: strategyId,
+                strategy_id: strategyId,
+                strategy: strategy,
+                created_at: new Date().toISOString(),
+                favorited_at: new Date().toISOString()
+              });
+            } else if (response.status === 404) {
+              // Strategy no longer exists, remove from favorites
+              await this.removeFromFavorites(strategyId);
+            }
+          } catch (error) {
+            console.error(`Error loading strategy ${strategyId}:`, error);
+          }
+        }
+        
+        return strategies;
+      } catch (fallbackError) {
+        throw new Error('Failed to load favorites: ' + error.message);
+      }
     }
   }
 
@@ -123,11 +190,27 @@ class FavoritesService {
    */
   async isFavorited(strategyId) {
     try {
-      const favorites = this.getLocalFavorites();
-      return favorites.includes(strategyId);
-    } catch (error) {
+      const response = await fetch(`${this.baseURL}/api/strategies/${strategyId}/check-favorite/`, {
+        headers: {
+          'Authorization': `Bearer ${this.getToken()}`
+        }
+      });
 
-      return false;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.success ? data.is_favorited : false;
+    } catch (error) {
+      // Fallback to localStorage if backend fails
+      try {
+        const favorites = this.getLocalFavorites();
+        return favorites.includes(strategyId);
+      } catch (fallbackError) {
+        console.error('Error checking favorite status:', error);
+        return false;
+      }
     }
   }
 
@@ -139,15 +222,50 @@ class FavoritesService {
    */
   async toggleFavorite(strategyId, currentStatus) {
     try {
-      if (currentStatus) {
-        await this.removeFromFavorites(strategyId);
-        return false;
+      const response = await fetch(`${this.baseURL}/api/strategies/${strategyId}/toggle-favorite/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.getToken()}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Also update localStorage for offline support
+        const favorites = this.getLocalFavorites();
+        if (data.is_favorited) {
+          if (!favorites.includes(strategyId)) {
+            favorites.push(strategyId);
+            localStorage.setItem('user_favorites', JSON.stringify(favorites));
+          }
+        } else {
+          const updatedFavorites = favorites.filter(id => id !== strategyId);
+          localStorage.setItem('user_favorites', JSON.stringify(updatedFavorites));
+        }
+        
+        return data.is_favorited;
       } else {
-        await this.addToFavorites(strategyId);
-        return true;
+        throw new Error(data.error || 'Failed to toggle favorite');
       }
     } catch (error) {
-      throw error;
+      // Fallback to individual add/remove if backend fails
+      try {
+        if (currentStatus) {
+          await this.removeFromFavorites(strategyId);
+          return false;
+        } else {
+          await this.addToFavorites(strategyId);
+          return true;
+        }
+      } catch (fallbackError) {
+        throw error;
+      }
     }
   }
 }

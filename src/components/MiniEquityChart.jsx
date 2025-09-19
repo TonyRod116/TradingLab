@@ -41,33 +41,27 @@ const MiniEquityChart = ({ strategy, height = 60 }) => {
     );
   }
 
-  // Fallback: generate mock data based on metrics
-  const generateMockData = () => {
-    const dataPoints = 20;
+  // Use real equity curve data if available, otherwise show a simple line
+  const getRealData = () => {
+    if (strategy.equity_curve && strategy.equity_curve.length > 0) {
+      return strategy.equity_curve.map((point, index) => ({
+        date: index,
+        value: parseFloat(point.equity || point.equity_value || 0)
+      }));
+    }
+    
+    // If no real data, show a simple line based on total return
     const initialValue = parseFloat(strategy.initial_capital) || 100000;
     const totalReturn = parseFloat(strategy.total_return) || 0;
     const finalValue = initialValue + totalReturn;
     
-
-    
-    const data = [];
-    for (let i = 0; i < dataPoints; i++) {
-      const progress = i / (dataPoints - 1);
-      const volatility = 0.05; // Fixed volatility for mini chart
-      const randomFactor = (Math.random() - 0.5) * volatility;
-      
-      // Linear interpolation with some noise
-      const value = initialValue + (finalValue - initialValue) * progress + randomFactor * initialValue;
-      data.push({
-        date: i,
-        value: Math.max(value, initialValue * 0.1) // Allow low values but not negative
-      });
-    }
-    
-    return data;
+    return [
+      { date: 0, value: initialValue },
+      { date: 1, value: finalValue }
+    ];
   };
 
-  const mockData = generateMockData();
+  const chartData = getRealData();
   const isPositive = (parseFloat(strategy.total_return) || 0) >= 0;
   const lineColor = isPositive ? '#00ff88' : '#ff6b6b';
   
@@ -76,7 +70,7 @@ const MiniEquityChart = ({ strategy, height = 60 }) => {
   return (
     <div className="mini-equity-chart" style={{ height: `${height}px` }}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={mockData}>
+        <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="1 1" stroke="rgba(255,255,255,0.1)" />
           <XAxis hide />
           <YAxis hide />
