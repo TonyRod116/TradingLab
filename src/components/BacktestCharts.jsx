@@ -93,6 +93,12 @@ const EquityCurveChart = ({ trades, equityCurve, initialCapital, startDate, endD
   };
 
   const equityData = calculateEquityCurve();
+  
+  // Determine if strategy is profitable based on final equity vs initial capital
+  const initialCap = parseFloat(initialCapital || 10000);
+  const finalEquity = equityData.length > 0 ? equityData[equityData.length - 1].value : initialCap;
+  const isProfitable = finalEquity > initialCap;
+  const lineColor = isProfitable ? 'var(--color-green)' : '#dc3545'; // Green if profitable, red if losing
 
   return (
     <div className="chart-item equity-chart">
@@ -126,10 +132,10 @@ const EquityCurveChart = ({ trades, equityCurve, initialCapital, startDate, endD
           <Line 
             type="monotone" 
             dataKey="value" 
-            stroke="var(--color-green)" 
+            stroke={lineColor} 
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 4, fill: 'var(--color-green)' }}
+            activeDot={{ r: 4, fill: lineColor }}
           />
         </LineChart>
       </ResponsiveContainer>
