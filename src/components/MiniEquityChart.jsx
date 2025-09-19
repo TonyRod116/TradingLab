@@ -6,7 +6,7 @@ const MiniEquityChart = memo(({ strategy, height = 60 }) => {
   
   // Memoize chart data to prevent unnecessary recalculations
   const chartData = useMemo(() => {
-    // First try to use real equity curve data if available
+    // ONLY use real equity curve data from backtests - NO mock data
     if (strategy.equity_curve && strategy.equity_curve.length > 0) {
       return strategy.equity_curve.map((point, index) => ({
         date: index,
@@ -25,24 +25,25 @@ const MiniEquityChart = memo(({ strategy, height = 60 }) => {
       }
     }
     
-    // If no real data, create a simple line based on total return
-    // This matches exactly what Community Backtests shows
-    const initialValue = parseFloat(strategy.initial_capital) || 100000;
-    const totalReturn = parseFloat(strategy.total_return) || 0;
-    const finalValue = initialValue + totalReturn;
-    
-    // Create a simple 2-point line: start and end
-    return [
-      { date: 0, value: initialValue },
-      { date: 1, value: finalValue }
-    ];
-  }, [strategy.equity_curve, strategy.backtests, strategy.initial_capital, strategy.total_return]);
+    // NO FALLBACK DATA - if no real equity curve, return empty array
+    // This ensures we never show fake data
+    return [];
+  }, [strategy.equity_curve, strategy.backtests]);
 
   // Memoize line color calculation
   const lineColor = useMemo(() => {
     const isPositive = (parseFloat(strategy.total_return) || 0) >= 0;
     return isPositive ? '#00ff88' : '#ff6b6b';
   }, [strategy.total_return]);
+
+  // If no real data, show a placeholder message
+  if (chartData.length === 0) {
+    return (
+      <div className="mini-equity-chart" style={{ height: `${height}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ color: '#666', fontSize: '12px' }}>No equity data</span>
+      </div>
+    );
+  }
 
   return (
     <div className="mini-equity-chart" style={{ height: `${height}px` }}>
