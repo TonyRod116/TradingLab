@@ -5,7 +5,6 @@ import {
   FaPlus, 
   FaRocket, 
   FaCog, 
-  FaLightbulb,
   FaDatabase,
   FaTachometerAlt,
   FaShieldAlt,
@@ -20,7 +19,6 @@ import StrategyList from './StrategyList';
 import FavoritesList from './FavoritesList';
 import StrategyCreator from './StrategyCreator';
 import StrategyTemplates from './StrategyTemplates';
-import NaturalLanguageStrategy from './NaturalLanguageStrategy';
 import RuleBuilder from './RuleBuilder';
 import './Strategies.css';
 
@@ -129,12 +127,6 @@ const Strategies = () => {
           onClick={() => handleTabChange('create-strategy')}
         >
           <FaCog /> Create Strategy
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'natural-language' ? 'active' : ''}`}
-          onClick={() => handleTabChange('natural-language')}
-        >
-          <FaLightbulb /> Natural Language
         </button>
       </div>
 

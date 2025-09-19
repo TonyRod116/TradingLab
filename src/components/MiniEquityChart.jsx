@@ -1,18 +1,28 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from 'recharts';
 import './MiniEquityChart.css';
 
-const MiniEquityChart = ({ strategy, height = 60 }) => {
+const MiniEquityChart = memo(({ strategy, height = 60 }) => {
+  
+  // Memoize chart data to prevent unnecessary recalculations
+  const chartData = useMemo(() => {
+    if (strategy.equity_curve && strategy.equity_curve.length > 0) {
+      return strategy.equity_curve.map(point => ({
+        date: new Date(point.timestamp).getTime(),
+        value: parseFloat(point.equity_value)
+      }));
+    }
+    return null;
+  }, [strategy.equity_curve]);
+
+  // Memoize line color calculation
+  const lineColor = useMemo(() => {
+    const isPositive = strategy.total_return >= 0;
+    return isPositive ? '#00ff88' : '#ff6b6b';
+  }, [strategy.total_return]);
   
   // If we have equity curve data from backend, use it
-  if (strategy.equity_curve && strategy.equity_curve.length > 0) {
-    const chartData = strategy.equity_curve.map(point => ({
-      date: new Date(point.timestamp).getTime(),
-      value: parseFloat(point.equity_value)
-    }));
-
-    const isPositive = strategy.total_return >= 0;
-    const lineColor = isPositive ? '#00ff88' : '#ff6b6b';
+  if (chartData) {
 
     return (
       <div className="mini-equity-chart" style={{ height: `${height}px` }}>
@@ -86,6 +96,8 @@ const MiniEquityChart = ({ strategy, height = 60 }) => {
       </ResponsiveContainer>
     </div>
   );
-};
+});
+
+MiniEquityChart.displayName = 'MiniEquityChart';
 
 export default MiniEquityChart;

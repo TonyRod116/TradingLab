@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { FaBookmark, FaTrash, FaEye, FaChartLine } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -109,7 +109,7 @@ const FavoritesList = () => {
       .trim(); // Remove leading/trailing spaces
   };
 
-  const formatMetric = (value, isPercentage = false, decimals = 2) => {
+  const formatMetric = useCallback((value, isPercentage = false, decimals = 2) => {
     if (value === null || value === undefined) return 'N/A';
     const numValue = parseFloat(value);
     if (isNaN(numValue)) return 'N/A';
@@ -118,7 +118,96 @@ const FavoritesList = () => {
       return `${numValue.toFixed(decimals)}%`;
     }
     return numValue.toFixed(decimals);
-  };
+  }, []);
+
+  // Memoize the strategy card component to prevent unnecessary re-renders
+  const StrategyCard = useMemo(() => {
+    return React.memo(({ strategy }) => {
+      const strategyId = strategy.id;
+      
+      return (
+        <div key={strategyId} className="favorite-card" onClick={() => handleStrategyClick(strategyId)}>
+          {/* Mini Equity Chart */}
+          <div className="strategy-chart">
+            <MiniEquityChart strategy={strategy} height={80} />
+          </div>
+
+          <div className="strategy-header">
+            <div className="strategy-info">
+              <h3>{cleanStrategyName(strategy.name)}</h3>
+              <p>{strategy.description}</p>
+              <div className="strategy-meta">
+                <span className="created-by">by {strategy.created_by || 'Unknown User'}</span>
+                <span className="symbol">{strategy.symbol}</span>
+                <span className="timeframe">{strategy.timeframe}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="strategy-stats">
+            <div className="stat-item">
+              <span className="stat-label">Win Rate</span>
+              <span className="stat-value">
+                {(() => {
+                  const winRate = strategy.win_rate;
+                  if (winRate === null || winRate === undefined) {
+                    return 'N/A';
+                  }
+                  return formatMetric(winRate, true, 1);
+                })()}
+              </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Trades</span>
+              <span className="stat-value">{strategy.total_trades || 'N/A'}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Profit Factor</span>
+              <span className="stat-value">{formatMetric(strategy.profit_factor, false, 2)}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Return</span>
+              <span className="stat-value">
+                {(() => {
+                  const returnPercent = strategy.total_return_percent;
+                  if (returnPercent === null || returnPercent === undefined) {
+                    return 'N/A';
+                  }
+                  const formatted = formatMetric(returnPercent, true, 1);
+                  const isPositive = parseFloat(returnPercent) > 0;
+                  return (
+                    <span className={isPositive ? 'positive' : 'negative'}>
+                      {formatted}
+                    </span>
+                  );
+                })()}
+              </span>
+            </div>
+          </div>
+
+          <div className="strategy-actions">
+            <button
+              className="action-btn view-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleStrategyClick(strategyId);
+              }}
+              title="View Details"
+            >
+              <FaEye />
+            </button>
+            <button
+              className="action-btn remove-btn"
+              onClick={(e) => handleRemoveFavorite(strategyId, strategy.name, e)}
+              title="Remove from Favorites"
+            >
+              <FaTrash />
+            </button>
+          </div>
+        </div>
+      );
+    });
+  }, [cleanStrategyName, formatMetric, handleStrategyClick, handleRemoveFavorite]);
 
   if (loading) {
     return (
@@ -166,80 +255,9 @@ const FavoritesList = () => {
       </div>
 
       <div className="favorites-grid">
-        {favorites.map((strategy) => {
-          // Now favorites is directly an array of strategies (same format as Community Backtests)
-          const strategyId = strategy.id;
-          
-          return (
-            <div key={strategyId} className="favorite-card" onClick={() => handleStrategyClick(strategyId)}>
-              {/* Mini Equity Chart */}
-              <div className="strategy-chart">
-                <MiniEquityChart strategy={strategy} height={80} />
-              </div>
-
-              <div className="strategy-header">
-                <div className="strategy-info">
-                  <h3>{cleanStrategyName(strategy.name)}</h3>
-                  <p>{strategy.description}</p>
-                  <div className="strategy-meta">
-                    <span className="created-by">by {strategy.created_by || 'Unknown User'}</span>
-                    <span className="symbol">{strategy.symbol}</span>
-                    <span className="timeframe">{strategy.timeframe}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="strategy-stats">
-                <div className="stat-item">
-                  <span className="stat-label">Win Rate</span>
-                  <span className="stat-value">
-                    {(() => {
-                      const winRate = strategy.win_rate;
-                      if (winRate === null || winRate === undefined) {
-                        return 'N/A';
-                      }
-                      const parsedWinRate = parseFloat(winRate);
-                      if (isNaN(parsedWinRate) || parsedWinRate < 0 || parsedWinRate > 100) {
-                        return 'N/A';
-                      }
-                      return parsedWinRate.toFixed(2) + '%';
-                    })()}
-                  </span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Total Trades</span>
-                  <span className="stat-value">{strategy.total_trades || 'N/A'}</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Profit Factor</span>
-                  <span className="stat-value">{strategy.profit_factor !== null && strategy.profit_factor !== undefined ? parseFloat(strategy.profit_factor).toFixed(2) : '0.00'}</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Total Return</span>
-                  <span className="stat-value">{strategy.total_return_percent ? parseFloat(strategy.total_return_percent).toFixed(2) : 'N/A'}%</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Max Drawdown</span>
-                  <span className="stat-value">{strategy.max_drawdown ? parseFloat(strategy.max_drawdown).toFixed(2) : 'N/A'}%</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Sharpe Ratio</span>
-                  <span className="stat-value">{strategy.sharpe_ratio ? parseFloat(strategy.sharpe_ratio).toFixed(2) : 'N/A'}</span>
-                </div>
-              </div>
-
-              <div className="strategy-actions">
-                <button
-                  className="action-button remove-favorite"
-                  onClick={(e) => handleRemoveFavorite(strategyId, cleanStrategyName(strategy.name), e)}
-                  title="Remove from favorites"
-                >
-                  <FaTrash />
-                </button>
-              </div>
-            </div>
-          );
-        })}
+        {favorites.map((strategy) => (
+          <StrategyCard key={strategy.id} strategy={strategy} />
+        ))}
       </div>
       
       <ConfirmDialog
