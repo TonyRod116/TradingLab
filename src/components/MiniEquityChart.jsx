@@ -6,7 +6,7 @@ const MiniEquityChart = memo(({ strategy, height = 60 }) => {
   
   // Memoize chart data to prevent unnecessary recalculations
   const chartData = useMemo(() => {
-    // First try to use real equity curve data
+    // First try to use real equity curve data if available
     if (strategy.equity_curve && strategy.equity_curve.length > 0) {
       return strategy.equity_curve.map((point, index) => ({
         date: index,
@@ -25,56 +25,18 @@ const MiniEquityChart = memo(({ strategy, height = 60 }) => {
       }
     }
     
-    // If no real data, generate a realistic equity curve based on performance
+    // If no real data, create a simple line based on total return
+    // This matches exactly what Community Backtests shows
     const initialValue = parseFloat(strategy.initial_capital) || 100000;
     const totalReturn = parseFloat(strategy.total_return) || 0;
-    const totalReturnPercent = parseFloat(strategy.total_return_percent) || 0;
-    const winRate = parseFloat(strategy.win_rate) || 0;
-    const totalTrades = parseInt(strategy.total_trades) || 10;
-    const profitFactor = parseFloat(strategy.profit_factor) || 1.0;
-    
-    // Generate realistic equity curve with some volatility
-    const dataPoints = Math.min(Math.max(totalTrades, 5), 15); // Between 5-15 points
     const finalValue = initialValue + totalReturn;
-    const equityCurve = [];
     
-    // Create a more realistic curve based on strategy performance
-    for (let i = 0; i <= dataPoints; i++) {
-      const progress = i / dataPoints;
-      let baseValue = initialValue + (totalReturn * progress);
-      
-      // Add realistic volatility based on win rate and profit factor
-      const volatility = Math.min(winRate / 100, 0.3); // Max 30% volatility
-      const randomFactor = 1 + (Math.random() - 0.5) * volatility;
-      
-      // Add some trend variation based on profit factor
-      const trendVariation = (profitFactor - 1) * 0.1; // Profit factor influence
-      const trendFactor = 1 + (Math.random() - 0.5) * trendVariation;
-      
-      // Combine factors
-      const finalValue = baseValue * randomFactor * trendFactor;
-      
-      // Ensure we don't go below 50% of initial or above 300% of initial
-      const minValue = initialValue * 0.5;
-      const maxValue = initialValue * 3.0;
-      
-      equityCurve.push({
-        date: i,
-        value: Math.max(minValue, Math.min(maxValue, finalValue))
-      });
-    }
-    
-    return equityCurve;
-  }, [
-    strategy.equity_curve, 
-    strategy.backtests, 
-    strategy.initial_capital, 
-    strategy.total_return, 
-    strategy.total_return_percent, 
-    strategy.win_rate, 
-    strategy.total_trades,
-    strategy.profit_factor
-  ]);
+    // Create a simple 2-point line: start and end
+    return [
+      { date: 0, value: initialValue },
+      { date: 1, value: finalValue }
+    ];
+  }, [strategy.equity_curve, strategy.backtests, strategy.initial_capital, strategy.total_return]);
 
   // Memoize line color calculation
   const lineColor = useMemo(() => {
