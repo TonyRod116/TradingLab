@@ -12,6 +12,7 @@ const Login = () => {
     password: ''
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
@@ -30,29 +31,31 @@ const Login = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (error) {
+      setError('');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError(''); // Clear previous errors
 
     const result = await login(formData.identifier, formData.password);
     
-      if (result.success) {
-        toast.success(`Welcome back, ${user?.username || 'Trader'}!`, {
-          position: "top-right",
-          autoClose: 2000,
-        });
-        
-        // Use window.location.href for guaranteed redirect
-        setTimeout(() => {
-          window.location.href = result.redirectTo || '/strategies';
-        }, 200);
-      } else {
-      toast.error(result.error, {
+    if (result.success) {
+      toast.success(`Welcome back, ${user?.username || 'Trader'}!`, {
         position: "top-right",
-        autoClose: 4000,
+        autoClose: 2000,
       });
+      
+      // Use window.location.href for guaranteed redirect
+      setTimeout(() => {
+        window.location.href = result.redirectTo || '/strategies';
+      }, 200);
+    } else {
+      setError(result.error);
     }
     
     setLoading(false);
@@ -88,6 +91,12 @@ const Login = () => {
 
         
         <form className="auth-form" onSubmit={handleSubmit}>
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+          
           <div className="form-group">
             <label htmlFor="identifier">Username</label>
             <input

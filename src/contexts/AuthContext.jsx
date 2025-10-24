@@ -56,7 +56,11 @@ export function AuthProvider({ children }) {
     const responseInterceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response?.status === 401) {
+        // Don't auto-logout during login/signup attempts
+        const isAuthEndpoint = error.config?.url?.includes('/auth/login/') || 
+                              error.config?.url?.includes('/api/users/signup/');
+        
+        if (error.response?.status === 401 && !isAuthEndpoint) {
           logout();
         }
         return Promise.reject(error);

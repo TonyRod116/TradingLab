@@ -13,6 +13,7 @@ const Signup = () => {
     confirmPassword: ''
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   
   const { signup, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
@@ -31,18 +32,20 @@ const Signup = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (error) {
+      setError('');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError(''); // Clear previous errors
 
     // Validate password confirmation
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match', {
-        position: "top-right",
-        autoClose: 4000,
-      });
+      setError('Passwords do not match');
       setLoading(false);
       return;
     }
@@ -62,10 +65,7 @@ const Signup = () => {
       // Use window.location.href for guaranteed redirect - more reliable than navigate()
       window.location.href = result.redirectTo || '/strategies';
     } else {
-      toast.error(result.error, {
-        position: "top-right",
-        autoClose: 4000,
-      });
+      setError(result.error);
     }
     
     setLoading(false);
@@ -103,6 +103,12 @@ const Signup = () => {
 
         
         <form className="auth-form" onSubmit={handleSubmit}>
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+          
           <div className="form-group">
             <label htmlFor="username">Username</label>
             <input
