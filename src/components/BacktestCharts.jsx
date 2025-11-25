@@ -7,11 +7,11 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
-  BarChart, 
-  Bar, 
   AreaChart, 
   Area,
-  ComposedChart
+  ComposedChart,
+  BarChart,
+  Bar
 } from 'recharts';
 import { FaChartLine, FaSpinner } from 'react-icons/fa';
 import './BacktestCharts.css';
@@ -61,9 +61,7 @@ const BacktestCharts = ({ backtestData: propBacktestData, trades: propTrades, eq
           startDate={backtestData.start_date}
           endDate={backtestData.end_date}
         />
-        
-        <TradesChart trades={trades} />
-        
+
         <WinLossChart trades={trades} />
       </div>
     </div>
@@ -221,57 +219,6 @@ const DrawdownChart = ({ trades, equityCurve, initialCapital }) => {
             strokeWidth={2}
           />
         </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  );
-};
-
-// Trades Chart (P&L per trade)
-const TradesChart = ({ trades }) => {
-  // Limit to first 50 trades to prevent performance issues
-  const limitedTrades = trades.slice(0, 50);
-  
-  const tradesData = limitedTrades.map((trade, index) => ({
-    trade_id: index + 1,
-    pnl: parseFloat(trade.net_pnl || 0),
-    is_winning: parseFloat(trade.net_pnl || 0) > 0
-  }));
-
-  return (
-    <div className="chart-item trades-chart">
-      <h4>P&L per Trade</h4>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={tradesData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-          <XAxis 
-            dataKey="trade_id" 
-            stroke="var(--color-text-secondary)"
-            fontSize={12}
-          />
-          <YAxis 
-            stroke="var(--color-text-secondary)"
-            fontSize={12}
-            tickFormatter={(value) => `$${value.toFixed(0)}`}
-          />
-          <Tooltip 
-            contentStyle={{
-              backgroundColor: 'rgba(0,0,0,0.8)',
-              border: '1px solid var(--color-green)',
-              borderRadius: '8px',
-              color: 'var(--color-white)'
-            }}
-            formatter={(value, name) => [
-              `$${value.toFixed(2)}`,
-              'Net P&L'
-            ]}
-            labelFormatter={(label) => `Trade ${label}`}
-          />
-          <Bar 
-            dataKey="pnl" 
-            fill="var(--color-green)"
-            radius={[2, 2, 0, 0]}
-          />
-        </BarChart>
       </ResponsiveContainer>
     </div>
   );

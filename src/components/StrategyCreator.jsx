@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import SimpleRuleBuilder from './SimpleRuleBuilder';
 import BacktestResults from './BacktestResults';
 import strategyService from '../services/StrategyService';
+import { normalizeStrategyData } from '../utils/strategyNormalizer';
 import './StrategyCreator.css';
 
 // Helper function to truncate error messages for better UX
@@ -313,6 +314,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     if (!validateStrategy()) {
       return;
     }
+    console.log('[StrategyCreator] handleRunBacktest - starting', { strategyData, rules });
     setLoading(true);
     setLoadingMessage('Running backtest... This may take up to 5 minutes for complex strategies.');
     
@@ -331,6 +333,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         exitRules.time_based = true;
       }
       
+      console.log('[StrategyCreator] handleRunBacktest - formatted rules', { entryRules, exitRules });
       // Add timestamp to name to avoid duplicates
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
       const tempName = `temp_backtest_${Date.now()}_${timestamp}`;
@@ -355,8 +358,10 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       strategyPayload.status = 'READY';
 
       
+      console.log('[StrategyCreator] handleRunBacktest - strategy payload', strategyPayload);
       const strategy = await strategyService.createStrategy(strategyPayload, rules);
       tempStrategyId = strategy.id;
+      console.log('[StrategyCreator] handleRunBacktest - temp strategy created', strategy);
       
       // Show success toast when strategy is created and backtest starts
       toast.success('Starting backtest calculation...', {
@@ -372,8 +377,10 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         commission: strategyData.round_turn_commissions,
         slippage: strategyData.slippage * 0.25  // Convert ticks to points (1 tick = 0.25 points)
       };
+      console.log('[StrategyCreator] handleRunBacktest - backtest params', backtestParams);
 
       const backtestResults = await strategyService.runBacktest(strategy.id, backtestParams);
+      console.log('[StrategyCreator] handleRunBacktest - backtest results', backtestResults);
       
       // Add strategy_id to results so we can update it later
       const resultsWithStrategyId = {
@@ -393,6 +400,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       
     } catch (error) {
       // Backtest error
+      console.error('[StrategyCreator] handleRunBacktest - error', error);
       
       // Clean up temporary strategy if it was created
       if (tempStrategyId) {
@@ -434,6 +442,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
     if (!backtestResults) return;
     
     try {
+      console.log('[StrategyCreator] handleSaveResults - start', { backtestResults, strategyData, rules });
       // Create the strategy for the first time when user clicks Save
       // Add timestamp to avoid name conflicts
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
@@ -468,52 +477,23 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
       const largestWin = winningTrades.length > 0 ? Math.max(...winningTrades.map(trade => trade.pnl)) : 0;
       const largestLoss = losingTrades.length > 0 ? Math.min(...losingTrades.map(trade => trade.pnl)) : 0;
       
-      const completeStrategyData = {
-        name: finalName,
-        description: strategyData.description,
-        symbol: strategyData.symbol,
-        timeframe: strategyData.timeframe,
-        initial_capital: strategyData.initial_capital,
-        entry_rules: entryRules,
-        exit_rules: exitRules,
-        stop_loss_type: strategyData.stop_loss_type,
-        stop_loss_value: strategyData.stop_loss_value,
-        take_profit_type: strategyData.take_profit_type,
-        take_profit_value: strategyData.take_profit_value,
-        // Detailed backtest metrics
-        total_return: performance.total_return || 0,
-        total_return_percent: performance.total_return_percent || 0,
-        total_trades: performance.total_trades || trades.length,
-        winning_trades: performance.winning_trades || winningTrades.length,
-        losing_trades: performance.losing_trades || losingTrades.length,
-        win_rate: performance.win_rate || (trades.length > 0 ? (winningTrades.length / trades.length) * 100 : 0),
-        profit_factor: performance.profit_factor || 0,
-        sharpe_ratio: performance.sharpe_ratio || 0,
-        max_drawdown: performance.max_drawdown || 0,
-        max_drawdown_percent: performance.max_drawdown_percent || 0,
-        avg_win: avgWin,
-        avg_loss: avgLoss,
-        largest_win: largestWin,
-        largest_loss: largestLoss,
-        final_capital: backtestResults.final_capital || (backtestResults.initial_capital + (performance.total_return || 0)),
-        // Additional metrics
-        sortino_ratio: performance.sortino_ratio || 0,
-        calmar_ratio: performance.calmar_ratio || 0,
-        volatility: performance.volatility || 0,
-        max_consecutive_wins: performance.max_consecutive_wins || 0,
-        max_consecutive_losses: performance.max_consecutive_losses || 0,
-        avg_trade_duration: performance.avg_trade_duration || 0,
-        // Backtest metadata
-        backtest_start_date: backtestResults.start_date,
-        backtest_end_date: backtestResults.end_date,
-        backtest_commission: backtestResults.commission || strategyData.round_turn_commissions,
-        backtest_slippage: backtestResults.slippage || (strategyData.slippage * 0.25)  // Convert ticks to points
-      };
+      const normalizedPayload = normalizeStrategyData(
+        {
+          ...strategyData,
+          name: finalName,
+          stop_loss_value: strategyData.stop_loss_value,
+          take_profit_value: strategyData.take_profit_value,
+        },
+        rules
+      );
+      normalizedPayload.status = 'READY';
+      console.log('[StrategyCreator] handleSaveResults - payload', normalizedPayload);
       
-
+      
       
       // Update the temporary strategy to make it permanent
-      const updatedStrategy = await strategyService.updateStrategy(backtestResults.strategy_id, completeStrategyData);
+      const updatedStrategy = await strategyService.updateStrategy(backtestResults.strategy_id, normalizedPayload);
+      console.log('[StrategyCreator] handleSaveResults - update response', updatedStrategy);
       
       toast.success('Strategy saved successfully! Redirecting to your profile...');
       
@@ -541,6 +521,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         errorMessage += `: ${error.message}`;
       }
       
+      console.error('[StrategyCreator] handleSaveResults - error', error);
       toast.error(`Failed to save strategy: ${truncateError(errorMessage)}`, {
         position: "top-right",
         autoClose: 4000,
@@ -1044,7 +1025,7 @@ const StrategyCreator = ({ onStrategyCreated, onBack, template }) => {
         <BacktestResults 
           results={backtestResults} 
           onClose={handleCloseBacktestResults}
-          onSave={handleSaveResults}
+          onSaveStrategy={handleSaveResults}
         />
       )}
     </>

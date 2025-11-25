@@ -14,6 +14,7 @@ import About from './components/About.jsx'
 import Pricing from './components/Pricing.jsx'
 import Strategies from './components/Strategies.jsx'
 import BacktestDetails from './components/BacktestDetails.jsx'
+import StrategyCreatorV2 from './components/StrategyCreatorV2.jsx'
 
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import './index.css'
@@ -32,6 +33,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/about" element={<About />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/strategies" element={<Strategies />} />
+          <Route path="/create-strategy-v2" element={<StrategyCreatorV2 />} />
 
           <Route path="/backtest/:strategyId" element={<BacktestDetails />} />
         </Routes>

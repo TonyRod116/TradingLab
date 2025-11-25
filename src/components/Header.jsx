@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,13 +6,41 @@ import './Header.css';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isCompactHeader, setIsCompactHeader] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 1024;
+  });
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
 
   const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+    if (!isCompactHeader) return;
+    setIsMenuOpen((prev) => !prev);
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleResize = () => {
+      setIsCompactHeader(window.innerWidth <= 1024);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isCompactHeader && isMenuOpen) {
+      setIsMenuOpen(false);
+    }
+  }, [isCompactHeader, isMenuOpen]);
 
   const handleLogin = () => {
     navigate('/users/login/');
@@ -79,51 +107,8 @@ const Header = () => {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="nav-desktop">
-          <Link to="/features" className={getActiveClass('/features')}>
-            Features
-          </Link>
-          <Link to="/about" className={getActiveClass('/about')}>
-            About
-          </Link>
-          <Link to="/pricing" className={getActiveClass('/pricing')}>
-            Pricing
-          </Link>
-          {isAuthenticated && (
-            <Link to="/strategies" className={getActiveClass('/strategies')}>
-              Strategies
-            </Link>
-          )}
-        </nav>
-
-        {/* Auth Buttons */}
-        <div className="auth-buttons">
-          {isAuthenticated ? (
-            <>
-              <button 
-                className={getProfileActiveClass()}
-                onClick={() => navigate(`/users/profile/${user?.id}`)}
-              >
-                Profile
-              </button>
-              <button className="btn btn-logout" onClick={handleLogout}>Logout</button>
-            </>
-          ) : (
-            <>
-              <button className="btn btn-login" onClick={handleLogin}>Login</button>
-              <button className="btn btn-signup" onClick={handleSignup}>Sign Up</button>
-            </>
-          )}
-        </div>
-
-        {/* Mobile Menu Toggle */}
-        <button className="menu-toggle" onClick={toggleMenu}>
-          <span className={`hamburger ${isMenuOpen ? 'open' : ''}`}></span>
-        </button>
-
-        {/* Mobile Menu */}
-        <div className={`mobile-menu ${isMenuOpen ? 'open' : ''}`}>
-          <nav className="nav-mobile">
+        {!isCompactHeader && (
+          <nav className="nav-desktop">
             <Link to="/features" className={getActiveClass('/features')}>
               Features
             </Link>
@@ -139,11 +124,15 @@ const Header = () => {
               </Link>
             )}
           </nav>
-          <div className="auth-buttons-mobile">
+        )}
+
+        {/* Auth Buttons */}
+        {!isCompactHeader && (
+          <div className="auth-buttons">
             {isAuthenticated ? (
               <>
                 <button 
-                  className={getProfileActiveClass()} 
+                  className={getProfileActiveClass()}
                   onClick={() => navigate(`/users/profile/${user?.id}`)}
                 >
                   Profile
@@ -157,7 +146,66 @@ const Header = () => {
               </>
             )}
           </div>
-        </div>
+        )}
+
+        {/* Mobile Menu Toggle */}
+        {isCompactHeader && (
+          <button className="menu-toggle" onClick={toggleMenu} aria-label="Toggle navigation">
+            <span className={`hamburger ${isMenuOpen ? 'open' : ''}`}></span>
+          </button>
+        )}
+
+        {/* Mobile Menu */}
+        {isCompactHeader && (
+          <div className={`mobile-menu ${isMenuOpen ? 'open' : ''}`}>
+            <nav className="nav-mobile">
+              <Link to="/features" className={getActiveClass('/features')} onClick={toggleMenu}>
+                Features
+              </Link>
+              <Link to="/about" className={getActiveClass('/about')} onClick={toggleMenu}>
+                About
+              </Link>
+              <Link to="/pricing" className={getActiveClass('/pricing')} onClick={toggleMenu}>
+                Pricing
+              </Link>
+              {isAuthenticated && (
+                <Link to="/strategies" className={getActiveClass('/strategies')} onClick={toggleMenu}>
+                  Strategies
+                </Link>
+              )}
+            </nav>
+            <div className="auth-buttons-mobile">
+              {isAuthenticated ? (
+                <>
+                  <button 
+                    className={getProfileActiveClass()} 
+                    onClick={() => {
+                      toggleMenu();
+                      navigate(`/users/profile/${user?.id}`);
+                    }}
+                  >
+                    Profile
+                  </button>
+                  <button className="btn btn-logout" onClick={() => {
+                    toggleMenu();
+                    handleLogout();
+                  }}>Logout</button>
+                </>
+              ) : (
+                <>
+                  <button className="btn btn-login" onClick={() => {
+                    toggleMenu();
+                    handleLogin();
+                  }}>Login</button>
+                  <button className="btn btn-signup" onClick={() => {
+                    toggleMenu();
+                    handleSignup();
+                  }}>Sign Up</button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

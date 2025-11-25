@@ -107,7 +107,8 @@
   gap: 0.75rem;
 }
 
-.auth-buttons .btn {
+.auth-buttons .btn,
+.auth-buttons-mobile .btn {
   padding: 0.5rem 1rem !important;
   border-radius: 6px !important;
   font-weight: 600 !important;
@@ -119,63 +120,72 @@
   max-width: 100px !important;
 }
 
-.auth-buttons .btn-login {
+.auth-buttons .btn-login,
+.auth-buttons-mobile .btn-login {
   background: transparent !important;
   color: var(--color-green) !important;
   border: 2px solid var(--color-green) !important;
   width: 100px !important;
 }
 
-.auth-buttons .btn-login:hover {
+.auth-buttons .btn-login:hover,
+.auth-buttons-mobile .btn-login:hover {
   background: var(--color-green);
   color: var(--color-black);
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
 }
 
-.auth-buttons .btn-signup {
+.auth-buttons .btn-signup,
+.auth-buttons-mobile .btn-signup {
   background: var(--color-green) !important;
   color: var(--color-black) !important;
   border: 2px solid var(--color-green) !important;
   width: 100px !important;
 }
 
-.auth-buttons .btn-signup:hover {
+.auth-buttons .btn-signup:hover,
+.auth-buttons-mobile .btn-signup:hover {
   background: var(--color-green-bright);
   border-color: var(--color-green-bright);
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 255, 136, 0.4);
 }
 
-.auth-buttons .btn-profile {
+.auth-buttons .btn-profile,
+.auth-buttons-mobile .btn-profile {
   background: transparent !important;
   color: var(--color-green) !important;
   border: 2px solid var(--color-green) !important;
   width: 100px !important;
 }
 
-.auth-buttons .btn-profile:hover {
+.auth-buttons .btn-profile:hover,
+.auth-buttons-mobile .btn-profile:hover {
   background: var(--color-green);
   color: var(--color-black);
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
 }
 
-.auth-buttons .btn-profile.active {
+.auth-buttons .btn-profile.active,
+.auth-buttons-mobile .btn-profile.active {
   background: var(--color-green) !important;
   color: var(--color-black) !important;
   border: 2px solid var(--color-green) !important;
   box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3) !important;
 }
 
-.auth-buttons .btn-logout {
+.auth-buttons .btn-logout,
+.auth-buttons-mobile .btn-logout {
   background: transparent !important;
   color: #ff6b6b !important;
   border: 2px solid #ff6b6b !important;
   width: 100px !important;
 }
 
-.auth-buttons .btn-logout:hover {
+.auth-buttons .btn-logout:hover,
+.auth-buttons-mobile .btn-logout:hover {
   background: #ff6b6b;
   color: var(--color-white);
   transform: translateY(-2px);
@@ -237,19 +247,25 @@
   display: none;
   position: absolute;
   top: 100%;
-  left: 0;
-  right: 0;
-  width: 100vw;
+  right: 1rem;
+  left: auto;
+  width: max-content;
+  max-width: 90vw;
   background: rgba(0, 0, 0, 0.98);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--color-green);
-  padding: 2rem;
+  border: 1px solid var(--color-green);
+  border-top: none;
+  padding: 1.5rem;
   transform: translateY(-100%);
   opacity: 0;
   transition: all 0.3s ease;
+  text-align: right;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+  border-radius: 0 0 16px 16px;
 }
 
 .mobile-menu.open {
+  display: block;
   transform: translateY(0);
   opacity: 1;
 }
@@ -259,54 +275,35 @@
   flex-direction: column;
   gap: 1.5rem;
   margin-bottom: 2rem;
+  align-items: flex-end;
+  text-align: right;
 }
 
 .auth-buttons-mobile {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  align-items: center;
-}
-
-.auth-buttons-mobile .btn {
-  padding: 0.5rem 1rem !important;
-  border-radius: 6px !important;
-  font-weight: 600 !important;
-  font-size: 0.8rem !important;
-  transition: all 0.3s ease !important;
-  width: 100px !important;
-  text-align: center !important;
-  min-width: 100px !important;
-  max-width: 100px !important;
-}
-
-.auth-buttons-mobile .user-welcome {
-  text-align: center;
-  margin-bottom: 1rem;
+  align-items: flex-end;
 }
 
 /* Responsive design */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  .header-container {
+    padding: 0 1.25rem;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
   .nav-desktop,
   .auth-buttons {
     display: none;
   }
-  
-  .menu-toggle {
-    display: block;
-  }
-  
-  .mobile-menu {
-    display: block;
-  }
-  
-  .header-container {
-    padding: 0 1rem;
-  }
 }
 
-@media (min-width: 769px) {
-  .mobile-menu {
+@media (min-width: 1025px) {
+  .menu-toggle {
     display: none;
   }
 }

@@ -1,0 +1,200 @@
+.date-range-selector {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-light-gray);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+}
+
+.date-range-selector.loading,
+.date-range-selector.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  color: var(--color-text-secondary);
+}
+
+.date-range-selector.loading .spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.selector-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  color: var(--color-white);
+}
+
+.selector-header svg {
+  color: var(--color-green);
+  font-size: 1.25rem;
+}
+
+.selector-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.preset-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.preset-button {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-light-gray);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.preset-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--color-green);
+}
+
+.preset-button.active {
+  background: var(--color-green);
+  border-color: var(--color-green);
+  color: var(--color-black);
+  font-weight: 600;
+}
+
+.custom-date-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.date-input-group label {
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.date-input-group input[type="date"] {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-light-gray);
+  border-radius: 6px;
+  color: var(--color-white);
+  font-size: 0.95rem;
+}
+
+.date-input-group input[type="date"]:focus {
+  outline: none;
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+}
+
+.available-range-info {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.available-range-info small {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.estimation-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: rgba(0, 255, 136, 0.05);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.estimation-info.warning-medium {
+  background: rgba(255, 165, 0, 0.05);
+  border-color: rgba(255, 165, 0, 0.3);
+}
+
+.estimation-info.warning-high {
+  background: rgba(255, 0, 0, 0.05);
+  border-color: rgba(255, 0, 0, 0.3);
+}
+
+.estimation-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  color: var(--color-text);
+}
+
+.estimation-label {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.estimation-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-white);
+}
+
+.estimation-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 165, 0, 0.1);
+  border-radius: 6px;
+  color: #ffb84d;
+  font-size: 0.85rem;
+}
+
+.estimation-info.warning-high .estimation-warning {
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff6b6b;
+}
+
+.estimation-warning svg {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .preset-buttons {
+    flex-direction: column;
+  }
+
+  .preset-button {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .custom-date-inputs {
+    grid-template-columns: 1fr;
+  }
+}
+

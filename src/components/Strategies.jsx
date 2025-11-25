@@ -36,12 +36,9 @@ const Strategies = () => {
     try {
       let response;
       
-      if (activeTab === 'my-strategies') {
-        // For Community Backtests tab, always use community endpoint
-        response = await fetch(`${getApiUrl(API_ENDPOINTS.STRATEGIES)}community/`);
-      } else if (isAuthenticated) {
-        // For other tabs, use main endpoint for authenticated users
-        const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('access_token');
+
+      if (activeTab === 'my-strategies' && isAuthenticated) {
         response = await fetch(`${getApiUrl(API_ENDPOINTS.STRATEGIES)}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -49,7 +46,7 @@ const Strategies = () => {
           }
         });
       } else {
-        // Use community endpoint for unauthenticated users
+        // Fallback to community strategies (for unauthenticated users or other tabs that don't need private data)
         response = await fetch(`${getApiUrl(API_ENDPOINTS.STRATEGIES)}community/`);
       }
       

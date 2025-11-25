@@ -1,25 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FaBookmark, FaTrash, FaEye, FaChartLine } from 'react-icons/fa';
+import { FaBookmark } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import favoritesService from '../services/FavoritesService';
-import { getApiUrl, API_ENDPOINTS } from '../config/api.js';
-import ConfirmDialog from './ConfirmDialog';
-import MiniEquityChart from './MiniEquityChart';
+import StrategyList from './StrategyList';
 import './FavoritesList.css';
 
 const FavoritesList = () => {
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [confirmDialog, setConfirmDialog] = useState({
-    isOpen: false,
-    strategyId: null,
-    strategyName: ''
-  });
 
   const loadFavorites = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -28,9 +19,8 @@ const FavoritesList = () => {
     setError(null);
     
     try {
-      // Use the updated FavoritesService to get all favorite strategies
       const favoritedStrategies = await favoritesService.getFavorites();
-      setFavorites(favoritedStrategies);
+      setFavorites(favoritedStrategies?.results || favoritedStrategies || []);
     } catch (err) {
       setError(err.message);
       toast.error('Failed to load favorites', {
@@ -46,168 +36,16 @@ const FavoritesList = () => {
     loadFavorites();
   }, [loadFavorites]);
 
-  const handleRemoveFavorite = useCallback((strategyId, strategyName, e) => {
-    e.stopPropagation();
-    
-    setConfirmDialog({
-      isOpen: true,
-      strategyId,
-      strategyName
-    });
-  }, []);
-
-  const confirmRemoveFavorite = useCallback(async () => {
-    if (!confirmDialog.strategyId) return;
-    
-    try {
-      await favoritesService.removeFromFavorites(confirmDialog.strategyId);
-      setFavorites(prev => prev.filter(strategy => strategy.id !== confirmDialog.strategyId));
-      
-      toast.success('Removed from favorites!', {
-        position: "top-right",
-        autoClose: 2000,
-      });
-      
-      // Notify parent component
-      // Favorite removed
-    } catch (err) {
-      toast.error('Failed to remove from favorites', {
-        position: "top-right",
-        autoClose: 4000,
-      });
-    } finally {
-      setConfirmDialog({
-        isOpen: false,
-        strategyId: null,
-        strategyName: ''
-      });
-    }
-  }, [confirmDialog.strategyId]);
-
-  const cancelRemoveFavorite = useCallback(() => {
-    setConfirmDialog({
-      isOpen: false,
-      strategyId: null,
-      strategyName: ''
-    });
-  }, []);
-
-  const handleStrategyClick = useCallback((strategyId) => {
-    navigate(`/backtest/${strategyId}`);
-  }, [navigate]);
-
-  const cleanStrategyName = (name) => {
-    if (!name) return 'Unnamed Strategy';
-    return name
-      .replace(/^(temp_backtest_|strategy_)/i, '')
-      .replace(/\d{8}T\d{6}/g, '') // Remove timestamps like 20250903T085328
-      .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/g, '') // Remove ISO timestamps
-      .replace(/\d{4}-\d{2}-\d{2}/g, '') // Remove dates like 2025-09-03
-      .replace(/\d{8}/g, '') // Remove dates like 20250903
-      .replace(/_+/g, ' ') // Replace multiple underscores with single space
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .trim(); // Remove leading/trailing spaces
-  };
-
-  const formatMetric = useCallback((value, isPercentage = false, decimals = 2) => {
-    if (value === null || value === undefined) return 'N/A';
-    const numValue = parseFloat(value);
-    if (isNaN(numValue)) return 'N/A';
-    
-    if (isPercentage) {
-      return `${numValue.toFixed(decimals)}%`;
-    }
-    return numValue.toFixed(decimals);
-  }, []);
-
-  // Memoize the strategy card component to prevent unnecessary re-renders
-  const StrategyCard = useMemo(() => {
-    return React.memo(({ strategy }) => {
-      const strategyId = strategy.id;
-      
-      return (
-        <div key={strategyId} className="favorite-card" onClick={() => handleStrategyClick(strategyId)}>
-          {/* Mini Equity Chart */}
-          <div className="strategy-chart">
-            <MiniEquityChart strategy={strategy} height={80} />
-          </div>
-
-          <div className="strategy-header">
-            <div className="strategy-info">
-              <h3>{cleanStrategyName(strategy.name)}</h3>
-              <p>{strategy.description}</p>
-              <div className="strategy-meta">
-                <span className="created-by">by {strategy.created_by || 'Unknown User'}</span>
-                <span className="symbol">{strategy.symbol}</span>
-                <span className="timeframe">{strategy.timeframe}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="strategy-stats">
-            <div className="stat-item">
-              <span className="stat-label">Win Rate</span>
-              <span className="stat-value">
-                {(() => {
-                  const winRate = strategy.win_rate;
-                  if (winRate === null || winRate === undefined) {
-                    return 'N/A';
-                  }
-                  return formatMetric(winRate, true, 1);
-                })()}
-              </span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Trades</span>
-              <span className="stat-value">{strategy.total_trades || 'N/A'}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Profit Factor</span>
-              <span className="stat-value">{formatMetric(strategy.profit_factor, false, 2)}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Return</span>
-              <span className="stat-value">
-                {(() => {
-                  const returnPercent = strategy.total_return_percent;
-                  if (returnPercent === null || returnPercent === undefined) {
-                    return 'N/A';
-                  }
-                  const formatted = formatMetric(returnPercent, true, 1);
-                  const isPositive = parseFloat(returnPercent) > 0;
-                  return (
-                    <span className={isPositive ? 'positive' : 'negative'}>
-                      {formatted}
-                    </span>
-                  );
-                })()}
-              </span>
-            </div>
-          </div>
-
-          <div className="strategy-actions">
-            <button
-              className="action-btn view-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleStrategyClick(strategyId);
-              }}
-              title="View Details"
-            >
-              <FaEye />
-            </button>
-            <button
-              className="action-btn remove-btn"
-              onClick={(e) => handleRemoveFavorite(strategyId, strategy.name, e)}
-              title="Remove from Favorites"
-            >
-              <FaTrash />
-            </button>
-          </div>
+  if (!isAuthenticated) {
+    return (
+      <div className="favorites-list-empty">
+        <div className="empty-state">
+          <div className="empty-icon">🔐</div>
+          <h3>Please sign in to view favorites</h3>
         </div>
-      );
-    });
-  }, [cleanStrategyName, formatMetric, handleStrategyClick, handleRemoveFavorite]);
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -227,48 +65,19 @@ const FavoritesList = () => {
     );
   }
 
-  if (favorites.length === 0) {
-    return (
-      <div className="favorites-list-empty">
-        <div className="empty-state">
-          <div className="empty-icon">🔖</div>
-          <h3>No favorites yet</h3>
-          <p>Start exploring the community and add strategies you like to your favorites!</p>
-          <p className="empty-features">
-            <strong>Your favorites will appear here:</strong><br/>
-            • Quick access to your preferred strategies<br/>
-            • Easy backtesting and analysis<br/>
-            • Personal collection of trading ideas
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="favorites-list">
+    <div className="favorites-list-wrapper">
       <div className="favorites-list-header">
         <h2>
           <FaBookmark className="header-icon" />
           My Favorites ({favorites.length})
         </h2>
       </div>
-
-      <div className="favorites-grid">
-        {favorites.map((strategy) => (
-          <StrategyCard key={strategy.id} strategy={strategy} />
-        ))}
-      </div>
-      
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        onClose={cancelRemoveFavorite}
-        onConfirm={confirmRemoveFavorite}
-        title="Remove from Favorites"
-        message={`Are you sure you want to remove "${confirmDialog.strategyName}" from your favorites?`}
-        confirmText="Remove"
-        cancelText="Cancel"
-        type="warning"
+      <StrategyList
+        strategies={favorites}
+        loading={loading}
+        error={error}
+        showUserInfo={true}
       />
     </div>
   );
